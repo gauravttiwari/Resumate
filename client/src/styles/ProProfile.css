@@ -1,0 +1,251 @@
+/**
+ * ProProfile - Elegant Corporate Resume Template Styles
+ * 
+ * A professional two-column template designed for corporate environments
+ * ATS-friendly and print-optimized styling.
+ */
+
+/* Container */
+.template-proprofile {
+  font-family: 'Arial', 'Helvetica', sans-serif;
+  color: #333;
+  background: #fff;
+  display: flex;
+  max-width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Left sidebar */
+.template-proprofile .sidebar {
+  width: 30%;
+  background-color: #1a365d; /* Dark blue background */
+  color: white;
+  padding: 25px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Name at the top of sidebar */
+.template-proprofile .sidebar .name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 15px;
+}
+
+/* Profile picture */
+.template-proprofile .profile-pic {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.template-proprofile .profile-pic img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255,255,255,0.3);
+}
+
+/* Sidebar section headings */
+.template-proprofile .sidebar h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 5px;
+}
+
+/* Skills section */
+.template-proprofile .skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.template-proprofile .skill-item {
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.template-proprofile .separator {
+  margin: 0 5px;
+  color: rgba(255,255,255,0.7);
+}
+
+/* Certifications section */
+.template-proprofile .certifications p {
+  margin: 5px 0;
+  font-size: 13px;
+}
+
+/* Core Competencies section */
+.template-proprofile .competencies .competency-group {
+  margin-bottom: 15px;
+}
+
+.template-proprofile .competency-icon {
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.template-proprofile .competency-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.template-proprofile .competency-skills {
+  margin-top: 5px;
+  margin-left: 28px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+}
+
+.template-proprofile .competency-skill {
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Achievements section */
+.template-proprofile .achievements ul {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.template-proprofile .achievements li {
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+/* Main content area */
+.template-proprofile .main-content {
+  width: 70%;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+/* Professional headline */
+.template-proprofile .headline {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #1a365d; /* This will be overridden by dynamic styles */
+}
+
+/* Contact information */
+.template-proprofile .contact-info {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+
+.template-proprofile .contact-info p {
+  margin: 0 20px 5px 0;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.template-proprofile .contact-info .icon {
+  margin-right: 8px;
+}
+
+/* Section headings in main content */
+.template-proprofile .main-content h2 {
+  font-size: 16px;
+  text-transform: uppercase;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  color: #1a365d; /* This will be overridden by dynamic styles */
+  border-bottom: 2px solid #1a365d; /* This will be overridden by dynamic styles */
+  padding-bottom: 8px;
+}
+
+/* Summary section */
+.template-proprofile .summary p {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+/* Experience section */
+.template-proprofile .experience-item {
+  margin-bottom: 20px;
+}
+
+.template-proprofile .experience-item h3 {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.template-proprofile .duration-location {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.template-proprofile .job-description {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.template-proprofile .job-description li {
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+/* Project section */
+.template-proprofile .project-item {
+  margin-bottom: 15px;
+}
+
+.template-proprofile .project-item h3 {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.template-proprofile .project-item p {
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+/* Education section */
+.template-proprofile .education-item {
+  margin-bottom: 15px;
+}
+
+.template-proprofile .institution {
+  font-weight: bold;
+  margin-bottom: 3px;
+  font-size: 15px;
+}
+
+.template-proprofile .degree {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Print optimization */
+@media print {
+  .template-proprofile {
+    box-shadow: none;
+    margin: 0;
+  }
+
+  .template-proprofile .sidebar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

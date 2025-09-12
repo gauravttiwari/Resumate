@@ -1,0 +1,77 @@
+# ResuMate - HTML-Based Resume Builder
+
+## Overview
+ResuMate is a web application that allows users to create professional resumes with different templates. This version uses pure HTML and CSS for resume generation, with client-side PDF conversion.
+
+## Key Features
+- User-friendly form for entering resume data
+- Multiple professional resume templates
+- Live preview of resume
+- Client-side PDF generation
+- Plain text resume output for ATS systems
+- Light/Dark mode support
+
+## Project Structure
+- `client/`: React frontend
+  - `src/`: Source code
+    - `components/`: React components
+    - `styles/`: CSS files
+- `server/`: Node.js backend for data storage
+- `output/`: Directory where generated files are stored
+
+## Technology Stack
+- **Frontend**: React
+- **Backend**: Express.js (Node.js)
+- **PDF Generation**: html2canvas + jsPDF
+- **Templating**: React components + CSS
+
+## Installation
+
+### Prerequisites
+- Node.js (v14+)
+- npm (v6+)
+
+### Setup
+1. Clone the repository
+2. Install dependencies:
+   ```
+   # Install server dependencies
+   cd server
+   npm install
+   
+   # Install client dependencies
+   cd ../client
+   npm install
+   ```
+
+### Running the Application
+1. Start the server:
+   ```
+   cd server
+   npm start
+   ```
+   Server will run on port 5000.
+
+2. Start the client:
+   ```
+   cd client
+   npm start
+   ```
+   Client will run on port 3000.
+
+## Usage
+1. Fill in the resume form with your personal information
+2. Choose a template style
+3. Preview your resume in real-time
+4. Click "Generate Resume" to create a PDF
+5. Download PDF, plain text, or JSON version
+
+## Development
+
+### Adding New Templates
+1. Add a new CSS class in `styles/ResumePreview.css`
+2. Add the template to the templates list in `App.js`
+3. Create a preview image for the template selector
+
+## License
+[MIT License](LICENSE)

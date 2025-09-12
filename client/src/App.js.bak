@@ -1,0 +1,515 @@
+import React from 'react';
+import ResumeForm from './ResumeForm';
+import ResumePreview from './ResumePreview';
+import TemplateSelector from './TemplateSelector';
+import latexTemplates from './latexTemplates';
+import Mustache from 'mustache';
+import generatePlainText from './plainTextGenerator';
+import LaTeXInstallGuide from './LaTeXInstallGuide';
+import generateClientSidePdf from './clientPdfGenerator';
+import { reportError, reportUsage } from './errorReporting';
+import { validateLatexTemplate, attemptLatexFix } from './latexValidator';
+import safeRenderLatex from './safeLatexRenderer';
+import './App.css';
+import './LaTeXInstallGuide.css';
+
+function App() {
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [generatedFiles, setGeneratedFiles] = React.useState(null);
+  const [selectedTemplate, setSelectedTemplate] = React.useState('modern');
+  const [theme, setTheme] = React.useState('light');
+  const [formData, setFormData] = React.useState(null);
+  const [showLaTeXGuide, setShowLaTeXGuide] = React.useState(false);
+  const [isLaTeXMissing, setIsLaTeXMissing] = React.useState(false);
+  const [latexVersion, setLatexVersion] = React.useState(null);
+  const [toast, setToast] = React.useState({ show: false, message: '', type: 'success' });
+  
+  // Check for LaTeX installation on component mount
+  React.useEffect(() => {
+    // Check if LaTeX is installed
+    fetch('http://localhost:5000/check-latex')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.installed) {
+          console.log('LaTeX is not installed');
+          setIsLaTeXMissing(true);
+          showToast('LaTeX is not installed. Some features will be limited.', 'warning', 8000);
+        } else {
+          console.log(`LaTeX is installed, version: ${data.version}`);
+          setLatexVersion(data.version);
+          setIsLaTeXMissing(false);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to check LaTeX installation:', error);
+      });
+  }, []);
+  
+  // Handle form data changes for live preview
+  const handleFormChange = (data) => {
+    setFormData(data);
+  };
+  
+  // Handle template selection change
+  const handleTemplateChange = (template) => {
+    setSelectedTemplate(template);
+  };
+  
+  // Toggle between light and dark theme
+  const handleThemeToggle = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+  
+  // Handle closing the LaTeX installation guide
+  const handleCloseLaTeXGuide = () => {
+    setShowLaTeXGuide(false);
+  };
+  
+  // Show toast notification
+  const showToast = (message, type = 'success', duration = 5000) => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, duration);
+  };
+
+  // Handle using the client-side PDF generator
+  const handleUseClientSidePdf = async () => {
+    try {
+      if (formData) {
+        // Close the LaTeX guide modal
+        setShowLaTeXGuide(false);
+        
+        // Show loading indicator
+        setIsGenerating(true);
+        
+        // Generate client-side PDF
+        const { pdf } = await generateClientSidePdf(formData);
+        
+        // Update generated files with client PDF
+        setGeneratedFiles(prevFiles => ({
+          ...prevFiles,
+          clientPdf: pdf
+        }));
+        
+        // Hide loading indicator
+        setIsGenerating(false);
+        
+        // Show success toast
+        showToast('Client-side PDF generated successfully!');
+        
+        // Open the PDF in a new tab
+        window.open(pdf, '_blank');
+      }
+    } catch (error) {
+      console.error('Failed to generate client-side PDF:', error);
+      showToast('Failed to generate client-side PDF. Please try installing LaTeX instead.', 'danger');
+      setIsGenerating(false);
+    }
+  };
+  
+  // Handler for form submission
+  const handleFormSubmit = async (formData) => {
+    setIsGenerating(true);
+    setFormData(formData); // Update form data for preview
+    
+    // Get the selected template
+    const template = latexTemplates[selectedTemplate];
+    
+    // Use safe LaTeX rendering to prevent content before \begin{document}
+    const latex = safeRenderLatex(template, formData);
+    
+    // Generate plain text version
+    const plainText = generatePlainText(formData);
+    
+    // Validate the LaTeX template before submission
+    const validation = validateLatexTemplate(latex);
+    
+    // Log warnings but don't block submission
+    if (validation.warnings.length > 0) {
+      console.warn('LaTeX template warnings:', validation.warnings);
+    }
+    
+    // If there are errors, try to fix them automatically
+    if (!validation.isValid) {
+      console.error('LaTeX template validation failed:', validation.errors);
+      reportError('LaTeX template validation failed', {
+        template: selectedTemplate,
+        errors: validation.errors,
+        beginDocPos: validation.beginDocumentPosition,
+        endDocPos: validation.endDocumentPosition
+      });
+      
+      // Attempt to fix template issues
+      const fixResult = attemptLatexFix(latex);
+      
+      if (fixResult.fixed) {
+        // Use the fixed template
+        console.log('Template issues automatically fixed:', fixResult.fixes);
+        showToast('Fixed some issues with the resume template', 'info');
+      } else {
+        // If we couldn't fix it, warn the user
+        showToast('There may be issues with the template structure. Trying anyway...', 'warning');
+      }
+    }
+    
+    const filename = formData.name ? formData.name.replace(/\s+/g, '_') : 'resume';
+    
+    // Send LaTeX to backend for PDF generation
+    const res = await fetch('http://localhost:5000/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ latex, filename, plainText, template: selectedTemplate })
+    });
+    
+    if (res.ok) {
+      const { pdf, tex } = await res.json();
+      setGeneratedFiles({ pdf: filename, tex: filename, txt: filename });
+      setIsGenerating(false);
+    } else {
+      // Don't immediately try to parse as JSON, get the text first
+      let errorMessage = `Resume generation failed. Server returned status ${res.status}`;
+      
+      try {
+        // Get the response as text
+        const textData = await res.text();
+        console.log('Error response text:', textData);
+        
+        try {
+          // Try to parse as JSON first
+          const errorData = JSON.parse(textData);
+          console.error('JSON error details:', errorData);
+          
+          // Special case for LaTeX not installed error
+          if (errorData.error === 'LaTeX not installed') {
+            console.log('LaTeX not installed, showing guide and generating client-side PDF');
+            // Set state to show our installation guide
+            setIsLaTeXMissing(true);
+            setShowLaTeXGuide(true);
+            
+            // Generate a client-side fallback PDF
+            try {
+              const result = await generateClientSidePdf(formData);
+              if (result && result.pdf) {
+                // Store generated files information
+                setGeneratedFiles({ 
+                  tex: filename, 
+                  txt: filename,
+                  clientPdf: result.pdf  // Store the client-generated PDF URL
+                });
+              }
+            } catch (clientPdfError) {
+              console.error('Failed to generate PDF on client side:', clientPdfError);
+            }
+          } 
+          // Special case for "Missing \begin{document}" error
+          else if (errorData.error === 'LaTeX compilation failed' && 
+                  errorData.details.includes("Missing \\begin{document}")) {
+            console.log('LaTeX structure error: Missing \\begin{document}');
+            
+            // Show more user-friendly error message for document structure issues
+            const errorMessage = `LaTeX Document Structure Error: The resume couldn't be compiled because of a template formatting issue.
+
+The system is trying to compile a document that doesn't have a proper structure. This is likely a bug in how the template is being generated.`;
+            
+            // Show toast with error message and recovery option
+            showToast(
+              <div>
+                {errorMessage}
+                <div className="mt-2">
+                  <button 
+                    className="btn btn-sm btn-outline-light" 
+                    onClick={() => {
+                      // Get the template and try to fix it
+                      const template = latexTemplates[selectedTemplate];
+                      const fixResult = attemptLatexFix(latex);
+                      
+                      if (fixResult.fixed) {
+                        showToast('Attempting to recover with fixed template...', 'info');
+                        
+                        // Use the safe renderer to generate the latex
+                        const safeLatex = safeRenderLatex(template, formData);
+                        
+                        // Resubmit with safely rendered template
+                        fetch('http://localhost:5000/generate', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ 
+                            latex: safeLatex, 
+                            filename, 
+                            plainText, 
+                            template: selectedTemplate 
+                          })
+                        }).then(res => {
+                          if (res.ok) {
+                            return res.json().then(data => {
+                              setGeneratedFiles({ pdf: filename, tex: filename, txt: filename });
+                              showToast('Recovery successful! Resume generated.', 'success');
+                            });
+                          } else {
+                            showToast('Recovery failed. Please try a different template.', 'danger');
+                          }
+                        }).catch(err => {
+                          showToast('Recovery failed. Please try a different template.', 'danger');
+                        });
+                      } else {
+                        showToast('Could not automatically fix the template. Please try a different template.', 'danger');
+                      }
+                    }}
+                  >
+                    Attempt Recovery
+                  </button>
+                  <button
+                    className="btn btn-sm btn-outline-light ms-2"
+                    onClick={() => {
+                      // Reset to default template
+                      setSelectedTemplate('modern');
+                      showToast('Switched to default template. Please try generating again.', 'info');
+                    }}
+                  >
+                    Use Default Template
+                  </button>
+                </div>
+              </div>,
+              'danger',
+              10000 // Longer duration for this important message
+            );
+            
+            // Report error for monitoring
+            reportError('Missing document structure in LaTeX template', {
+              template: selectedTemplate,
+              errorDetails: errorData.details,
+              command: errorData.command,
+              documentTags: errorData.documentTags
+            });
+            
+            // Also try to generate a client-side PDF as fallback
+            try {
+              // Generate a client-side fallback PDF
+              showToast("Attempting to generate a fallback PDF version...", "info");
+              generateClientSidePdf(formData).then(result => {
+                if (result && result.pdf) {
+                  // Store generated files information
+                  setGeneratedFiles({ 
+                    tex: filename, 
+                    txt: filename,
+                    clientPdf: result.pdf  // Store the client-generated PDF URL
+                  });
+                  showToast("Fallback PDF generated successfully!", "success");
+                }
+              });
+            } catch (clientPdfError) {
+              console.error('Failed to generate fallback PDF:', clientPdfError);
+            }
+          }
+          // Special case for missing LaTeX packages
+          else if (errorData.error === 'LaTeX compilation failed' && 
+                  (errorData.details.includes("File `") && errorData.details.includes("' not found"))) {
+            // Extract package name from error message
+            const packageMatch = errorData.details.match(/File `([^']+)' not found/);
+            const packageName = packageMatch ? packageMatch[1].replace('.sty', '') : 'unknown package';
+            
+            console.log(`Missing LaTeX package: ${packageName}`);
+            
+            // Show more specific error message for missing packages
+            const packageMessage = `Missing LaTeX package: ${packageName}
+
+The LaTeX compilation failed because a required package is missing. To fix this:
+
+1. Open MiKTeX Console (search for it in your Start menu)
+2. Go to "Packages" tab
+3. Search for "${packageName}"
+4. Right-click and select "Install"
+5. Wait for installation to complete
+6. Try generating your resume again
+
+Alternatively, enable "Install missing packages on-the-fly" in MiKTeX Console Settings.`;
+            
+            // Use toast notification instead of alert
+            showToast(`Missing LaTeX package: ${packageName}. Opening installation guide...`, 'warning');
+            
+            // Also show the LaTeX installation guide for more help
+            setIsLaTeXMissing(true);
+            setShowLaTeXGuide(true);
+          } else {
+            errorMessage = `Resume generation failed: ${errorData.error || 'Unknown error'}`;
+            // Use toast instead of alert for better user experience
+            showToast(errorMessage, 'danger');
+            
+            // Log error details for debugging without exposing to user interface
+            console.error('Resume generation error details:', errorData.details || 'No additional details');
+          }
+        } catch (jsonError) {
+          // Not valid JSON, check for LaTeX patterns
+          if (textData.includes('LaTeX') || textData.includes('pdflatex')) {
+            console.error('LaTeX error detected:', textData);
+            errorMessage = `LaTeX Error: ${textData.substring(0, 500)}`;
+            if (textData.length > 500) {
+              errorMessage += '... (error message truncated)';
+            }
+          } else if (textData && textData.trim().length > 0) {
+            // Use text directly
+            errorMessage = `Resume generation failed: ${textData.substring(0, 500)}`;
+            if (textData.length > 500) {
+              errorMessage += '... (error message truncated)';
+            }
+          }
+          showToast(errorMessage, 'danger');
+        }
+      } catch (e) {
+        console.error('Failed to process error response:', e);
+        showToast('An unexpected error occurred while processing the server response', 'danger');
+      }
+      
+      setIsGenerating(false);
+    }
+  };
+  
+  const handleDownload = (type, filename) => {
+    window.open(`http://localhost:5000/download/${type}/${filename}`);
+  };
+
+  return (
+    <div className={`app-container ${theme}-theme container-fluid p-0`}>
+      <header className="app-header text-center py-4">
+        <h1 className="display-4">ResuMate</h1>
+        <p className="lead">Create an ATS-friendly professional resume</p>
+        <div className="d-flex justify-content-center align-items-center gap-3">
+          <button className="theme-toggle btn" onClick={handleThemeToggle}>
+            {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+          </button>
+          
+          {/* LaTeX status indicator */}
+          <div className={`latex-status badge ${isLaTeXMissing ? 'bg-warning' : 'bg-success'}`} 
+               onClick={() => isLaTeXMissing && setShowLaTeXGuide(true)}
+               style={{cursor: isLaTeXMissing ? 'pointer' : 'default'}}>
+            {isLaTeXMissing ? (
+              <>🔧 LaTeX Not Installed</>
+            ) : (
+              <>✅ LaTeX Ready {latexVersion && `(v${latexVersion})`}</>
+            )}
+          </div>
+        </div>
+      </header>
+      
+      <div className="template-selection container">
+        <TemplateSelector 
+          selectedTemplate={selectedTemplate} 
+          onTemplateChange={handleTemplateChange}
+        />
+      </div>
+      
+      <div className="main-content container">
+        <div className="row">
+          <div className="form-container col-lg-6 mb-4">
+            <ResumeForm 
+              onSubmit={handleFormSubmit} 
+              onChange={handleFormChange}
+            />
+          </div>
+          
+          <div className="preview-container col-lg-6">
+            {formData && (
+              <ResumePreview 
+                formData={formData} 
+                templateType={selectedTemplate}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {isGenerating && (
+        <div className="generating-overlay">
+          <div className="generating-message">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-3">Generating your ATS-friendly resume...</p>
+          </div>
+        </div>
+      )}
+      
+      {generatedFiles && !isGenerating && (
+        <div className="download-options container text-center my-4 p-4 rounded">
+          <h2 className="mb-4">Download Your Resume</h2>
+          <div className="download-buttons d-flex justify-content-center flex-wrap gap-3">
+            {/* If LaTeX is missing and we have a client-generated PDF */}
+            {isLaTeXMissing && generatedFiles.clientPdf ? (
+              <button 
+                onClick={() => window.open(generatedFiles.clientPdf, '_blank')} 
+                className="btn btn-success btn-lg"
+              >
+                <i className="bi bi-file-pdf"></i> Download Client PDF
+              </button>
+            ) : (
+              generatedFiles.pdf && (
+                <button 
+                  onClick={() => handleDownload('pdf', generatedFiles.pdf)} 
+                  className="btn btn-success btn-lg"
+                >
+                  <i className="bi bi-file-pdf"></i> Download PDF
+                </button>
+              )
+            )}
+            
+            <button 
+              onClick={() => handleDownload('tex', generatedFiles.tex)} 
+              className="btn btn-primary btn-lg"
+            >
+              <i className="bi bi-file-text"></i> Download LaTeX Source
+            </button>
+            <button 
+              onClick={() => handleDownload('txt', generatedFiles.txt)} 
+              className="btn btn-secondary btn-lg"
+            >
+              <i className="bi bi-file-text"></i> Download Plain Text
+            </button>
+            
+            {/* Show LaTeX installation guide button if LaTeX is missing */}
+            {isLaTeXMissing && (
+              <button 
+                onClick={() => setShowLaTeXGuide(true)} 
+                className="btn btn-info btn-lg"
+              >
+                <i className="bi bi-info-circle"></i> LaTeX Installation Guide
+              </button>
+            )}
+          </div>
+          
+          {isLaTeXMissing && (
+            <div className="fallback-notice mt-3 alert alert-info">
+              <p><strong>Note:</strong> The PDF was generated using a client-side fallback because LaTeX is not installed on your system. 
+              For higher quality PDFs, please install LaTeX using the installation guide.</p>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <footer className="app-footer mt-auto py-3 text-center">
+        <p className="mb-0">&copy; 2023 ResuMate. All rights reserved.</p>
+      </footer>
+      
+      {/* LaTeX Installation Guide Modal */}
+      {showLaTeXGuide && (
+        <LaTeXInstallGuide 
+          onDismiss={handleCloseLaTeXGuide}
+          onUseClientSidePDF={handleUseClientSidePdf}
+        />
+      )}
+      
+      {/* Toast notifications */}
+      {toast.show && (
+        <div className={`toast-container position-fixed bottom-0 end-0 p-3`}>
+          <div className={`toast show bg-${toast.type} text-white`} role="alert">
+            <div className="toast-body">
+              {toast.message}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;

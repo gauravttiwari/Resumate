@@ -1,0 +1,140 @@
+/* Form styling */
+.resume-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.resume-form h1 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+
+.resume-form h2 {
+  color: #3498db;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 10px;
+  margin-top: 30px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+}
+
+.form-col {
+  flex: 1;
+  padding: 0 10px;
+  min-width: 200px;
+}
+
+.btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.btn:hover {
+  background-color: #2980b9;
+}
+
+.btn-remove {
+  background-color: #e74c3c;
+}
+
+.btn-remove:hover {
+  background-color: #c0392b;
+}
+
+.btn-add {
+  background-color: #2ecc71;
+  display: block;
+  margin: 10px 0 20px;
+}
+
+.btn-add:hover {
+  background-color: #27ae60;
+}
+
+.btn-submit {
+  background-color: #3498db;
+  display: block;
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  margin-top: 30px;
+}
+
+.section-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #f9f9f9;
+}
+
+.word-count {
+  color: #7f8c8d;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.skill-suggestions {
+  margin: 10px 0;
+}
+
+.skill-tag {
+  display: inline-block;
+  background-color: #f1f1f1;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+.skill-tag:hover {
+  background-color: #e0e0e0;
+}
+
+.tips-box {
+  background-color: #f8f9fa;
+  border-left: 4px solid #3498db;
+  padding: 10px 15px;
+  margin: 15px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.download-options {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.download-options button {
+  flex: 1;
+  margin: 0 10px;
+}

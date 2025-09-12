@@ -1,0 +1,545 @@
+import React, { useState, useEffect } from 'react';
+import './styles/ResumeForm.css';
+
+const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    linkedin: '',
+    github: '',
+    summary: '',
+    skills: '',
+    education: [{ degree: '', institution: '', year: '', percentage: '' }],
+    experience: [{ role: '', company: '', duration: '', description: '' }],
+    projects: [{ title: '', description: '' }],
+    achievements: [''],
+    profilePic: null
+  });
+
+  // When formData changes, notify parent component
+  useEffect(() => {
+    if (onChange) {
+      onChange(formData);
+    }
+  }, [formData, onChange]);
+
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
+
+  // Handle array item changes (education, experience, etc.)
+  const handleArrayItemChange = (index, field, subfield, value) => {
+    setFormData(prevData => {
+      const updatedItems = [...prevData[field]];
+      updatedItems[index] = {
+        ...updatedItems[index],
+        [subfield]: value
+      };
+      return {
+        ...prevData,
+        [field]: updatedItems
+      };
+    });
+  };
+
+  // Handle achievements as a simple array of strings
+  const handleAchievementChange = (index, value) => {
+    setFormData(prevData => {
+      const updatedAchievements = [...prevData.achievements];
+      updatedAchievements[index] = value;
+      return {
+        ...prevData,
+        achievements: updatedAchievements
+      };
+    });
+  };
+
+  // Add new item to arrays
+  const handleAddItem = (field) => {
+    setFormData(prevData => {
+      let newItem;
+      
+      switch(field) {
+        case 'education':
+          newItem = { degree: '', institution: '', year: '', percentage: '' };
+          break;
+        case 'experience':
+          newItem = { role: '', company: '', duration: '', description: '' };
+          break;
+        case 'projects':
+          newItem = { title: '', description: '' };
+          break;
+        case 'achievements':
+          return {
+            ...prevData,
+            achievements: [...prevData.achievements, '']
+          };
+        default:
+          return prevData;
+      }
+      
+      return {
+        ...prevData,
+        [field]: [...prevData[field], newItem]
+      };
+    });
+  };
+
+  // Remove item from arrays
+  const handleRemoveItem = (field, index) => {
+    setFormData(prevData => {
+      const updatedItems = [...prevData[field]];
+      updatedItems.splice(index, 1);
+      
+      // Ensure there's always at least one empty item
+      if (updatedItems.length === 0) {
+        switch(field) {
+          case 'education':
+            updatedItems.push({ degree: '', institution: '', year: '', percentage: '' });
+            break;
+          case 'experience':
+            updatedItems.push({ role: '', company: '', duration: '', description: '' });
+            break;
+          case 'projects':
+            updatedItems.push({ title: '', description: '' });
+            break;
+          case 'achievements':
+            updatedItems.push('');
+            break;
+          default:
+            break;
+        }
+      }
+      
+      return {
+        ...prevData,
+        [field]: updatedItems
+      };
+    });
+  };
+
+  // Handle profile picture upload
+  const handleProfilePicUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData(prevData => ({
+          ...prevData,
+          profilePic: event.target.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (onSubmit) {
+      onSubmit(formData);
+    }
+  };
+
+  return (
+    <form className="resume-form" onSubmit={handleSubmit}>
+      <h2>Personal Information</h2>
+      <div className="form-group">
+        <label htmlFor="name">Full Name*</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          placeholder="John Doe"
+        />
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="email">Email*</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            placeholder="john@example.com"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="phone">Phone Number*</label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+            placeholder="123-456-7890"
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="address">Address</label>
+        <input
+          type="text"
+          id="address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          placeholder="City, State"
+        />
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="linkedin">LinkedIn Profile (Optional)</label>
+          <input
+            type="text"
+            id="linkedin"
+            name="linkedin"
+            value={formData.linkedin}
+            onChange={handleChange}
+            placeholder="linkedin.com/in/johndoe"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="github">GitHub Profile (Optional)</label>
+          <input
+            type="text"
+            id="github"
+            name="github"
+            value={formData.github}
+            onChange={handleChange}
+            placeholder="github.com/johndoe"
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="profilePic">Profile Picture (Optional)</label>
+        <input
+          type="file"
+          id="profilePic"
+          accept="image/*"
+          onChange={handleProfilePicUpload}
+        />
+        <small className="form-text text-muted">
+          Note: Some ATS systems may not process profile pictures correctly. For MNC applications, consider omitting images.
+        </small>
+      </div>
+
+      <h2>Professional Summary</h2>
+      <div className="form-group">
+        <label htmlFor="summary">Career Objective / Summary*</label>
+        <textarea
+          id="summary"
+          name="summary"
+          value={formData.summary}
+          onChange={handleChange}
+          rows="3"
+          required
+          placeholder="Software Engineer with 2 years of experience building scalable web applications using React, Node.js, and cloud technologies."
+        ></textarea>
+        <small className="form-text text-muted">
+          2-3 lines summarizing your profile and the job role you're applying for. Keep it focused and include relevant keywords.
+        </small>
+      </div>
+
+      <h2>Technical Skills</h2>
+      <div className="form-group">
+        <label htmlFor="skills">Skills*</label>
+        <input
+          type="text"
+          id="skills"
+          name="skills"
+          value={formData.skills}
+          onChange={handleChange}
+          required
+          placeholder="JavaScript, React, Node.js, Python, AWS, Docker, Git"
+        />
+        <small className="form-text text-muted">
+          List your skills, separated by commas. Include technical skills, programming languages, and tools.
+        </small>
+      </div>
+
+      <h2>Work Experience</h2>
+      {formData.experience.map((exp, index) => (
+        <div key={index} className="section-item">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor={`exp-role-${index}`}>Role/Position*</label>
+              <input
+                type="text"
+                id={`exp-role-${index}`}
+                value={exp.role}
+                onChange={(e) => handleArrayItemChange(index, 'experience', 'role', e.target.value)}
+                required
+                placeholder="Software Developer"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor={`exp-company-${index}`}>Company*</label>
+              <input
+                type="text"
+                id={`exp-company-${index}`}
+                value={exp.company}
+                onChange={(e) => handleArrayItemChange(index, 'experience', 'company', e.target.value)}
+                required
+                placeholder="ABC Corp"
+              />
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor={`exp-duration-${index}`}>Duration*</label>
+            <input
+              type="text"
+              id={`exp-duration-${index}`}
+              value={exp.duration}
+              onChange={(e) => handleArrayItemChange(index, 'experience', 'duration', e.target.value)}
+              required
+              placeholder="Jan 2023 - Jun 2023"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor={`exp-description-${index}`}>Description*</label>
+            <textarea
+              id={`exp-description-${index}`}
+              value={exp.description}
+              onChange={(e) => handleArrayItemChange(index, 'experience', 'description', e.target.value)}
+              rows="3"
+              required
+              placeholder="- Developed REST APIs using Node.js and Express.js.
+- Implemented authentication system using JWT.
+- Optimized database queries, improving performance by 30%."
+            ></textarea>
+            <small className="form-text text-muted">
+              Enter bullet points, each on a new line. Start with action verbs and include measurable achievements.
+            </small>
+          </div>
+          
+          <div className="section-item-actions">
+            {formData.experience.length > 1 && (
+              <button 
+                type="button" 
+                className="btn-remove" 
+                onClick={() => handleRemoveItem('experience', index)}
+              >
+                Remove Experience
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+      
+      <div className="section-actions">
+        <button 
+          type="button" 
+          className="btn-add" 
+          onClick={() => handleAddItem('experience')}
+        >
+          Add Experience
+        </button>
+      </div>
+
+      <h2>Projects</h2>
+      {formData.projects.map((project, index) => (
+        <div key={index} className="section-item">
+          <div className="form-group">
+            <label htmlFor={`project-title-${index}`}>Project Title*</label>
+            <input
+              type="text"
+              id={`project-title-${index}`}
+              value={project.title}
+              onChange={(e) => handleArrayItemChange(index, 'projects', 'title', e.target.value)}
+              required
+              placeholder="Resume Builder App"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor={`project-description-${index}`}>Project Description*</label>
+            <textarea
+              id={`project-description-${index}`}
+              value={project.description}
+              onChange={(e) => handleArrayItemChange(index, 'projects', 'description', e.target.value)}
+              rows="3"
+              required
+              placeholder="- Built a web-based resume generator using HTML, CSS, and JS.
+- Implemented PDF export functionality with html2pdf.js.
+- Added localStorage for data persistence."
+            ></textarea>
+            <small className="form-text text-muted">
+              Enter bullet points, each on a new line. Focus on your role, technologies used, and outcomes.
+            </small>
+          </div>
+          
+          <div className="section-item-actions">
+            {formData.projects.length > 1 && (
+              <button 
+                type="button" 
+                className="btn-remove" 
+                onClick={() => handleRemoveItem('projects', index)}
+              >
+                Remove Project
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+      
+      <div className="section-actions">
+        <button 
+          type="button" 
+          className="btn-add" 
+          onClick={() => handleAddItem('projects')}
+        >
+          Add Project
+        </button>
+      </div>
+
+      <h2>Education</h2>
+      {formData.education.map((edu, index) => (
+        <div key={index} className="section-item">
+          <div className="form-group">
+            <label htmlFor={`edu-degree-${index}`}>Degree/Course*</label>
+            <input
+              type="text"
+              id={`edu-degree-${index}`}
+              value={edu.degree}
+              onChange={(e) => handleArrayItemChange(index, 'education', 'degree', e.target.value)}
+              required
+              placeholder="B.Sc Computer Science"
+            />
+          </div>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor={`edu-institution-${index}`}>Institution*</label>
+              <input
+                type="text"
+                id={`edu-institution-${index}`}
+                value={edu.institution}
+                onChange={(e) => handleArrayItemChange(index, 'education', 'institution', e.target.value)}
+                required
+                placeholder="XYZ University"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor={`edu-year-${index}`}>Year*</label>
+              <input
+                type="text"
+                id={`edu-year-${index}`}
+                value={edu.year}
+                onChange={(e) => handleArrayItemChange(index, 'education', 'year', e.target.value)}
+                required
+                placeholder="2023"
+              />
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor={`edu-percentage-${index}`}>GPA/Percentage</label>
+            <input
+              type="text"
+              id={`edu-percentage-${index}`}
+              value={edu.percentage}
+              onChange={(e) => handleArrayItemChange(index, 'education', 'percentage', e.target.value)}
+              placeholder="3.8 GPA or 85%"
+            />
+          </div>
+          
+          <div className="section-item-actions">
+            {formData.education.length > 1 && (
+              <button 
+                type="button" 
+                className="btn-remove" 
+                onClick={() => handleRemoveItem('education', index)}
+              >
+                Remove Education
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+      
+      <div className="section-actions">
+        <button 
+          type="button" 
+          className="btn-add" 
+          onClick={() => handleAddItem('education')}
+        >
+          Add Education
+        </button>
+      </div>
+
+      <h2>Achievements & Certifications</h2>
+      {formData.achievements.map((achievement, index) => (
+        <div key={index} className="section-item achievement-item">
+          <div className="form-group">
+            <label htmlFor={`achievement-${index}`}>Achievement/Certification {index + 1}</label>
+            <input
+              type="text"
+              id={`achievement-${index}`}
+              value={achievement}
+              onChange={(e) => handleAchievementChange(index, e.target.value)}
+              placeholder="AWS Certified Solutions Architect (2024)"
+            />
+          </div>
+          
+          <div className="section-item-actions">
+            {formData.achievements.length > 1 && (
+              <button 
+                type="button" 
+                className="btn-remove" 
+                onClick={() => handleRemoveItem('achievements', index)}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+      
+      <div className="section-actions">
+        <button 
+          type="button" 
+          className="btn-add" 
+          onClick={() => handleAddItem('achievements')}
+        >
+          Add Achievement
+        </button>
+      </div>
+
+      <div className="form-actions">
+        <button 
+          type="submit" 
+          className="btn-generate" 
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Generating...' : 'Generate Resume'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default ResumeForm;

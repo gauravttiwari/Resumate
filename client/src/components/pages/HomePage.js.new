@@ -1,0 +1,262 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import './HomePage.css'; // We'll create this file for styling
+
+const HomePage = () => {
+  // Animation state
+  const [isVisible, setIsVisible] = useState({
+    hero: false,
+    templates: false,
+    features: false,
+    howItWorks: false,
+    testimonials: false,
+    cta: false
+  });
+
+  // Intersection observer setup
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: '-50px'
+    };
+
+    const observerCallback = (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setIsVisible(prev => ({ ...prev, [entry.target.id]: true }));
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    
+    // Observe all sections
+    const sections = document.querySelectorAll('.animate-section');
+    sections.forEach(section => observer.observe(section));
+
+    return () => sections.forEach(section => observer.unobserve(section));
+  }, []);
+
+  // Sample templates for preview
+  const featuredTemplates = [
+    { 
+      id: 'modern', 
+      name: 'Modern', 
+      description: 'Clean and minimal design for a contemporary look',
+      imgSrc: '/assets/templates/modern-thumb.jpg'
+    },
+    { 
+      id: 'professional', 
+      name: 'Professional', 
+      description: 'Traditional layout for corporate environments',
+      imgSrc: '/assets/templates/professional-thumb.jpg'
+    },
+    { 
+      id: 'creative', 
+      name: 'Creative', 
+      description: 'Unique design for creative fields and portfolios',
+      imgSrc: '/assets/templates/creative-thumb.jpg'
+    },
+    { 
+      id: 'pro-profile', 
+      name: 'ProProfile', 
+      description: 'Corporate style with dark sidebar for impact',
+      imgSrc: '/assets/templates/pro-profile-thumb.jpg'
+    },
+  ];
+
+  // Features list
+  const features = [
+    {
+      title: 'Professional Templates',
+      description: 'Choose from a variety of expertly designed templates that make your resume stand out',
+      icon: (
+        <svg className="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Real-time Preview',
+      description: 'See exactly how your resume will look as you build it with our instant preview feature',
+      icon: (
+        <svg className="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      ),
+    },
+    {
+      title: 'ATS-Optimized',
+      description: 'Our templates are designed to pass through Applicant Tracking Systems with ease',
+      icon: (
+        <svg className="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Expert Guidance',
+      description: 'Get helpful tips and suggestions to improve your resume and increase your chances of getting hired',
+      icon: (
+        <svg className="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      ),
+    },
+  ];
+
+  // Process steps
+  const steps = [
+    {
+      number: '01',
+      title: 'Select a Template',
+      description: 'Choose from our collection of professional templates designed for different industries and career levels',
+    },
+    {
+      number: '02',
+      title: 'Fill in Your Details',
+      description: 'Our intuitive editor makes it easy to add your personal information, experience, skills, and more',
+    },
+    {
+      number: '03',
+      title: 'Customize & Download',
+      description: 'Personalize fonts, colors, and layout, then download your resume in PDF format ready to send to employers',
+    },
+  ];
+
+  return (
+    <div className="homepage-container">
+      {/* Hero Section */}
+      <section id="hero" className="hero-section animate-section">
+        <div className="hero-background"></div>
+        
+        <div className="container">
+          <div className={`hero-content ${isVisible.hero ? 'visible' : ''}`}>
+            <div className="hero-text">
+              <span className="hero-badge">Professional Resume Builder</span>
+              <h1 className="hero-title">
+                Create an impressive 
+                <span className="highlight"> resume </span> 
+                in minutes
+              </h1>
+              <p className="hero-description">
+                Build a standout resume that gets you noticed. Choose from professional templates, customize with ease, and land your dream job.
+              </p>
+              <div className="hero-buttons">
+                <Link to="/create" className="btn btn-primary">
+                  Create Your Resume
+                </Link>
+                <Link to="/templates" className="btn btn-secondary">
+                  Browse Templates
+                </Link>
+              </div>
+            </div>
+            
+            <div className="hero-image">
+              <img src="/assets/images/resume-preview.png" alt="Resume preview" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Templates Section */}
+      <section id="templates" className="templates-section animate-section">
+        <div className="container">
+          <div className={`section-header ${isVisible.templates ? 'visible' : ''}`}>
+            <h2 className="section-title">Professional Resume Templates</h2>
+            <p className="section-description">
+              Choose from our collection of professionally designed templates
+            </p>
+          </div>
+
+          <div className="templates-grid">
+            {featuredTemplates.map(template => (
+              <div key={template.id} className="template-card">
+                <div className="template-image">
+                  <img src={template.imgSrc} alt={template.name} />
+                  <div className="template-overlay">
+                    <Link to={`/templates/${template.id}`} className="template-button">
+                      Use this template
+                    </Link>
+                  </div>
+                </div>
+                <h3 className="template-name">{template.name}</h3>
+                <p className="template-description">{template.description}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="view-more">
+            <Link to="/templates" className="btn btn-outline">
+              View All Templates
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="features-section animate-section">
+        <div className="container">
+          <div className={`section-header ${isVisible.features ? 'visible' : ''}`}>
+            <h2 className="section-title">Why Choose ResuMate</h2>
+            <p className="section-description">
+              Features designed to help you create the perfect resume
+            </p>
+          </div>
+
+          <div className="features-grid">
+            {features.map((feature, index) => (
+              <div key={index} className="feature-card">
+                <div className="feature-icon-wrapper">
+                  {feature.icon}
+                </div>
+                <h3 className="feature-title">{feature.title}</h3>
+                <p className="feature-description">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section id="howItWorks" className="process-section animate-section">
+        <div className="container">
+          <div className={`section-header ${isVisible.howItWorks ? 'visible' : ''}`}>
+            <h2 className="section-title">How It Works</h2>
+            <p className="section-description">
+              Create your perfect resume in three simple steps
+            </p>
+          </div>
+
+          <div className="steps-container">
+            {steps.map((step, index) => (
+              <div key={index} className="step-card">
+                <div className="step-number">{step.number}</div>
+                <h3 className="step-title">{step.title}</h3>
+                <p className="step-description">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section id="cta" className="cta-section animate-section">
+        <div className="container">
+          <div className={`cta-content ${isVisible.cta ? 'visible' : ''}`}>
+            <h2 className="cta-title">Ready to land your dream job?</h2>
+            <p className="cta-description">
+              Join thousands of job seekers who have successfully created standout resumes with ResuMate
+            </p>
+            <Link to="/create" className="btn btn-cta">
+              Create Your Resume Now
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default HomePage;

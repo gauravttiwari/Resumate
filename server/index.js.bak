@@ -1,0 +1,277 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json({limit: '5mb'}));  // Increased limit for larger files
+
+const OUTPUT_DIR = path.join(__dirname, '../output');
+
+// Ensure output directory exists
+if (!fs.existsSync(OUTPUT_DIR)) {
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+}
+
+app.post('/generate', (req, res) => {
+  try {
+    console.log('Received resume generation request');
+    
+    // Log the entire request body for debugging
+    console.log('Request body:', JSON.stringify(req.body).substring(0, 200) + '...');
+    
+    // Validate request body
+    const { resumeData, filename: rawFilename, plainText, template = 'modern' } = req.body;
+    
+    if (!resumeData) {
+      console.error('No resume data provided');
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'No resume data provided' });
+    }
+    
+    // Sanitize filename and provide default if not provided
+    const filename = rawFilename 
+      ? rawFilename.replace(/[^a-z0-9_-]/gi, '_') 
+      : `resume_${Date.now()}`;
+    
+    console.log(`Generating resume with filename: ${filename}, template: ${template}`);
+    
+    // Create output directory if it doesn't exist
+    if (!fs.existsSync(OUTPUT_DIR)) {
+      fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+    }
+    
+    // Handle profile picture (if any)
+    if (resumeData.profilePic) {
+      const base64Data = resumeData.profilePic;
+      const matches = base64Data.match(/^data:image\/([a-zA-Z]+);base64,/);
+      
+      if (matches && matches.length > 1) {
+        const imageType = matches[1];
+        const base64Image = base64Data.replace(/^data:image\/[^;]+;base64,/, '');
+        const imageFileName = `${filename}_profile.${imageType}`;
+        const imagePath = path.join(OUTPUT_DIR, imageFileName);
+        
+        // Save image file
+        fs.writeFileSync(imagePath, base64Image, 'base64');
+        console.log(`Profile image saved to ${imagePath}`);
+        
+        // Replace base64 data with file path
+        resumeData.profilePicPath = imageFileName;
+      }
+    }
+    
+    // Save JSON data for future use
+    const jsonPath = path.join(OUTPUT_DIR, `${filename}.json`);
+    fs.writeFileSync(jsonPath, JSON.stringify(resumeData, null, 2));
+    console.log(`Resume data saved to ${jsonPath}`);
+    
+    // Save plain text version
+    if (plainText) {
+      const txtPath = path.join(OUTPUT_DIR, `${filename}.txt`);
+      fs.writeFileSync(txtPath, plainText);
+      console.log(`Plain text file saved to ${txtPath}`);
+    }
+    const beginDocPos = latex.indexOf('\\begin{document}');
+    const endDocPos = latex.indexOf('\\end{document}');
+    console.log(`\\begin{document} position: ${beginDocPos}, \\end{document} position: ${endDocPos}`);
+    
+    // Check if there's content before \begin{document} that might be causing issues
+    if (beginDocPos > 0) {
+      console.log(`Content before \\begin{document}: ${latex.substring(0, beginDocPos)}`);
+    }
+    
+    // Check if pdflatex is installed
+    exec('pdflatex --version', (checkError, checkStdout, checkStderr) => {
+      if (checkError) {
+        console.error('pdflatex is not installed or not in PATH:', checkError.message);
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(500).json({
+          error: 'LaTeX not installed',
+          details: 'pdflatex is not installed on this system or not in the PATH. Please install LaTeX (such as MiKTeX or TeX Live) to generate PDF resumes.',
+          installationGuide: {
+            windows: 'Visit https://miktex.org/download to download and install MiKTeX.',
+            mac: 'Run "brew install --cask mactex" with Homebrew or visit https://www.tug.org/mactex/.',
+            linux: 'Run "sudo apt-get install texlive-full" on Ubuntu/Debian or the equivalent for your distribution.'
+          },
+          texContent: fs.readFileSync(texPath, 'utf8').substring(0, 500) + '...' // Provide the LaTeX source
+        });
+      } else {
+        // pdflatex is installed, generate PDF
+        console.log('Starting PDF generation with pdflatex');
+        
+        // Prepare and sanitize paths for command line
+        const sanitizedOutputDir = OUTPUT_DIR.replace(/(["\s'$`\\])/g, '\\$1');
+        const sanitizedTexPath = texPath.replace(/(["\s'$`\\])/g, '\\$1');
+        
+        // Log the exact command being executed
+        const pdflatexCommand = `pdflatex -interaction=nonstopmode -output-directory="${sanitizedOutputDir}" "${sanitizedTexPath}"`;
+        console.log('Executing command:', pdflatexCommand);
+        
+        // Execute with options array to avoid shell parsing issues
+        exec(pdflatexCommand, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+          if (error) {
+            console.error('LaTeX compilation error:', error);
+            console.error('LaTeX stdout:', stdout);
+            console.error('LaTeX stderr:', stderr);
+            
+            // Try to read the log file for more detailed error information
+            let errorDetails = error.message || 'Unknown LaTeX error';
+            let logContent = '';
+            
+            try {
+              const logPath = path.join(OUTPUT_DIR, `${filename}.log`);
+              if (fs.existsSync(logPath)) {
+                logContent = fs.readFileSync(logPath, 'utf8');
+                console.error('LaTeX log file content:', logContent);
+                
+                // Extract the relevant error message from the log if possible
+                const errorPatterns = [
+                  /(! LaTeX Error:.+?)(?=\n\n|\n[^\n])/s,
+                  /(! Undefined control sequence.+?)(?=\n\n|\n[^\n])/s,
+                  /(! Missing .+?)(?=\n\n|\n[^\n])/s,
+                  /(! Package .+? Error:.+?)(?=\n\n|\n[^\n])/s,
+                  /(! Font .+? Error:.+?)(?=\n\n|\n[^\n])/s,
+                  /(LaTeX Warning:.+?)(?=\n\n|\n[^\n])/s
+                ];
+                
+                // Common error explanations for user-friendly messages
+                const errorExplanations = {
+                  'Missing \\begin{document}': 'The document structure is incorrect. Please check the template format.',
+                  'Undefined control sequence': 'The template contains commands that LaTeX doesn\'t recognize. Try a different template.',
+                  'File `': 'A required package is missing. Please install it via MiKTeX Console.',
+                  'Emergency stop': 'A critical error occurred in the LaTeX compilation process.',
+                  'LaTeX Warning: Command': 'The template contains warnings that might affect the output quality.',
+                  'Overfull \\hbox': 'The content may extend beyond the page margins in some areas.'
+                };
+                
+                for (const pattern of errorPatterns) {
+                  const match = logContent.match(pattern);
+                  if (match && match[1]) {
+                    errorDetails = match[1].replace(/\n/g, ' ').trim();
+                    
+                    // Find a user-friendly explanation for this error
+                    let userFriendlyMessage = '';
+                    for (const [errorKey, explanation] of Object.entries(errorExplanations)) {
+                      if (errorDetails.includes(errorKey)) {
+                        userFriendlyMessage = explanation;
+                        break;
+                      }
+                    }
+                    
+                    // Add user-friendly message if found
+                    if (userFriendlyMessage) {
+                      errorDetails = `${errorDetails} (${userFriendlyMessage})`;
+                    }
+                    
+                    // For missing package errors, add installation guidance
+                    if (errorDetails.includes("File `") && errorDetails.includes("' not found")) {
+                      const packageMatch = errorDetails.match(/File `([^']+)' not found/);
+                      if (packageMatch && packageMatch[1]) {
+                        const packageName = packageMatch[1].replace('.sty', '');
+                        errorDetails += ` (Missing package: ${packageName}. Please install it using MiKTeX Console.)`;
+                      }
+                    }
+                    break;
+                  }
+                }
+              }
+            } catch (logError) {
+              console.error('Error reading log file:', logError);
+            }
+            
+            // Set proper headers for JSON response
+            res.setHeader('Content-Type', 'application/json');
+            return res.status(500).json({ 
+              error: 'LaTeX compilation failed', 
+              details: errorDetails,
+              command: pdflatexCommand,
+              documentTags: {
+                hasBeginDocument: latex.includes('\\begin{document}'),
+                hasEndDocument: latex.includes('\\end{document}'),
+                beginPosition: latex.indexOf('\\begin{document}'),
+                endPosition: latex.indexOf('\\end{document}')
+              },
+              log: logContent.substring(0, 1000) // Include part of the log for debugging
+            });
+          } else {
+    // Return success response with file paths
+    res.setHeader('Content-Type', 'application/json');
+    res.json({
+      message: 'Resume data saved successfully',
+      json: `${filename}.json`,
+      txt: plainText ? `${filename}.txt` : null
+    });
+  } catch (error) {
+    console.error('Unexpected error during resume generation:', error);
+    // Make sure the error message is always a string
+    const errorMessage = error.message || 'Unknown error';
+    const errorStack = error.stack || '';
+    
+    // Ensure proper headers for JSON response
+    res.setHeader('Content-Type', 'application/json');
+    res.status(500).json({ 
+      error: 'Server error', 
+      details: errorMessage,
+      stack: process.env.NODE_ENV === 'development' ? errorStack : undefined
+    });
+  }
+});
+
+// Check for LaTeX installation
+app.get('/check-latex', (req, res) => {
+  console.log('Checking for LaTeX installation');
+  
+  exec('pdflatex --version', (error, stdout, stderr) => {
+    res.setHeader('Content-Type', 'application/json');
+    
+    if (error) {
+      console.log('LaTeX is not installed:', error.message);
+      return res.json({
+        installed: false,
+        message: 'LaTeX is not installed or not in PATH. Please install LaTeX to generate PDF resumes.',
+        error: error.message
+      });
+    }
+    
+    // Extract version information from stdout
+    const versionMatch = stdout.match(/pdfTeX\s+([\d.]+)/);
+    const version = versionMatch ? versionMatch[1] : 'unknown';
+    
+    console.log('LaTeX is installed, version:', version);
+    return res.json({
+      installed: true,
+      version: version,
+      details: stdout.split('\n')[0]
+    });
+  });
+});
+
+app.get('/download/:type/:filename', (req, res) => {
+  const { type, filename } = req.params;
+  const filePath = path.join(OUTPUT_DIR, `${filename}.${type}`);
+  
+  if (fs.existsSync(filePath)) {
+    // Set appropriate content type
+    const contentTypes = {
+      'pdf': 'application/pdf',
+      'tex': 'application/x-tex',
+      'txt': 'text/plain'
+    };
+    
+    res.setHeader('Content-Type', contentTypes[type] || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}.${type}`);
+    res.download(filePath);
+  } else {
+    // Return JSON response for the 404 error
+    res.setHeader('Content-Type', 'application/json');
+    res.status(404).json({ 
+      error: 'File not found',
+      details: `The requested file ${filename}.${type} does not exist.` 
+    });
+  }
+});
+
+app.listen(5000, () => console.log('Server running on port 5000'));

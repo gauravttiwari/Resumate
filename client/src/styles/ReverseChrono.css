@@ -1,0 +1,165 @@
+/**
+ * Reverse-Chronological Resume Template - ResuMate Pro
+ * ATS-friendly, clean, professional template design
+ */
+
+.resume-template-reverse-chrono {
+  /* Base template styles */
+  font-family: Arial, sans-serif;
+  font-size: 12pt;
+  color: #000;
+  background-color: #fff;
+  max-width: 8.5in;
+  margin: 0 auto;
+  padding: 1in;
+  line-height: 1.5;
+}
+
+/* Header section */
+.resume-template-reverse-chrono .resume-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.resume-template-reverse-chrono .resume-name {
+  font-size: 24pt;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.resume-template-reverse-chrono .contact-info {
+  font-size: 11pt;
+  margin-bottom: 0.5rem;
+}
+
+.resume-template-reverse-chrono .contact-info span {
+  margin-right: 0.5rem;
+}
+
+/* Main section headers */
+.resume-template-reverse-chrono .section-title {
+  text-transform: uppercase;
+  font-size: 14pt;
+  font-weight: bold;
+  border-bottom: 1px solid #000;
+  padding-bottom: 0.25rem;
+  margin: 1.5rem 0 0.75rem 0;
+  color: #000;
+}
+
+/* Professional Summary */
+.resume-template-reverse-chrono .summary-text {
+  margin-bottom: 1rem;
+  text-align: justify;
+}
+
+/* Technical Skills */
+.resume-template-reverse-chrono .skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.resume-template-reverse-chrono .skills-list span {
+  background-color: #f8f8f8;
+  padding: 0.2rem 0.5rem;
+  margin: 0 0.5rem 0.5rem 0;
+  border-radius: 3px;
+  font-size: 10.5pt;
+}
+
+/* Work Experience */
+.resume-template-reverse-chrono .experience-item {
+  margin-bottom: 1.25rem;
+}
+
+.resume-template-reverse-chrono .experience-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.resume-template-reverse-chrono .experience-title {
+  font-weight: bold;
+}
+
+.resume-template-reverse-chrono .experience-company {
+  font-weight: bold;
+}
+
+.resume-template-reverse-chrono .experience-duration {
+  font-style: italic;
+}
+
+.resume-template-reverse-chrono .experience-description {
+  margin-top: 0.25rem;
+}
+
+.resume-template-reverse-chrono .experience-description ul {
+  padding-left: 1.5rem;
+  margin: 0.25rem 0;
+}
+
+/* Projects section */
+.resume-template-reverse-chrono .project-item {
+  margin-bottom: 1rem;
+}
+
+.resume-template-reverse-chrono .project-title {
+  font-weight: bold;
+}
+
+.resume-template-reverse-chrono .project-description {
+  margin-top: 0.25rem;
+}
+
+/* Education section */
+.resume-template-reverse-chrono .education-item {
+  margin-bottom: 0.75rem;
+}
+
+.resume-template-reverse-chrono .education-degree {
+  font-weight: bold;
+}
+
+.resume-template-reverse-chrono .education-institution {
+  font-style: italic;
+}
+
+/* Certifications & Achievements */
+.resume-template-reverse-chrono .cert-achievements-list {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.resume-template-reverse-chrono .cert-achievements-list li {
+  margin-bottom: 0.5rem;
+}
+
+/* Print styles - for PDF generation */
+@media print {
+  .resume-template-reverse-chrono {
+    padding: 0;
+  }
+}
+
+/* Profile picture (handle it in an ATS-friendly way) */
+.resume-template-reverse-chrono .profile-pic {
+  display: none; /* Hide by default for ATS compliance */
+}
+
+/* Toggle class for showing profile pic in preview */
+.resume-template-reverse-chrono.show-profile .profile-pic {
+  display: block;
+  width: 100px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.resume-template-reverse-chrono.show-profile .profile-pic img {
+  width: 100%;
+  height: auto;
+}
