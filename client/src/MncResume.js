@@ -81,7 +81,7 @@ const MncResume = React.forwardRef(({ data, template = 'professional' }, ref) =>
                   <div className="job-duration">{exp.duration}</div>
                 </div>
                 <ul className="job-duties">
-                  {exp.description.split('\n').map((duty, i) => 
+                  {exp.description && exp.description.split('\n').map((duty, i) => 
                     duty.trim() && <li key={i}>{duty.trim()}</li>
                   )}
                 </ul>
@@ -100,7 +100,7 @@ const MncResume = React.forwardRef(({ data, template = 'professional' }, ref) =>
               <div key={index} className="project-item">
                 <h3 className="project-title">{project.title}</h3>
                 <ul className="project-details">
-                  {project.description.split('\n').map((detail, i) => 
+                  {project.description && project.description.split('\n').map((detail, i) => 
                     detail.trim() && <li key={i}>{detail.trim()}</li>
                   )}
                 </ul>

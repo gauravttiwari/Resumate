@@ -1,5 +1,325 @@
 /* ResumeTypeSelector.css */
+/* Modern Resume Type Selector Styles */
+
 .resume-type-selector {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--gray-50) 0%, white 50%, var(--primary-50) 100%);
+  padding: var(--space-12) var(--space-6) var(--space-20) var(--space-6);
+  position: relative;
+}
+
+.resume-type-selector::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%236366f1" fill-opacity="0.03"><circle cx="30" cy="30" r="3"/></g></svg>') repeat;
+  pointer-events: none;
+}
+
+/* Selector Header */
+.selector-header {
+  text-align: center;
+  margin-bottom: var(--space-16);
+  position: relative;
+  z-index: 1;
+}
+
+.selector-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: var(--font-bold);
+  color: var(--gray-900);
+  margin-bottom: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.title-icon {
+  font-size: 1.2em;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.selector-description {
+  font-size: var(--text-xl);
+  color: var(--gray-600);
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Resume Types Grid */
+.resume-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: var(--space-8);
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Resume Type Cards */
+.resume-type-card {
+  background: white;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--gray-200);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-type-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-2xl);
+  border-color: var(--primary-200);
+}
+
+.resume-type-card:hover .card-gradient-bg {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.resume-type-card:hover .type-icon {
+  transform: scale(1.2);
+}
+
+.resume-type-card:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+/* Card Header */
+.card-header {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-50);
+}
+
+.card-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--card-gradient);
+  opacity: 0.8;
+  transition: all var(--transition-slow);
+  transform: scale(1);
+}
+
+.type-icon-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+}
+
+.type-icon {
+  font-size: 2.5rem;
+  transition: transform var(--transition-normal);
+}
+
+/* Card Content */
+.card-content {
+  flex: 1;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--gray-900);
+  margin: 0;
+  text-align: center;
+}
+
+.card-description {
+  color: var(--gray-600);
+  line-height: 1.6;
+  text-align: center;
+  margin: 0;
+  flex: 1;
+}
+
+/* Card Features */
+.card-features {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-4) 0 0 0;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  font-size: var(--text-sm);
+  color: var(--gray-700);
+}
+
+.feature-check {
+  color: var(--success-500);
+  font-weight: var(--font-bold);
+  font-size: var(--text-base);
+}
+
+/* Card Footer */
+.card-footer {
+  padding: var(--space-6);
+  border-top: 1px solid var(--gray-100);
+  background: var(--gray-50);
+}
+
+.select-type-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  position: relative;
+  overflow: hidden;
+}
+
+.select-type-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left var(--transition-slow);
+}
+
+.select-type-btn:hover::before {
+  left: 100%;
+}
+
+.select-type-btn:hover {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.select-type-btn:active {
+  transform: translateY(0);
+}
+
+.btn-arrow {
+  transition: transform var(--transition-normal);
+  font-size: 1.2em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .resume-type-selector {
+    padding: var(--space-8) var(--space-4) var(--space-12) var(--space-4);
+  }
+  
+  .selector-title {
+    font-size: var(--text-3xl);
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .selector-description {
+    font-size: var(--text-lg);
+  }
+  
+  .resume-types-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  
+  .resume-type-card {
+    height: auto;
+    min-height: 350px;
+  }
+  
+  .card-header {
+    height: 100px;
+  }
+  
+  .type-icon-wrapper {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .type-icon {
+    font-size: 2rem;
+  }
+  
+  .card-content {
+    padding: var(--space-4);
+  }
+  
+  .card-footer {
+    padding: var(--space-4);
+  }
+}
+
+/* Animation for cards entrance */
+.resume-type-card {
+  animation: slideInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.resume-type-card:nth-child(1) { animation-delay: 0.1s; }
+.resume-type-card:nth-child(2) { animation-delay: 0.2s; }
+.resume-type-card:nth-child(3) { animation-delay: 0.3s; }
+.resume-type-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Legacy styles for compatibility */
+.home-button-container {
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;

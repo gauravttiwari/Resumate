@@ -17,6 +17,7 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that the AI provides relevant keyword and content improvement suggestions.
 
 **Steps**:
+
 1. Navigate to the resume form page
 2. Fill in basic resume information (name, contact info, job title, etc.)
 3. Add some work experience entries with simple descriptions
@@ -37,6 +38,7 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that the AI accurately scores the resume's ATS compatibility.
 
 **Steps**:
+
 1. Create a resume with varying levels of completeness
 2. Click on the "ATS Score" tab in the AI sidebar
 3. Observe the overall score and section scores
@@ -51,6 +53,7 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that the AI generates professional summaries based on resume content.
 
 **Steps**:
+
 1. Create a resume with work experience, skills, and education
 2. Click on the "Summary Generator" tab in the AI sidebar
 3. Click "Generate Professional Summary"
@@ -65,6 +68,7 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that the AI recommends templates based on job type and resume content.
 
 **Steps**:
+
 1. Create resumes for different job types (tech, non-tech, medical, diploma)
 2. Navigate to the template selection page
 3. Enable AI recommendations
@@ -80,6 +84,7 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that the AI chat provides helpful responses to resume-related questions.
 
 **Steps**:
+
 1. Click on the chat icon in the corner of any page
 2. Ask various resume-related questions:
    - "How can I improve my work experience section?"
@@ -98,10 +103,12 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that AI responses are returned within an acceptable timeframe.
 
 **Steps**:
+
 1. Use a stopwatch to time how long each AI feature takes to respond
 2. Test with varying amounts of resume content (minimal, average, extensive)
 
 **Expected Result**: AI responses should typically be returned within:
+
 - Optimization: 3-5 seconds
 - ATS Scoring: 2-4 seconds
 - Summary Generation: 2-3 seconds
@@ -113,6 +120,7 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that the AI response caching mechanism works properly.
 
 **Steps**:
+
 1. Make identical AI requests in succession
 2. Time the first and subsequent responses
 
@@ -125,6 +133,7 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that the application handles API errors gracefully.
 
 **Steps**:
+
 1. Temporarily invalidate your API key in the `.env` file
 2. Try to use each AI feature
 3. Verify that appropriate error messages are displayed
@@ -137,6 +146,7 @@ Before testing, ensure you have:
 **Test Scenario**: Verify that the application handles extremely large resume content.
 
 **Steps**:
+
 1. Create a resume with unusually large content in each section
 2. Try to use each AI feature with this large resume
 
@@ -145,6 +155,7 @@ Before testing, ensure you have:
 ## Bug Reporting
 
 If you encounter any issues during testing, please report them with:
+
 1. The specific feature being tested
 2. Steps to reproduce the issue
 3. Expected vs. actual behavior

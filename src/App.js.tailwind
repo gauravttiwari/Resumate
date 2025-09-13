@@ -1,0 +1,437 @@
+import React, { useState, useRef } from 'react';
+import ResumeForm from './ResumeForm';
+import TemplateSelector from './TemplateSelector';
+import MncResume from './MncResume';
+import ReverseChronoResume from './ReverseChronoResume';
+import ModernSidebarResume from './ModernSidebarResume';
+import ProfessionalCleanResume from './ProfessionalCleanResume';
+import JobFitProResume from './JobFitProResume';
+import ProProfileResume from './ProProfileResume';
+import HomeScreen from './HomeScreen';
+import ResumeTypeSelector from './ResumeTypeSelector';
+// Template-specific styles still needed for resume rendering
+import './styles/ReverseChrono.css';
+import './styles/ModernSidebar.css';
+import './styles/ProfessionalClean.css';
+import './styles/JobFitPro.css';
+import './styles/ProProfile.css';
+
+function App() {
+  const [resumeData, setResumeData] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState('reverse-chrono');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [activeView, setActiveView] = useState('home'); // 'home', 'type-selector', 'form', 'templates', or 'preview'
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [resumeType, setResumeType] = useState(null); // 'technical', 'medical', 'diploma', or 'nontechnical'
+  const resumePreviewRef = useRef(null);
+  
+  // Handle form submission
+  const handleFormSubmit = (formData) => {
+    setIsGenerating(true);
+    
+    // Store the form data
+    setResumeData(formData);
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      setIsGenerating(false);
+      setActiveView('preview');
+      showToast('Resume generated successfully!');
+    }, 1000);
+  };
+
+  // Update form data as user types
+  const handleFormChange = (formData) => {
+    setResumeData(formData);
+  };
+  
+  // Handle template selection change
+  const handleTemplateChange = (template) => {
+    setSelectedTemplate(template);
+    // If we already have resume data, show a success message
+    if (resumeData) {
+      showToast(`Template changed to ${template}`, 'success', 2000);
+    }
+  };
+  
+  // Show toast notification
+  const showToast = (message, type = 'success', duration = 5000) => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, duration);
+  };
+  
+  // Handle color change for templates that support it
+  const handleColorChange = (color) => {
+    if (!resumeData) return;
+    
+    setResumeData({
+      ...resumeData,
+      sidebarColor: color
+    });
+    
+    showToast('Resume color updated!', 'success', 2000);
+  };
+  
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    try {
+      setIsGenerating(true);
+      
+      // Import the libraries for PDF generation
+      const html2canvas = await import('html2canvas').then(module => module.default);
+      const { jsPDF } = await import('jspdf');
+      
+      const resumeElement = document.getElementById('resume-to-pdf');
+      
+      if (!resumeElement) {
+        throw new Error('Resume element not found');
+      }
+      
+      // Process images before capturing
+      const images = resumeElement.querySelectorAll('img');
+      // Wait for all images to load
+      const imagePromises = Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve; // Continue even if image fails
+        });
+      });
+      
+      await Promise.all(imagePromises);
+      
+      // Capture the resume as canvas
+      const canvas = await html2canvas(resumeElement, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true, // Allow loading cross-origin images
+        allowTaint: true, // Allow tainted canvas for security constraints
+        logging: false,
+        backgroundColor: '#ffffff',
+        imageTimeout: 15000 // Longer timeout for images
+      });
+      
+      // Calculate dimensions to maintain aspect ratio
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // Add image to PDF
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Generate multiple pages if resume is longer than A4
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      // Only add additional pages if the resume is longer than one page
+      if (heightLeft > pageHeight) {
+        while (heightLeft > pageHeight) {
+          position = heightLeft - pageHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+      }
+      
+      // Save the PDF
+      const fileName = resumeData && resumeData.name ? 
+        `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf` : 
+        `Resume_${new Date().getTime()}.pdf`;
+      
+      pdf.save(fileName);
+      
+      setIsGenerating(false);
+      showToast('PDF downloaded successfully!');
+      
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      setIsGenerating(false);
+      showToast('Failed to generate PDF. Please try again.', 'danger');
+    }
+  };
+
+  // Color options for templates that support color customization
+  const colorOptions = [
+    { name: 'Default Blue', value: '#1a365d' },
+    { name: 'Corporate Navy', value: '#0c2340' },
+    { name: 'Professional Maroon', value: '#800000' },
+    { name: 'Forest Green', value: '#2f4f4f' },
+    { name: 'Deep Purple', value: '#4b0082' },
+    { name: 'Executive Gray', value: '#333333' }
+  ];
+
+  // Check if current template supports color customization
+  const supportsColorCustomization = ['modern-sidebar', 'jobfit-pro', 'pro-profile'].includes(selectedTemplate);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between">
+          <div className="flex items-center mb-4 md:mb-0">
+            <h1 className="text-3xl font-bold text-primary-700">ResuMate</h1>
+            <p className="ml-4 text-secondary-600 hidden sm:block">Professional MNC-approved Resume Builder</p>
+          </div>
+          <nav className="flex flex-wrap gap-2">
+            <button 
+              className={`px-4 py-2 rounded-md transition-colors ${activeView === 'home' 
+                ? 'bg-primary-100 text-primary-800 font-medium' 
+                : 'text-secondary-600 hover:bg-primary-50 hover:text-primary-700'}`}
+              onClick={() => setActiveView('home')}
+            >
+              Home
+            </button>
+            {resumeType && (
+              <button 
+                className={`px-4 py-2 rounded-md transition-colors ${activeView === 'form' 
+                  ? 'bg-primary-100 text-primary-800 font-medium' 
+                  : 'text-secondary-600 hover:bg-primary-50 hover:text-primary-700'}`}
+                onClick={() => setActiveView('form')}
+              >
+                Create Resume
+              </button>
+            )}
+            <button 
+              className={`px-4 py-2 rounded-md transition-colors ${activeView === 'templates' 
+                ? 'bg-primary-100 text-primary-800 font-medium' 
+                : 'text-secondary-600 hover:bg-primary-50 hover:text-primary-700'}`}
+              onClick={() => resumeType ? setActiveView('templates') : showToast('Please select a resume type first', 'warning')}
+            >
+              Templates
+            </button>
+            {resumeData && (
+              <button 
+                className={`px-4 py-2 rounded-md transition-colors ${activeView === 'preview' 
+                  ? 'bg-primary-100 text-primary-800 font-medium' 
+                  : 'text-secondary-600 hover:bg-primary-50 hover:text-primary-700'}`}
+                onClick={() => setActiveView('preview')}
+              >
+                Preview
+              </button>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        {activeView === 'home' && (
+          <div className="max-w-4xl mx-auto">
+            <HomeScreen onStartClick={() => setActiveView('type-selector')} />
+          </div>
+        )}
+        
+        {activeView === 'type-selector' && (
+          <div className="max-w-4xl mx-auto">
+            <ResumeTypeSelector 
+              onSelect={(type) => {
+                setResumeType(type);
+                setActiveView('form');
+              }}
+            />
+          </div>
+        )}
+        
+        {activeView === 'form' && (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Create Your ATS-Friendly Resume for Top MNCs</h2>
+              <p className="text-gray-600 mb-6">
+                Build a professional resume optimized for Applicant Tracking Systems 
+                used by companies like Google, Microsoft, Amazon, and other tech giants.
+              </p>
+              {resumeType && (
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="text-gray-700">Selected Resume Type: </span>
+                      <strong className="font-medium">
+                        {resumeType === 'technical' ? 'Technical' : 
+                         resumeType === 'medical' ? 'Medical' : 
+                         resumeType === 'diploma' ? 'Diploma/Certificate' : 'Non-Technical'}
+                      </strong>
+                    </div>
+                    <button 
+                      onClick={() => setActiveView('type-selector')} 
+                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-sm"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <ResumeForm 
+                initialData={resumeData} // Pass existing resume data when editing
+                onSubmit={handleFormSubmit} 
+                onChange={handleFormChange}
+                isSubmitting={isGenerating}
+                resumeType={resumeType}
+              />
+            </div>
+          </div>
+        )}
+        
+        {activeView === 'templates' && (
+          <div className="max-w-5xl mx-auto">
+            <TemplateSelector
+              selectedTemplate={selectedTemplate}
+              onTemplateChange={handleTemplateChange}
+            />
+            {resumeData && (
+              <div className="flex justify-center mt-8">
+                <button 
+                  className="px-6 py-3 bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 transition-colors shadow-sm"
+                  onClick={() => setActiveView('preview')}
+                >
+                  Preview Resume
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {activeView === 'preview' && resumeData ? (
+          <div className="max-w-5xl mx-auto">
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Resume Preview</h2>
+                
+                <div className="flex flex-wrap gap-3">
+                  <button 
+                    className="px-4 py-2 bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 transition-colors"
+                    onClick={handleDownloadPDF}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? 'Generating PDF...' : 'Download PDF'}
+                  </button>
+                  <button 
+                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors"
+                    onClick={() => setActiveView('form')}
+                  >
+                    Edit Resume
+                  </button>
+                  <button 
+                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors"
+                    onClick={() => setActiveView('templates')}
+                  >
+                    Change Template
+                  </button>
+                </div>
+              </div>
+              
+              {/* Color Customization Options */}
+              {supportsColorCustomization && (
+                <div className="mb-6 pb-4 border-b border-gray-200">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Customize Colors:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {colorOptions.map((color, index) => (
+                      <button
+                        key={index}
+                        className="w-8 h-8 rounded-full border-2 border-white hover:scale-110 transition-transform shadow-sm"
+                        title={color.name}
+                        style={{ backgroundColor: color.value }}
+                        onClick={() => handleColorChange(color.value)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Resume Preview */}
+              <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[800px]" id="resume-to-pdf">
+                {selectedTemplate === 'reverse-chrono' ? (
+                  <ReverseChronoResume
+                    ref={resumePreviewRef}
+                    data={resumeData}
+                    showProfile={true}
+                  />
+                ) : selectedTemplate === 'modern-sidebar' ? (
+                  <ModernSidebarResume
+                    ref={resumePreviewRef}
+                    data={resumeData}
+                    showProfile={true}
+                  />
+                ) : selectedTemplate === 'professional-clean' ? (
+                  <ProfessionalCleanResume
+                    ref={resumePreviewRef}
+                    data={resumeData}
+                    showProfile={true}
+                  />
+                ) : selectedTemplate === 'jobfit-pro' ? (
+                  <JobFitProResume
+                    ref={resumePreviewRef}
+                    data={resumeData}
+                    showProfile={true}
+                  />
+                ) : selectedTemplate === 'pro-profile' ? (
+                  <ProProfileResume
+                    ref={resumePreviewRef}
+                    data={resumeData}
+                    showProfile={true}
+                  />
+                ) : (
+                  <MncResume 
+                    ref={resumePreviewRef}
+                    data={resumeData} 
+                    template={selectedTemplate} 
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        ) : activeView === 'preview' && (
+          <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">No Resume Data</h2>
+            <p className="text-gray-600 mb-6">Please fill out the resume form first.</p>
+            <button 
+              className="px-6 py-3 bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 transition-colors"
+              onClick={() => setActiveView('form')}
+            >
+              Create Resume
+            </button>
+          </div>
+        )}
+      </main>
+
+      {/* Toast notification */}
+      {toast.show && (
+        <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-md shadow-lg flex items-center justify-between min-w-[300px] z-50
+          ${toast.type === 'success' ? 'bg-green-500 text-white' : 
+            toast.type === 'warning' ? 'bg-yellow-500 text-white' : 
+            'bg-red-500 text-white'}`}>
+          <span>{toast.message}</span>
+          <button 
+            onClick={() => setToast({ ...toast, show: false })}
+            className="ml-4 text-white hover:text-gray-100"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <footer className="bg-white border-t border-gray-200 py-6 mt-12">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-600 mb-4 md:mb-0">
+              &copy; {new Date().getFullYear()} ResuMate - ATS-Optimized Resume Builder
+            </p>
+            <div className="flex gap-6">
+              <a href="#privacy" className="text-primary-600 hover:text-primary-800 transition-colors">Privacy Policy</a>
+              <a href="#terms" className="text-primary-600 hover:text-primary-800 transition-colors">Terms of Use</a>
+              <a href="#contact" className="text-primary-600 hover:text-primary-800 transition-colors">Contact</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default App;

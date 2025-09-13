@@ -6,35 +6,48 @@ const resumeTypes = [
     id: 'technical',
     title: 'Technical Resume',
     icon: '💻',
-    description: 'For software developers, IT professionals, engineers, and other technical roles.'
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    description: 'For software developers, IT professionals, engineers, and other technical roles.',
+    features: ['ATS Optimized', 'Skills Focused', 'Project Showcase']
   },
   {
     id: 'medical',
     title: 'Medical Resume',
     icon: '🩺',
-    description: 'For doctors, nurses, medical technicians, and healthcare professionals.'
+    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    description: 'For doctors, nurses, medical technicians, and healthcare professionals.',
+    features: ['Clinical Experience', 'Certifications', 'Professional Focus']
   },
   {
     id: 'diploma',
     title: 'Diploma/Certificate Resume',
     icon: '🎓',
-    description: 'For diploma holders, technicians, and vocational training graduates.'
+    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    description: 'For diploma holders, technicians, and vocational training graduates.',
+    features: ['Training Focused', 'Skill Certificates', 'Practical Experience']
   },
   {
     id: 'nontechnical',
-    title: 'Non-Technical Resume',
-    icon: '📝',
-    description: 'For business, marketing, sales, customer service, and other non-technical roles.'
+    title: 'Professional Resume',
+    icon: '�',
+    gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    description: 'For business, marketing, sales, customer service, and other professional roles.',
+    features: ['Experience Driven', 'Achievement Focus', 'Leadership Skills']
   }
 ];
 
 const ResumeTypeSelector = ({ onSelect }) => {
   return (
     <div className="resume-type-selector">
-      <h2>Select Your Resume Type</h2>
-      <p className="selector-description">
-        Choose the type of resume that best matches your career profile to get a tailored resume format.
-      </p>
+      <div className="selector-header">
+        <h1 className="selector-title">
+          <span className="title-icon">🎯</span>
+          Choose Your Resume Type
+        </h1>
+        <p className="selector-description">
+          Select the perfect template type that matches your career profile and industry for maximum impact
+        </p>
+      </div>
       
       <div className="resume-types-grid">
         {resumeTypes.map(type => (
@@ -42,11 +55,35 @@ const ResumeTypeSelector = ({ onSelect }) => {
             key={type.id} 
             className="resume-type-card" 
             onClick={() => onSelect(type.id)}
+            style={{'--card-gradient': type.gradient}}
           >
-            <div className="type-icon">{type.icon}</div>
-            <h3>{type.title}</h3>
-            <p>{type.description}</p>
-            <button className="select-type-btn">Select</button>
+            <div className="card-header">
+              <div className="type-icon-wrapper">
+                <span className="type-icon">{type.icon}</span>
+              </div>
+              <div className="card-gradient-bg"></div>
+            </div>
+            
+            <div className="card-content">
+              <h3 className="card-title">{type.title}</h3>
+              <p className="card-description">{type.description}</p>
+              
+              <ul className="card-features">
+                {type.features.map((feature, index) => (
+                  <li key={index} className="feature-item">
+                    <span className="feature-check">✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <div className="card-footer">
+              <button className="select-type-btn">
+                <span>Choose This Type</span>
+                <span className="btn-arrow">→</span>
+              </button>
+            </div>
           </div>
         ))}
       </div>

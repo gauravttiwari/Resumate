@@ -5,6 +5,7 @@ This document outlines the components and design choices for the new ResuMate ho
 ## Components Created
 
 1. **HomePage.js** - Main component for the landing page
+
    - Hero section with call-to-action buttons
    - Featured templates section
    - Features overview with icons
@@ -13,6 +14,7 @@ This document outlines the components and design choices for the new ResuMate ho
    - Call-to-action footer
 
 2. **Header.js** - Responsive navigation header
+
    - Desktop and mobile navigation
    - Logo and main navigation links
    - Mobile menu with hamburger toggle
@@ -25,17 +27,20 @@ This document outlines the components and design choices for the new ResuMate ho
 ## Design Elements
 
 ### Color Scheme
+
 - Primary blue (#0066c3) for brand identity and CTAs
 - Secondary grays for text and backgrounds
 - Gradient backgrounds for visual interest
 - White space for clean, modern look
 
 ### Typography
+
 - Roboto for general text (sans-serif)
 - Merriweather for select headings (serif)
 - Roboto Mono for code examples (monospace)
 
 ### UI Components
+
 - Cards with hover effects
 - Gradient backgrounds
 - SVG icons and illustrations
@@ -45,36 +50,43 @@ This document outlines the components and design choices for the new ResuMate ho
 ## Features
 
 ### Responsive Navigation
+
 - Desktop: Horizontal navigation with dropdown menus
 - Mobile: Hamburger menu with slide-down navigation
 - Sticky header for easy navigation
 
 ### Modern Hero Section
+
 - Large headline with subtext
 - Dual call-to-action buttons
 - Wave divider at bottom
 
 ### Template Showcase
+
 - Grid layout of template thumbnails
 - Hover effect with preview button
 - Clean thumbnail presentation
 
 ### Features Section
+
 - Icon-based feature cards
 - Clean, minimal design
 - Clear feature explanations
 
 ### How It Works
+
 - Numbered steps with connecting lines
 - Simple, clear instructions
 - Visual progression indication
 
 ### Testimonials
+
 - Card-based testimonial display
 - Quote icons and rounded avatars
 - Clean typography for readability
 
 ### Call-to-Action Section
+
 - Contrasting background color
 - Clear, compelling headline
 - Single focused CTA button

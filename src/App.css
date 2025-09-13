@@ -1,0 +1,191 @@
+.app-container {
+  position: relative;
+  min-height: 100vh;
+  padding-bottom: 50px;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Using Bootstrap classes and custom theme styles */
+.light-theme {
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+.dark-theme {
+  background-color: #282c34;
+  color: #f5f5f5;
+}
+
+.dark-theme .download-options {
+  background-color: #3a3f4b;
+  color: #f5f5f5;
+}
+
+.dark-theme .generating-message {
+  background-color: #3a3f4b;
+  color: #f5f5f5;
+}
+
+/* Header styles */
+.app-header {
+  background-color: #3498db;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+}
+
+.dark-theme .app-header {
+  background-color: #2c3e50;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2.5em;
+}
+
+.theme-toggle {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background: none;
+  border: 2px solid white;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Layout styles */
+.main-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.form-container {
+  flex: 1;
+  min-width: 400px;
+}
+
+.preview-container {
+  flex: 1;
+  min-width: 400px;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+/* Template selection styles */
+.template-selection {
+  padding: 20px;
+  background-color: #eaeaea;
+  margin-bottom: 20px;
+}
+
+.dark-theme .template-selection {
+  background-color: #3a3f4b;
+}
+
+/* Footer styles */
+.app-footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  padding: 15px;
+  background-color: #3498db;
+  color: white;
+}
+
+.dark-theme .app-footer {
+  background-color: #2c3e50;
+}
+
+.generating-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.generating-message {
+  background-color: white;
+  padding: 30px 50px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.download-options {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.download-options h2 {
+  color: #3498db;
+  margin-bottom: 20px;
+}
+
+.download-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.btn-download {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+  min-width: 200px;
+}
+
+.btn-download:hover {
+  background-color: #27ae60;
+}
+
+/* Toast notification styles */
+.toast-container {
+  z-index: 9999;
+}
+
+.toast {
+  min-width: 250px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  animation: slide-in 0.3s ease-out;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

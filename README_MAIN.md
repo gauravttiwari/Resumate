@@ -23,21 +23,24 @@ An intelligent resume builder powered by Google's Gemini AI that helps you creat
 ## 📦 Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/gauravttiwari/Resumate.git
    cd Resumate
    ```
 
 2. Install dependencies:
+
    ```bash
    # Install server dependencies
    cd server && npm install
-   
+
    # Install client dependencies
    cd ../client && npm install
    ```
 
 3. Set up environment variables:
+
    ```bash
    # Create .env file in server directory
    cp server/.env.example server/.env
@@ -45,10 +48,11 @@ An intelligent resume builder powered by Google's Gemini AI that helps you creat
    ```
 
 4. Run the application:
+
    ```bash
    # Start server (from server directory)
    npm start
-   
+
    # Start client (from client directory)
    npm start
    ```
@@ -56,6 +60,7 @@ An intelligent resume builder powered by Google's Gemini AI that helps you creat
 ## 🔧 Configuration
 
 Add your Gemini API key to the server/.env file:
+
 ```
 GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-1.5-flash

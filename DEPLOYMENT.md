@@ -47,16 +47,19 @@ REACT_APP_API_URL=https://your-api-domain.com/api
 #### Building the Client
 
 1. Navigate to the client directory
+
    ```bash
    cd client
    ```
 
 2. Install dependencies
+
    ```bash
    npm install
    ```
 
 3. Build the client
+
    ```bash
    npm run build
    ```
@@ -66,11 +69,13 @@ REACT_APP_API_URL=https://your-api-domain.com/api
 #### Setting up the Server
 
 1. Navigate to the server directory
+
    ```bash
    cd server
    ```
 
 2. Install dependencies
+
    ```bash
    npm install
    ```
@@ -85,6 +90,7 @@ REACT_APP_API_URL=https://your-api-domain.com/api
 A Dockerfile and docker-compose.yml file are provided for easy containerization.
 
 1. Build the Docker image
+
    ```bash
    docker-compose build
    ```
@@ -99,21 +105,25 @@ A Dockerfile and docker-compose.yml file are provided for easy containerization.
 #### Deploying to Heroku
 
 1. Install the Heroku CLI
+
    ```bash
    npm install -g heroku
    ```
 
 2. Login to Heroku
+
    ```bash
    heroku login
    ```
 
 3. Create a new Heroku app
+
    ```bash
    heroku create resumate-app
    ```
 
 4. Set environment variables
+
    ```bash
    heroku config:set MONGODB_URI=your_mongodb_uri
    heroku config:set JWT_SECRET=your_jwt_secret
@@ -129,11 +139,13 @@ A Dockerfile and docker-compose.yml file are provided for easy containerization.
 #### Deploying to Vercel
 
 1. Install Vercel CLI
+
    ```bash
    npm install -g vercel
    ```
 
 2. Login to Vercel
+
    ```bash
    vercel login
    ```
@@ -158,11 +170,13 @@ After deploying, make sure to:
 ### Updating the Application
 
 1. Pull the latest changes
+
    ```bash
    git pull origin main
    ```
 
 2. Update dependencies
+
    ```bash
    cd client && npm install
    cd ../server && npm install
@@ -191,10 +205,12 @@ If using MongoDB:
 ### Common Issues
 
 1. **API Connection Issues**
+
    - Check that the client is pointing to the correct API URL
    - Verify that CORS is configured correctly on the server
 
 2. **Gemini AI Not Responding**
+
    - Check that your API key is valid
    - Verify that you haven't exceeded API rate limits
    - Check server logs for detailed error messages

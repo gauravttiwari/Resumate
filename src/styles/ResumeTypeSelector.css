@@ -1,0 +1,134 @@
+/* ResumeTypeSelector.css */
+.resume-type-selector {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.resume-type-selector h2 {
+  color: #2c3e50;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.selector-description {
+  color: #555;
+  margin-bottom: 40px;
+  font-size: 1.1rem;
+}
+
+.resume-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  margin: 30px 0;
+}
+
+.resume-type-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 25px 20px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-type-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.type-icon {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+.resume-type-card h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+
+.resume-type-card p {
+  color: #555;
+  font-size: 0.95rem;
+  flex-grow: 1;
+  margin-bottom: 20px;
+}
+
+.select-type-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.select-type-btn:hover {
+  background-color: #2980b9;
+}
+
+.home-button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  text-align: center;
+}
+
+.create-resume-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 30px;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-resume-btn span {
+  margin-right: 10px;
+}
+
+.create-resume-btn i {
+  font-size: 1.3rem;
+}
+
+.create-resume-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.welcome-message {
+  max-width: 600px;
+  margin-bottom: 30px;
+}
+
+.welcome-message h1 {
+  color: #2c3e50;
+  font-size: 2.8rem;
+  margin-bottom: 15px;
+}
+
+.welcome-message p {
+  color: #555;
+  font-size: 1.2rem;
+  line-height: 1.6;
+}

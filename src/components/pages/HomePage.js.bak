@@ -1,0 +1,467 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+const HomePage = () => {
+  // Animation state
+  const [isVisible, setIsVisible] = useState({
+    hero: false,
+    templates: false,
+    features: false,
+    howItWorks: false,
+    testimonials: false,
+    cta: false
+  });
+
+  // Intersection observer setup
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: '-50px'
+    };
+
+    const observerCallback = (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setIsVisible(prev => ({ ...prev, [entry.target.id]: true }));
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    
+    // Observe all sections
+    const sections = document.querySelectorAll('.animate-section');
+    sections.forEach(section => observer.observe(section));
+
+    return () => sections.forEach(section => observer.unobserve(section));
+  }, []);
+
+  // Sample templates for preview
+  const featuredTemplates = [
+    { 
+      id: 'modern', 
+      name: 'Modern', 
+      description: 'Clean and minimal design for a contemporary look',
+      imgSrc: '/assets/templates/modern-thumb.jpg',
+      color: 'bg-blue-600'
+    },
+    { 
+      id: 'professional', 
+      name: 'Professional', 
+      description: 'Traditional layout for corporate environments',
+      imgSrc: '/assets/templates/professional-thumb.jpg',
+      color: 'bg-gray-700'
+    },
+    { 
+      id: 'creative', 
+      name: 'Creative', 
+      description: 'Unique design for creative fields and portfolios',
+      imgSrc: '/assets/templates/creative-thumb.jpg',
+      color: 'bg-purple-600'
+    },
+    { 
+      id: 'pro-profile', 
+      name: 'ProProfile', 
+      description: 'Corporate style with dark sidebar for impact',
+      imgSrc: '/assets/templates/pro-profile-thumb.jpg',
+      color: 'bg-emerald-700'
+    },
+  ];
+
+  // Features list
+  const features = [
+    {
+      title: 'Professional Templates',
+      description: 'Choose from a variety of expertly designed templates that make your resume stand out',
+      icon: (
+        <svg className="w-10 h-10 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Real-time Preview',
+      description: 'See exactly how your resume will look as you build it with our instant preview feature',
+      icon: (
+        <svg className="w-10 h-10 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      ),
+    },
+    {
+      title: 'ATS-Optimized',
+      description: 'Our templates are designed to pass through Applicant Tracking Systems with ease',
+      icon: (
+        <svg className="w-10 h-10 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Expert Guidance',
+      description: 'Get helpful tips and suggestions to improve your resume and increase your chances of getting hired',
+      icon: (
+        <svg className="w-10 h-10 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      ),
+    },
+  ];
+
+  // Process steps
+  const steps = [
+    {
+      number: '01',
+      title: 'Select a Template',
+      description: 'Choose from our collection of professional templates designed for different industries and career levels',
+    },
+    {
+      number: '02',
+      title: 'Fill in Your Details',
+      description: 'Our intuitive editor makes it easy to add your personal information, experience, skills, and more',
+    },
+    {
+      number: '03',
+      title: 'Customize & Download',
+      description: 'Personalize fonts, colors, and layout, then download your resume in PDF format ready to send to employers',
+    },
+  ];
+
+  // Testimonials
+  const testimonials = [
+    {
+      quote: "ResuMate helped me create a professional resume that got me interviews at top tech companies. The templates are clean and ATS-friendly.",
+      author: "Sarah Johnson",
+      title: "Software Engineer",
+      company: "Google",
+      avatar: "/assets/testimonials/avatar1.jpg",
+    },
+    {
+      quote: "I was struggling with my resume for months until I found ResuMate. The guidance and templates helped me land my dream job.",
+      author: "David Chen",
+      title: "Marketing Director",
+      company: "Amazon",
+      avatar: "/assets/testimonials/avatar2.jpg",
+    },
+    {
+      quote: "The real-time preview feature saved me so much time. I could see exactly how my resume would look while I was building it.",
+      author: "Maria Rodriguez",
+      title: "UX Designer",
+      company: "Facebook",
+      avatar: "/assets/testimonials/avatar3.jpg",
+    },
+  ];
+
+  // FAQ items
+  const faqItems = [
+    {
+      question: "Is ResuMate free to use?",
+      answer: "We offer both free and premium templates. You can create and download resumes with our free templates, while our premium templates offer additional features and designs for a small fee."
+    },
+    {
+      question: "Can I download my resume in different formats?",
+      answer: "Yes, you can download your resume in PDF format, which is the industry standard and works well for both digital applications and printing."
+    },
+    {
+      question: "Are the templates ATS-friendly?",
+      answer: "Absolutely! All our templates are designed to pass through Applicant Tracking Systems with ease, ensuring your resume gets seen by hiring managers."
+    },
+    {
+      question: "Can I create multiple resumes?",
+      answer: "Yes, you can create and save multiple resumes for different job applications or industries. This helps you tailor your resume to specific job requirements."
+    }
+  ];
+
+  return (
+    <div className="min-h-screen overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 font-sans">
+      {/* Hero Section */}
+      <section id="hero" className="relative overflow-hidden animate-section">
+        {/* Background Elements */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 right-0 w-1/3 h-screen bg-gradient-to-b from-primary-100/30 to-primary-200/20 rounded-bl-[100px] -rotate-6 transform origin-top-right"></div>
+          <div className="absolute bottom-0 left-0 w-1/2 h-1/3 bg-gradient-to-tr from-primary-100/30 to-primary-200/10 rounded-tr-[100px]"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 py-16 md:py-28 lg:py-32">
+          <div className={`grid grid-cols-1 lg:grid-cols-2 gap-16 items-center transition-all duration-1000 transform ${isVisible.hero ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <div className="order-2 lg:order-1">
+              <span className="inline-block px-4 py-1 rounded-full bg-primary-100 text-primary-700 font-medium text-sm mb-6">
+                Professional Resume Builder
+              </span>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+                Create an impressive 
+                <span className="text-primary-600 relative">
+                  <span className="relative z-10"> resume </span>
+                  <span className="absolute bottom-2 left-0 w-full h-3 bg-primary-200 -z-0"></span>
+                </span> 
+                in minutes
+              </h1>
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                Stand out with beautifully designed templates. Easy to customize, ATS-friendly, and ready to help you land your dream job.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link 
+                  to="/create" 
+                  className="btn bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-medium text-lg flex items-center gap-2 shadow-lg shadow-primary-500/20 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300"
+                >
+                  Create My Resume
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </Link>
+                <Link 
+                  to="/templates" 
+                  className="btn bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200"
+                >
+                  Browse Templates
+                </Link>
+              </div>
+            </div>
+            
+            <div className="order-1 lg:order-2 flex justify-center">
+              <div className="relative w-full max-w-md">
+                {/* Main resume preview */}
+                <div className="relative z-20 rounded-xl shadow-2xl overflow-hidden transform hover:-rotate-1 transition-all duration-300">
+                  <img 
+                    src="/assets/hero-resume.jpg" 
+                    alt="Resume Preview" 
+                    className="w-full h-auto"
+                  />
+                </div>
+                
+                {/* Floating elements */}
+                <div className="absolute -bottom-4 -left-10 z-10 w-28 h-28 bg-white p-3 rounded-lg shadow-lg transform rotate-6">
+                  <div className="h-full w-full rounded bg-green-100 flex items-center justify-center text-green-700">
+                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                
+                <div className="absolute -top-4 -right-8 z-10 w-36 h-16 bg-white p-2 rounded-lg shadow-lg transform -rotate-3">
+                  <div className="h-full w-full rounded bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-semibold">
+                    ATS-Optimized
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-10 -right-12 z-10 w-32 h-32 bg-white p-3 rounded-lg shadow-lg transform rotate-3">
+                  <div className="h-full w-full rounded bg-yellow-100 flex flex-col items-center justify-center text-yellow-700">
+                    <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span className="text-xs font-semibold">Easy to Use</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Trusted by companies */}
+          <div className={`mt-20 text-center transition-all duration-1000 transform delay-300 ${isVisible.hero ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <p className="text-gray-500 mb-6">Trusted by professionals from top companies</p>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+              <img src="/assets/companies/google.svg" alt="Google" className="h-6 md:h-8 opacity-70" />
+              <img src="/assets/companies/amazon.svg" alt="Amazon" className="h-6 md:h-8 opacity-70" />
+              {/* Add more company logos as needed */}
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Templates Showcase */}
+      <section id="templates" className="py-20 bg-white animate-section">
+        <div className="container mx-auto px-4">
+          <div className={`text-center mb-16 transition-all duration-1000 transform ${isVisible.templates ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Professional Resume Templates</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Choose from our collection of ATS-friendly templates designed to impress employers
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredTemplates.map((template, index) => (
+              <Link 
+                key={index}
+                to={`/templates/${template.id}`} 
+                className={`group transition-all duration-700 transform ${isVisible.templates ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
+                style={{ transitionDelay: `${index * 150}ms` }}
+              >
+                <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <div className={`h-2 w-full ${template.color}`}></div>
+                  <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{template.name}</h3>
+                    <p className="text-gray-600 text-sm mb-4">{template.description}</p>
+                    <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-100">
+                      <img 
+                        src={template.imgSrc || `/assets/templates/placeholder.jpg`} 
+                        alt={`${template.name} Template`} 
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          
+          <div className="text-center mt-12">
+            <Link 
+              to="/templates" 
+              className="btn border border-primary-600 text-primary-600 hover:bg-primary-50 px-8 py-3 rounded-lg inline-flex items-center gap-2 transition-all duration-300"
+            >
+              View All Templates
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+      
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-gradient-to-br from-white to-gray-50 animate-section">
+        <div className="container mx-auto px-4">
+          <div className={`text-center mb-16 transition-all duration-1000 transform ${isVisible.features ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Choose ResuMate</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Our powerful features make resume creation simple and effective
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <div 
+                key={index}
+                className={`bg-white rounded-xl p-8 shadow hover:shadow-lg transition-all duration-300 border border-gray-100 transform ${isVisible.features ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
+                style={{ transitionDelay: `${index * 150}ms`, transitionDuration: '700ms' }}
+              >
+                <div className="bg-primary-50 w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3 text-center">{feature.title}</h3>
+                <p className="text-gray-600 text-center">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* How It Works */}
+      <section id="how-it-works" className="py-20 bg-white animate-section">
+        <div className="container mx-auto px-4">
+          <div className={`text-center mb-16 transition-all duration-1000 transform ${isVisible.howItWorks ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Creating a professional resume has never been easier
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            {steps.map((step, index) => (
+              <div 
+                key={index}
+                className={`relative transition-all duration-700 transform ${isVisible.howItWorks ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
+                style={{ transitionDelay: `${index * 150}ms` }}
+              >
+                <div className="bg-primary-100 text-primary-800 text-2xl font-bold h-14 w-14 rounded-full flex items-center justify-center mb-6">
+                  {step.number}
+                </div>
+                {index < steps.length - 1 && (
+                  <div className="hidden md:block absolute top-7 left-14 w-full h-[2px] bg-primary-100 -z-10"></div>
+                )}
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">{step.title}</h3>
+                <p className="text-gray-600">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* Testimonials */}
+      <section id="testimonials" className="py-20 bg-primary-900 text-white animate-section">
+        <div className="container mx-auto px-4">
+          <div className={`text-center mb-16 transition-all duration-1000 transform ${isVisible.testimonials ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Users Say</h2>
+            <p className="text-xl text-primary-200 max-w-3xl mx-auto">
+              Join thousands of job seekers who have found success using ResuMate
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <div 
+                key={index} 
+                className={`bg-primary-800 rounded-xl p-8 relative border border-primary-700 transition-all duration-700 transform ${isVisible.testimonials ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
+                style={{ transitionDelay: `${index * 150}ms` }}
+              >
+                <svg className="text-primary-600 w-12 h-12 absolute -top-4 -left-4 bg-primary-900 rounded-full p-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                </svg>
+                <p className="text-primary-100 mb-8 italic">{testimonial.quote}</p>
+                <div className="flex items-center">
+                  <img 
+                    src={testimonial.avatar} 
+                    alt={testimonial.author} 
+                    className="w-12 h-12 rounded-full object-cover mr-4 border-2 border-primary-600"
+                  />
+                  <div>
+                    <h4 className="font-semibold">{testimonial.author}</h4>
+                    <p className="text-primary-300 text-sm">{testimonial.title}, {testimonial.company}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* CTA Section */}
+      <section id="cta" className="py-20 bg-gradient-to-r from-primary-600 to-primary-700 text-white relative overflow-hidden animate-section">
+        {/* Background elements */}
+        <div className="absolute inset-0 overflow-hidden opacity-10">
+          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-white"></div>
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-white"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className={`max-w-3xl mx-auto text-center transition-all duration-1000 transform ${isVisible.cta ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Land Your Dream Job?</h2>
+            <p className="text-xl mb-8 text-primary-100">Create a professional resume that gets you noticed by employers</p>
+            <Link 
+              to="/create" 
+              className="btn bg-white hover:bg-gray-100 text-primary-600 px-8 py-4 rounded-lg font-bold text-lg inline-block shadow-xl hover:shadow-2xl transition-all duration-300"
+            >
+              Build My Resume — It's Free
+            </Link>
+            <p className="mt-6 text-sm text-primary-200">No credit card required • Free templates available</p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Find answers to common questions about our resume builder
+            </p>
+          </div>
+          
+          <div className="max-w-3xl mx-auto">
+            {faqItems.map((item, index) => (
+              <div key={index} className="mb-8 border-b border-gray-200 pb-8 last:border-b-0">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{item.question}</h3>
+                <p className="text-gray-600">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default HomePage;

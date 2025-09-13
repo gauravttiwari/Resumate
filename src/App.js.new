@@ -1,0 +1,325 @@
+import React, { useState, useRef } from 'react';
+import ResumeForm from './ResumeForm';
+import TemplateSelector from './TemplateSelector';
+import MncResume from './MncResume';
+import ReverseChronoResume from './ReverseChronoResume';
+import ModernSidebarResume from './ModernSidebarResume';
+import ProfessionalCleanResume from './ProfessionalCleanResume';
+import JobFitProResume from './JobFitProResume';
+import ProProfileResume from './ProProfileResume';
+import HomeScreen from './HomeScreen';
+import ResumeTypeSelector from './ResumeTypeSelector';
+// Template-specific styles still needed for resume rendering
+import './styles/ReverseChrono.css';
+import './styles/ModernSidebar.css';
+import './styles/ProfessionalClean.css';
+import './styles/JobFitPro.css';
+import './styles/ProProfile.css';
+
+function App() {
+  
+  // Handle form submission
+  const handleFormSubmit = (formData) => {
+    setIsGenerating(true);
+    
+    // Store the form data
+    setResumeData(formData);
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      setIsGenerating(false);
+      setActiveView('preview');
+      showToast('Resume generated successfully!');
+    }, 1000);
+  };
+
+  // Update form data as user types
+  const handleFormChange = (formData) => {
+    setResumeData(formData);
+  };
+  
+  // Handle template selection change
+  const handleTemplateChange = (template) => {
+    setSelectedTemplate(template);
+    // If we already have resume data, show a success message
+    if (resumeData) {
+      showToast(`Template changed to ${template}`, 'success', 2000);
+    }
+  };
+  
+      setToast({ show: false, message: '', type: 'success' });
+    }, duration);
+  };
+  
+  // Handle color change for templates that support it
+  const handleColorChange = (color) => {
+    if (!resumeData) return;
+    
+    setResumeData({
+      ...resumeData,
+      sidebarColor: color
+    });
+    
+    showToast('Resume color updated!', 'success', 2000);
+  };
+  
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    try {
+      setIsGenerating(true);
+      
+      // Import the libraries for PDF generation
+      const html2canvas = await import('html2canvas').then(module => module.default);
+      const { jsPDF } = await import('jspdf');
+      
+      const resumeElement = document.getElementById('resume-to-pdf');
+      
+      if (!resumeElement) {
+        throw new Error('Resume element not found');
+      }
+      
+      // Process images before capturing
+      const images = resumeElement.querySelectorAll('img');
+      // Wait for all images to load
+      const imagePromises = Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve; // Continue even if image fails
+        });
+      });
+      
+      await Promise.all(imagePromises);
+      
+      // Capture the resume as canvas
+      const canvas = await html2canvas(resumeElement, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true, // Allow loading cross-origin images
+        allowTaint: true, // Allow tainted canvas for security constraints
+        logging: false,
+        backgroundColor: '#ffffff',
+        imageTimeout: 15000 // Longer timeout for images
+      });
+      
+      // Calculate dimensions to maintain aspect ratio
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // Add image to PDF
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Generate multiple pages if resume is longer than A4
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      // Only add additional pages if the resume is longer than one page
+      if (heightLeft > pageHeight) {
+        while (heightLeft > pageHeight) {
+          position = heightLeft - pageHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+      }
+      
+      // Save the PDF
+      const fileName = resumeData && resumeData.name ? 
+        `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf` : 
+        `Resume_${new Date().getTime()}.pdf`;
+      
+      pdf.save(fileName);
+      
+      setIsGenerating(false);
+      showToast('PDF downloaded successfully!');
+      
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      setIsGenerating(false);
+      showToast('Failed to generate PDF. Please try again.', 'danger');
+    }
+  };
+
+  // Color options for templates that support color customization
+  const colorOptions = [
+    { name: 'Default Blue', value: '#1a365d' },
+    { name: 'Corporate Navy', value: '#0c2340' },
+    { name: 'Professional Maroon', value: '#800000' },
+    { name: 'Forest Green', value: '#2f4f4f' },
+    { name: 'Deep Purple', value: '#4b0082' },
+    { name: 'Executive Gray', value: '#333333' }
+  ];
+
+  // Check if current template supports color customization
+  const supportsColorCustomization = ['modern-sidebar', 'jobfit-pro', 'pro-profile'].includes(selectedTemplate);
+        imageTimeout: 15000 // Longer timeout for images
+      });
+      
+      // Create PDF (A4 size)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Add the canvas as an image
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      
+      pdf.addImage(
+        imgData, 'JPEG',
+        0, 0,
+        imgWidth * ratio, imgHeight * ratio
+      );
+      
+      return {
+        blob: pdf.output('blob'),
+        url: URL.createObjectURL(pdf.output('blob'))
+      };
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      throw error;
+    }
+  };
+  
+  // Handler for form submission
+  const handleFormSubmit = async (formData) => {
+    try {
+      setIsGenerating(true);
+      setFormData(formData); // Update form data for preview
+      
+      // Generate plain text version
+      const plainText = generatePlainText(formData);
+      
+      // Generate PDF client-side
+      const pdfResult = await generatePDF();
+      if (!pdfResult) {
+        throw new Error('Failed to generate PDF');
+      }
+      
+      // Prepare filename
+      const filename = formData.name ? formData.name.replace(/\s+/g, '_') : 'resume';
+      
+      // Send data to backend for storage
+      const res = await fetch('http://localhost:5000/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeData: formData,
+          filename,
+          plainText,
+          template: selectedTemplate
+        })
+      });
+      
+      if (res.ok) {
+        const { json, txt } = await res.json();
+        
+        // Store generated files info
+        setGeneratedFiles({
+          pdf: pdfResult.url,
+          json,
+          txt
+        });
+        
+        setIsGenerating(false);
+        showToast('Resume generated successfully!');
+        
+        // Open the PDF in a new tab
+        window.open(pdfResult.url, '_blank');
+      } else {
+        throw new Error(`Server returned status ${res.status}`);
+      }
+    } catch (error) {
+      console.error('Resume generation error:', error);
+      showToast(`Failed to generate resume: ${error.message}`, 'danger');
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className={`app ${theme}`}>
+      <header className="app-header">
+        <h1>ResuMate</h1>
+        <div className="theme-toggle">
+          <button onClick={handleThemeToggle}>
+            {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+          </button>
+        </div>
+      </header>
+      
+      <main className="app-main">
+        <div className="template-selector-container">
+          <h2>Choose a Template</h2>
+          <TemplateSelector
+            selectedTemplate={selectedTemplate}
+            onChange={handleTemplateChange}
+          />
+        </div>
+        
+        <div className="resume-builder">
+          <div className="form-container">
+            <ResumeForm
+              onSubmit={handleFormSubmit}
+              onChange={handleFormChange}
+              isSubmitting={isGenerating}
+            />
+          </div>
+          
+          <div className="preview-container">
+            <h2>Preview</h2>
+            {formData ? (
+              <>
+                <div className="resume-preview-wrapper">
+                  <ResumePreview
+                    data={formData}
+                    template={selectedTemplate}
+                    ref={resumePreviewRef}
+                  />
+                </div>
+                <div className="preview-actions">
+                  <button
+                    onClick={() => handleFormSubmit(formData)}
+                    disabled={isGenerating}
+                    className="generate-button"
+                  >
+                    {isGenerating ? 'Generating...' : 'Generate Resume'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="empty-preview">
+                <p>Fill in the form to see your resume preview</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+      
+      {/* Toast notification */}
+      {toast.show && (
+        <div className={`toast toast-${toast.type}`}>
+          <div className="toast-message">{toast.message}</div>
+          <button onClick={() => setToast({ show: false, message: '', type: 'success' })}>×</button>
+        </div>
+      )}
+      
+      <footer className="app-footer">
+        <p>&copy; {new Date().getFullYear()} ResuMate - HTML-Based Resume Builder</p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
