@@ -33,6 +33,7 @@ function App() {
   const [isAnalyzingATS, setIsAnalyzingATS] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [activeFeatureTab, setActiveFeatureTab] = useState('analytics'); // For preview page tabs
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile menu toggle
   
   // Template search states
   const [templateSearchQuery, setTemplateSearchQuery] = useState('');
@@ -438,6 +439,15 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
               <h1>ResuMate</h1>
               <p className="app-tagline">AI-Powered Professional Resume Builder</p>
             </div>
+
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="mobile-nav-toggle"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? '✕' : '☰'}
+            </button>
           
           {/* Template Search Bar - Center of Navigation */}
           <div className="template-search-container">
@@ -514,42 +524,64 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
           </div>
 
           {/* Navigation */}
-          <nav className="app-nav">
+          <nav className={`app-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             <button 
               className={`nav-link ${activeView === 'home' ? 'active' : ''}`}
-              onClick={() => setActiveView('home')}
+              onClick={() => {
+                setActiveView('home');
+                setIsMobileMenuOpen(false);
+              }}
             >
               🏠 Home
             </button>
             <button 
               className={`nav-link ${activeView === 'type-selector' || activeView === 'form' ? 'active' : ''}`}
-              onClick={() => setActiveView('type-selector')}
+              onClick={() => {
+                setActiveView('type-selector');
+                setIsMobileMenuOpen(false);
+              }}
             >
               📝 Create Resume
             </button>
             <button 
               className={`nav-link ${activeView === 'templates' ? 'active' : ''}`}
-              onClick={() => resumeType ? setActiveView('templates') : showToast('Please select a resume type first', 'warning')}
+              onClick={() => {
+                if (resumeType) {
+                  setActiveView('templates');
+                  setIsMobileMenuOpen(false);
+                } else {
+                  showToast('Please select a resume type first', 'warning');
+                }
+              }}
             >
               📋 Templates
             </button>
             <button 
               className={`nav-link ${activeView === 'interview-prep' ? 'active' : ''}`}
-              onClick={() => setActiveView('interview-prep')}
+              onClick={() => {
+                setActiveView('interview-prep');
+                setIsMobileMenuOpen(false);
+              }}
             >
               🎯 Interview Prep
             </button>
             {resumeData && (
               <button 
                 className={`nav-link ${activeView === 'preview' ? 'active' : ''}`}
-                onClick={() => setActiveView('preview')}
+                onClick={() => {
+                  setActiveView('preview');
+                  setIsMobileMenuOpen(false);
+                }}
               >
                 👁️ Preview
               </button>
             )}
             <button 
               className="nav-link ai-chat-btn"
-              onClick={() => setShowChatModal(true)}
+              onClick={() => {
+                setShowChatModal(true);
+                setIsMobileMenuOpen(false);
+              }}
             >
               💬 AI Chat
             </button>
