@@ -2548,16 +2548,17 @@ body {
     min-width: 50px;
   }
 }
-  }
-  
-  /* Features section responsive */
+
+/* Additional responsive features */
+@media (max-width: 600px) {
   .features-category .features-grid {
     grid-template-columns: 1fr;
     gap: var(--space-4);
   }
-  
+
   .feature-card {
     padding: var(--space-6);
+    text-align: center;
   }
   
   .category-title {
