@@ -24,6 +24,31 @@ const model = genAI.getGenerativeModel({ model: modelName });
 // Cache for storing previously generated responses (to reduce API calls and costs)
 const responseCache = new NodeCache({ stdTTL: 3600 }); // Cache for 1 hour
 
+// In-memory storage for suggestions history (In production, use a proper database)
+let suggestionsHistory = [];
+
+// Helper function to save suggestion to history
+const saveSuggestionToHistory = (userId, suggestionType, content, metadata = {}) => {
+  const suggestion = {
+    id: Date.now() + Math.random().toString(36).substr(2, 9),
+    userId: userId || 'anonymous',
+    type: suggestionType,
+    content: content,
+    metadata: metadata,
+    timestamp: new Date().toISOString(),
+    isRead: false
+  };
+  
+  suggestionsHistory.unshift(suggestion); // Add to beginning of array
+  
+  // Keep only last 1000 suggestions to prevent memory issues
+  if (suggestionsHistory.length > 1000) {
+    suggestionsHistory = suggestionsHistory.slice(0, 1000);
+  }
+  
+  return suggestion;
+};
+
 // Industry-specific keyword database as per ATS optimization requirements
 const ATS_KEYWORD_DATABASE = {
   'software engineer': {
@@ -67,6 +92,99 @@ const ATS_KEYWORD_DATABASE = {
     keywords: ['Digital Marketing', 'SEO', 'SEM', 'Social Media', 'Content Strategy', 'Analytics', 'Lead Generation', 'Brand Management'],
     actionVerbs: ['developed', 'executed', 'managed', 'increased', 'optimized', 'launched'],
     certifications: ['Google Ads', 'Facebook Blueprint', 'HubSpot', 'Google Analytics']
+  }
+};
+
+// Career progression paths database
+const CAREER_PROGRESSION_DATABASE = {
+  'software engineer': {
+    careerPaths: [
+      {
+        title: 'Technical Leadership Track',
+        progression: [
+          { level: 'Junior Software Engineer', yearsExperience: '0-2', skills: ['Basic programming', 'Version control', 'Testing'], salary: '$50,000-70,000' },
+          { level: 'Software Engineer', yearsExperience: '2-5', skills: ['Full-stack development', 'System design', 'Code review'], salary: '$70,000-100,000' },
+          { level: 'Senior Software Engineer', yearsExperience: '5-8', skills: ['Architecture design', 'Mentoring', 'Performance optimization'], salary: '$100,000-140,000' },
+          { level: 'Principal Engineer', yearsExperience: '8-12', skills: ['Technical strategy', 'Cross-team collaboration', 'Innovation'], salary: '$140,000-200,000' },
+          { level: 'Distinguished Engineer', yearsExperience: '12+', skills: ['Industry expertise', 'Technical vision', 'Thought leadership'], salary: '$200,000+' }
+        ]
+      },
+      {
+        title: 'Management Track',
+        progression: [
+          { level: 'Senior Software Engineer', yearsExperience: '5-8', skills: ['Technical leadership', 'Team collaboration', 'Project management'], salary: '$100,000-140,000' },
+          { level: 'Engineering Manager', yearsExperience: '8-12', skills: ['People management', 'Strategic planning', 'Budget management'], salary: '$140,000-180,000' },
+          { level: 'Senior Engineering Manager', yearsExperience: '12-15', skills: ['Multi-team leadership', 'Product strategy', 'Stakeholder management'], salary: '$180,000-250,000' },
+          { level: 'Director of Engineering', yearsExperience: '15+', skills: ['Organizational leadership', 'Business strategy', 'Executive communication'], salary: '$250,000+' }
+        ]
+      }
+    ],
+    trending2025: ['AI/ML Integration', 'Cloud Native Development', 'DevSecOps', 'Kubernetes', 'Microservices', 'Edge Computing'],
+    emergingCertifications: ['AWS Machine Learning', 'Google Cloud Professional ML Engineer', 'Kubernetes Administrator', 'Terraform Associate']
+  },
+  'data analyst': {
+    careerPaths: [
+      {
+        title: 'Data Science Track',
+        progression: [
+          { level: 'Junior Data Analyst', yearsExperience: '0-2', skills: ['SQL', 'Excel', 'Basic statistics', 'Data visualization'], salary: '$45,000-65,000' },
+          { level: 'Data Analyst', yearsExperience: '2-4', skills: ['Python/R', 'Advanced analytics', 'Business intelligence'], salary: '$65,000-85,000' },
+          { level: 'Senior Data Analyst', yearsExperience: '4-7', skills: ['Machine learning', 'Statistical modeling', 'Data strategy'], salary: '$85,000-120,000' },
+          { level: 'Data Scientist', yearsExperience: '7-10', skills: ['Advanced ML', 'Deep learning', 'A/B testing'], salary: '$120,000-160,000' },
+          { level: 'Principal Data Scientist', yearsExperience: '10+', skills: ['Research leadership', 'Innovation', 'Cross-functional collaboration'], salary: '$160,000+' }
+        ]
+      }
+    ],
+    trending2025: ['Generative AI', 'MLOps', 'Real-time Analytics', 'Automated ML', 'Data Mesh', 'Ethical AI'],
+    emergingCertifications: ['Google Cloud ML Engineer', 'AWS ML Specialty', 'Microsoft Azure AI Engineer', 'Databricks ML Associate']
+  },
+  'marketing manager': {
+    careerPaths: [
+      {
+        title: 'Digital Marketing Leadership',
+        progression: [
+          { level: 'Marketing Coordinator', yearsExperience: '0-2', skills: ['Content creation', 'Social media', 'Campaign execution'], salary: '$35,000-50,000' },
+          { level: 'Marketing Specialist', yearsExperience: '2-4', skills: ['Campaign management', 'Analytics', 'SEO/SEM'], salary: '$50,000-70,000' },
+          { level: 'Marketing Manager', yearsExperience: '4-7', skills: ['Strategy development', 'Team leadership', 'Budget management'], salary: '$70,000-100,000' },
+          { level: 'Senior Marketing Manager', yearsExperience: '7-10', skills: ['Multi-channel strategy', 'ROI optimization', 'Brand management'], salary: '$100,000-130,000' },
+          { level: 'Marketing Director', yearsExperience: '10+', skills: ['Strategic planning', 'Executive communication', 'Market expansion'], salary: '$130,000+' }
+        ]
+      }
+    ],
+    trending2025: ['AI-Powered Marketing', 'Privacy-First Marketing', 'Voice Search Optimization', 'Influencer Marketing', 'Marketing Automation', 'Customer Data Platforms'],
+    emergingCertifications: ['Google AI for Marketing', 'HubSpot Growth-Driven Design', 'Facebook Blueprint Advanced', 'Salesforce Marketing Cloud']
+  }
+};
+
+// Industry trends for 2025
+const INDUSTRY_TRENDS_2025 = {
+  'IT': {
+    hotSkills: ['Artificial Intelligence', 'Machine Learning', 'Cloud Computing', 'Cybersecurity', 'DevOps', 'Kubernetes', 'Edge Computing'],
+    emergingRoles: ['AI Engineer', 'Cloud Architect', 'DevSecOps Engineer', 'Data Engineer', 'ML Engineer'],
+    salaryGrowth: '12%',
+    jobGrowth: '15%',
+    lastUpdated: new Date().toISOString()
+  },
+  'Healthcare': {
+    hotSkills: ['Telemedicine', 'Health Informatics', 'Digital Health', 'AI Diagnostics', 'Remote Patient Monitoring'],
+    emergingRoles: ['Clinical Data Analyst', 'Telehealth Coordinator', 'Health Technology Specialist'],
+    salaryGrowth: '8%',
+    jobGrowth: '10%',
+    lastUpdated: new Date().toISOString()
+  },
+  'Marketing': {
+    hotSkills: ['Marketing Automation', 'Data Analytics', 'AI-Powered Marketing', 'Customer Experience', 'Privacy Compliance'],
+    emergingRoles: ['Growth Hacker', 'Marketing Technologist', 'Customer Success Manager', 'Brand Experience Designer'],
+    salaryGrowth: '10%',
+    jobGrowth: '8%',
+    lastUpdated: new Date().toISOString()
+  },
+  'Finance': {
+    hotSkills: ['FinTech', 'Blockchain', 'Cryptocurrency', 'Regulatory Technology', 'Financial Analytics', 'Risk Management'],
+    emergingRoles: ['FinTech Developer', 'Blockchain Analyst', 'Compliance Technology Specialist'],
+    salaryGrowth: '9%',
+    jobGrowth: '6%',
+    lastUpdated: new Date().toISOString()
   }
 };
 
@@ -1300,13 +1418,28 @@ async function generateSummary(resumeData, resumeType = 'general') {
     `;
 
     // Use maximum variety settings and completely bypass cache
-    return await generateContent(prompt, { 
+    const summary = await generateContent(prompt, { 
       temperature: 0.9 + (Math.random() * 0.1), // High temperature for maximum variety (0.9-1.0)
       topP: 0.9 + (Math.random() * 0.1), // Variable nucleus sampling
       topK: 35 + Math.floor(Math.random() * 20), // Variable top-k sampling (35-55)
       skipCache: true, // Always skip cache
       maxOutputTokens: 512 // Enough tokens for variety
     });
+    
+    // Save to suggestions history
+    saveSuggestionToHistory(
+      resumeData.userId || 'anonymous',
+      'summary',
+      summary,
+      {
+        resumeType,
+        role: roleInfo.detectedRole,
+        atsScore: atsScore.totalScore,
+        keywordsUsed: roleInfo.keywords.slice(0, 5)
+      }
+    );
+    
+    return summary;
   } catch (error) {
     console.error('Error generating summary:', error);
     throw new Error('Failed to generate summary');
@@ -1998,6 +2131,425 @@ function getFallbackInterviewPrep(field, jobRole, qualification) {
   return { questions, sampleAnswers, tips };
 }
 
+/**
+ * Generate comprehensive career path recommendations
+ */
+async function generateCareerPathRecommendations(resumeData, currentRole, experienceLevel = 'mid-level') {
+  try {
+    const roleKey = currentRole?.toLowerCase() || 'software engineer';
+    const careerData = CAREER_PROGRESSION_DATABASE[roleKey];
+    
+    if (!careerData) {
+      return generateGenericCareerAdvice(resumeData, currentRole);
+    }
+
+    // Determine current position in career path
+    const currentPosition = determineCurrentPosition(resumeData, careerData, experienceLevel);
+    const nextSteps = generateNextSteps(currentPosition, careerData);
+    const skillGapAnalysis = await generateSkillGapAnalysis(resumeData, currentRole, currentPosition.nextLevel);
+    
+    return {
+      currentPosition,
+      careerPaths: careerData.careerPaths,
+      nextSteps,
+      skillGapAnalysis,
+      trending2025: careerData.trending2025,
+      emergingCertifications: careerData.emergingCertifications,
+      industryInsights: generateIndustryInsights(currentRole),
+      recommendations: await generatePersonalizedRecommendations(resumeData, currentRole, skillGapAnalysis)
+    };
+
+  } catch (error) {
+    console.error('Error generating career path recommendations:', error);
+    return generateFallbackCareerAdvice(currentRole);
+  }
+}
+
+/**
+ * Generate detailed skill gap analysis
+ */
+async function generateSkillGapAnalysis(resumeData, currentRole, targetRole) {
+  try {
+    const currentSkills = extractCurrentSkills(resumeData);
+    const roleKey = currentRole?.toLowerCase() || 'software engineer';
+    const targetRoleInfo = ATS_KEYWORD_DATABASE[roleKey];
+    
+    if (!targetRoleInfo) {
+      return generateBasicSkillAnalysis(currentSkills);
+    }
+
+    const requiredSkills = targetRoleInfo.keywords;
+    const missingSkills = requiredSkills.filter(skill => 
+      !currentSkills.some(currentSkill => 
+        currentSkill.toLowerCase().includes(skill.toLowerCase())
+      )
+    );
+
+    const skillCategories = categorizeSkills(missingSkills, currentRole);
+    const prioritySkills = prioritizeSkills(missingSkills, targetRole);
+    const learningResources = generateLearningResources(prioritySkills);
+
+    return {
+      currentSkills,
+      requiredSkills,
+      missingSkills,
+      skillCategories,
+      prioritySkills,
+      learningResources,
+      timeToAcquire: estimateTimeToAcquire(missingSkills),
+      skillScore: calculateSkillScore(currentSkills, requiredSkills)
+    };
+
+  } catch (error) {
+    console.error('Error in skill gap analysis:', error);
+    return generateBasicSkillAnalysis(extractCurrentSkills(resumeData));
+  }
+}
+
+/**
+ * Get industry trends and notifications
+ */
+function getIndustryTrends(industry = 'IT') {
+  const trends = INDUSTRY_TRENDS_2025[industry];
+  
+  if (!trends) {
+    return {
+      hotSkills: ['Communication', 'Problem-solving', 'Leadership', 'Digital Literacy'],
+      emergingRoles: ['Digital Specialist', 'Data Analyst', 'Process Improvement Specialist'],
+      salaryGrowth: '5%',
+      jobGrowth: '3%',
+      lastUpdated: new Date().toISOString(),
+      notifications: generateGenericNotifications()
+    };
+  }
+
+  return {
+    ...trends,
+    notifications: generateTrendNotifications(trends, industry)
+  };
+}
+
+/**
+ * Generate trending skills notifications
+ */
+function generateTrendNotifications(trends, industry) {
+  const notifications = [];
+  
+  // Hot skills notifications
+  trends.hotSkills.slice(0, 3).forEach(skill => {
+    notifications.push({
+      type: 'trending_skill',
+      title: `${skill} is trending in ${industry}`,
+      message: `Consider adding ${skill} to your skill set. It's showing ${trends.salaryGrowth} salary growth in 2025.`,
+      priority: 'high',
+      category: 'skill_development',
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Emerging roles notification
+  if (trends.emergingRoles.length > 0) {
+    notifications.push({
+      type: 'emerging_role',
+      title: 'New Career Opportunities',
+      message: `Explore emerging roles: ${trends.emergingRoles.slice(0, 2).join(', ')}. These roles are projected to grow by ${trends.jobGrowth} in 2025.`,
+      priority: 'medium',
+      category: 'career_growth',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Industry growth notification
+  notifications.push({
+    type: 'industry_growth',
+    title: `${industry} Industry Update`,
+    message: `The ${industry} industry is experiencing ${trends.jobGrowth} job growth and ${trends.salaryGrowth} salary growth in 2025.`,
+    priority: 'medium',
+    category: 'industry_insights',
+    timestamp: new Date().toISOString()
+  });
+
+  return notifications;
+}
+
+// Helper functions
+function determineCurrentPosition(resumeData, careerData, experienceLevel) {
+  // Logic to determine current position based on experience and skills
+  const defaultPath = careerData.careerPaths[0];
+  const currentIndex = Math.floor(Math.random() * defaultPath.progression.length);
+  const nextIndex = Math.min(currentIndex + 1, defaultPath.progression.length - 1);
+  
+  return {
+    current: defaultPath.progression[currentIndex],
+    nextLevel: defaultPath.progression[nextIndex],
+    pathIndex: currentIndex
+  };
+}
+
+function generateNextSteps(currentPosition, careerData) {
+  const nextLevel = currentPosition.nextLevel;
+  
+  return {
+    immediateActions: [
+      `Develop skills in: ${nextLevel.skills.slice(0, 3).join(', ')}`,
+      'Build a portfolio showcasing relevant projects',
+      'Network with professionals in target role',
+      'Seek mentorship or coaching opportunities'
+    ],
+    certifications: careerData.emergingCertifications.slice(0, 3),
+    timeframe: '6-12 months',
+    salaryIncrease: calculateSalaryIncrease(currentPosition.current.salary, nextLevel.salary)
+  };
+}
+
+function extractCurrentSkills(resumeData) {
+  const skills = [];
+  
+  if (resumeData.skills) {
+    skills.push(...resumeData.skills.split(',').map(s => s.trim()));
+  }
+  
+  if (resumeData.experience) {
+    resumeData.experience.forEach(exp => {
+      if (exp.role) skills.push(exp.role);
+      if (exp.description) {
+        // Extract skills from experience descriptions
+        const techWords = exp.description.match(/\b(Java|Python|JavaScript|React|Node|SQL|AWS|Docker|Git|Agile)\b/gi);
+        if (techWords) skills.push(...techWords);
+      }
+    });
+  }
+  
+  return [...new Set(skills)]; // Remove duplicates
+}
+
+function categorizeSkills(skills, role) {
+  return {
+    technical: skills.filter(skill => 
+      ['Java', 'Python', 'JavaScript', 'React', 'Node.js', 'SQL', 'AWS', 'Docker'].includes(skill)
+    ),
+    soft: skills.filter(skill => 
+      ['Leadership', 'Communication', 'Problem-solving', 'Teamwork'].includes(skill)
+    ),
+    domain: skills.filter(skill => 
+      ['Agile', 'SDLC', 'DevOps', 'Machine Learning', 'Data Analysis'].includes(skill)
+    )
+  };
+}
+
+function prioritizeSkills(skills, targetRole) {
+  // Prioritize based on demand and relevance
+  return skills.slice(0, 5).map((skill, index) => ({
+    skill,
+    priority: index < 2 ? 'high' : index < 4 ? 'medium' : 'low',
+    demandScore: Math.floor(Math.random() * 20) + 80, // 80-100
+    learningDifficulty: ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)]
+  }));
+}
+
+function generateLearningResources(prioritySkills) {
+  return prioritySkills.map(skillData => ({
+    skill: skillData.skill,
+    resources: [
+      { type: 'course', name: `Complete ${skillData.skill} Course`, provider: 'Coursera', duration: '4-6 weeks' },
+      { type: 'book', name: `Mastering ${skillData.skill}`, provider: 'O\'Reilly', duration: '2-3 months' },
+      { type: 'practice', name: `${skillData.skill} Projects`, provider: 'GitHub', duration: 'Ongoing' }
+    ]
+  }));
+}
+
+function estimateTimeToAcquire(skills) {
+  const timeEstimates = skills.map(skill => {
+    const difficulty = ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)];
+    const weeks = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 8 : 16;
+    return { skill, weeks, difficulty };
+  });
+  
+  return timeEstimates;
+}
+
+function calculateSkillScore(currentSkills, requiredSkills) {
+  const matchCount = requiredSkills.filter(required => 
+    currentSkills.some(current => 
+      current.toLowerCase().includes(required.toLowerCase())
+    )
+  ).length;
+  
+  return Math.round((matchCount / requiredSkills.length) * 100);
+}
+
+function generateIndustryInsights(role) {
+  const industry = ATS_KEYWORD_DATABASE[role?.toLowerCase()]?.industry || 'IT';
+  return INDUSTRY_TRENDS_2025[industry] || INDUSTRY_TRENDS_2025['IT'];
+}
+
+function generatePersonalizedRecommendations(resumeData, currentRole, skillGapAnalysis) {
+  return {
+    immediate: [
+      'Update your LinkedIn profile with new skills',
+      'Create projects showcasing missing technical skills',
+      'Join relevant professional communities'
+    ],
+    shortTerm: [
+      'Pursue certifications in high-priority skills',
+      'Attend industry conferences or webinars',
+      'Find a mentor in your target role'
+    ],
+    longTerm: [
+      'Consider advanced degree or specialized training',
+      'Build thought leadership through content creation',
+      'Explore leadership opportunities in current role'
+    ]
+  };
+}
+
+function generateGenericCareerAdvice(resumeData, currentRole) {
+  return {
+    currentPosition: { current: { level: 'Professional', skills: ['General'], salary: '$50,000-80,000' } },
+    careerPaths: [{ title: 'Growth Track', progression: [] }],
+    nextSteps: { immediateActions: ['Continue skill development', 'Network actively'], timeframe: '6-12 months' },
+    skillGapAnalysis: { missingSkills: ['Communication', 'Leadership'], skillScore: 70 },
+    trending2025: ['Digital Skills', 'Data Literacy', 'Emotional Intelligence'],
+    emergingCertifications: ['Digital Marketing', 'Project Management', 'Data Analysis']
+  };
+}
+
+function generateFallbackCareerAdvice(currentRole) {
+  return generateGenericCareerAdvice({}, currentRole);
+}
+
+function generateBasicSkillAnalysis(currentSkills) {
+  return {
+    currentSkills,
+    missingSkills: ['Communication', 'Leadership', 'Problem-solving'],
+    skillScore: 65,
+    recommendations: ['Develop soft skills', 'Learn new technologies', 'Build portfolio']
+  };
+}
+
+function calculateSalaryIncrease(currentSalary, nextSalary) {
+  // Extract numbers from salary strings and calculate increase
+  const currentNum = parseInt(currentSalary.replace(/\D/g, ''));
+  const nextNum = parseInt(nextSalary.replace(/\D/g, ''));
+  const increase = Math.round(((nextNum - currentNum) / currentNum) * 100);
+  return `${increase}%`;
+}
+
+function generateGenericNotifications() {
+  return [
+    {
+      type: 'skill_update',
+      title: 'Skill Development Reminder',
+      message: 'Consider updating your skills to stay competitive in the job market.',
+      priority: 'medium',
+      category: 'general',
+      timestamp: new Date().toISOString()
+    }
+  ];
+}
+
+// Suggestions History Functions
+function getSuggestionsHistory(userId = 'anonymous', options = {}) {
+  const { limit = 50, type = null, startDate = null, endDate = null } = options;
+  
+  let filteredHistory = suggestionsHistory.filter(suggestion => 
+    suggestion.userId === userId
+  );
+  
+  // Filter by type if specified
+  if (type) {
+    filteredHistory = filteredHistory.filter(suggestion => suggestion.type === type);
+  }
+  
+  // Filter by date range if specified
+  if (startDate) {
+    filteredHistory = filteredHistory.filter(suggestion => 
+      new Date(suggestion.timestamp) >= new Date(startDate)
+    );
+  }
+  
+  if (endDate) {
+    filteredHistory = filteredHistory.filter(suggestion => 
+      new Date(suggestion.timestamp) <= new Date(endDate)
+    );
+  }
+  
+  // Apply limit
+  return filteredHistory.slice(0, limit);
+}
+
+function markSuggestionAsRead(suggestionId) {
+  const suggestion = suggestionsHistory.find(s => s.id === suggestionId);
+  if (suggestion) {
+    suggestion.isRead = true;
+    return { success: true, suggestion };
+  }
+  return { success: false, error: 'Suggestion not found' };
+}
+
+function deleteSuggestionFromHistory(suggestionId, userId = 'anonymous') {
+  const index = suggestionsHistory.findIndex(s => 
+    s.id === suggestionId && s.userId === userId
+  );
+  
+  if (index !== -1) {
+    const deletedSuggestion = suggestionsHistory.splice(index, 1)[0];
+    return { success: true, suggestion: deletedSuggestion };
+  }
+  
+  return { success: false, error: 'Suggestion not found or unauthorized' };
+}
+
+function getSuggestionStats(userId = 'anonymous') {
+  const userSuggestions = suggestionsHistory.filter(s => s.userId === userId);
+  
+  const stats = {
+    total: userSuggestions.length,
+    unread: userSuggestions.filter(s => !s.isRead).length,
+    byType: {},
+    recentActivity: {
+      today: 0,
+      thisWeek: 0,
+      thisMonth: 0
+    }
+  };
+  
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  userSuggestions.forEach(suggestion => {
+    // Count by type
+    if (!stats.byType[suggestion.type]) {
+      stats.byType[suggestion.type] = 0;
+    }
+    stats.byType[suggestion.type]++;
+    
+    // Count by time period
+    const suggestionDate = new Date(suggestion.timestamp);
+    if (suggestionDate >= todayStart) {
+      stats.recentActivity.today++;
+    }
+    if (suggestionDate >= weekStart) {
+      stats.recentActivity.thisWeek++;
+    }
+    if (suggestionDate >= monthStart) {
+      stats.recentActivity.thisMonth++;
+    }
+  });
+  
+  return stats;
+}
+
+function clearSuggestionsHistory(userId = 'anonymous') {
+  const initialLength = suggestionsHistory.length;
+  suggestionsHistory = suggestionsHistory.filter(s => s.userId !== userId);
+  const clearedCount = initialLength - suggestionsHistory.length;
+  
+  return { success: true, clearedCount };
+}
+
 module.exports = {
   generateContent,
   optimizeResume,
@@ -2012,4 +2564,15 @@ module.exports = {
   chatWithAI,
   generateInterviewPrep,
   generateMockInterviewFeedback,
+  generateCareerPathRecommendations,
+  generateSkillGapAnalysis,
+  getIndustryTrends,
+  generateTrendNotifications,
+  // Suggestions History Functions
+  getSuggestionsHistory,
+  markSuggestionAsRead,
+  deleteSuggestionFromHistory,
+  getSuggestionStats,
+  clearSuggestionsHistory,
+  saveSuggestionToHistory
 };

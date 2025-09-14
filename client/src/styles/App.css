@@ -1344,6 +1344,86 @@ body {
   line-height: 1.6;
 }
 
+/* Feature Categories */
+.features-category {
+  margin-bottom: var(--space-16);
+}
+
+.category-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--gray-800);
+  text-align: center;
+  margin-bottom: var(--space-8);
+  position: relative;
+}
+
+.category-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-500), var(--secondary-500));
+  border-radius: 2px;
+}
+
+/* Premium Feature Cards */
+.feature-card.premium {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.feature-card.premium .feature-title {
+  color: white;
+}
+
+.feature-card.premium .feature-description {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.feature-card.premium::before {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  height: 100%;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.feature-card.premium:hover::before {
+  opacity: 1;
+}
+
+/* Feature Highlights */
+.feature-highlight {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--primary-500);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.feature-card.premium .feature-highlight {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* Enhanced Features Grid */
+.features-category .features-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
 /* Testimonials Section */
 .testimonials-section {
   padding: var(--space-20) 0;
@@ -1554,9 +1634,15 @@ body {
 
 .resume-actions {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 15px;
   margin-bottom: 20px;
   justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .btn-ats-score {
@@ -2094,33 +2180,76 @@ body {
 .btn-edit,
 .btn-change-template,
 .btn-preview,
-.btn-create {
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 500;
+.btn-create,
+.btn-ats-score {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600 !important;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   border: none;
+  font-size: 14px !important;
+  min-width: 140px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  color: white !important;
+  text-decoration: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
 }
 
 .btn-download {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: #007bff !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
 }
 
 .btn-download:hover {
-  background-color: var(--primary-dark);
+  background-color: #0056b3 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .btn-edit,
 .btn-change-template {
-  background-color: var(--secondary-color);
-  color: white;
+  background-color: #6c757d !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
 }
 
 .btn-edit:hover,
 .btn-change-template:hover {
-  background-color: var(--secondary-dark);
+  background-color: #545b62 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-ats-score {
+  background-color: #28a745 !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+
+.btn-ats-score:hover {
+  background-color: #218838 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  color: white !important;
+}
+
+.btn-ats-score:disabled {
+  background-color: #6c757d !important;
+  cursor: not-allowed;
+  transform: none;
+  color: white !important;
 }
 
 .btn-preview,
@@ -2252,12 +2381,54 @@ body {
   
   .resume-actions {
     flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 15px;
+  }
+  
+  .btn-download,
+  .btn-edit,
+  .btn-change-template,
+  .btn-ats-score {
+    width: 100%;
+    min-width: auto;
   }
   
   .toast {
     left: 20px;
     right: 20px;
     min-width: auto;
+  }
+  
+  /* Features section responsive */
+  .features-category .features-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .feature-card {
+    padding: var(--space-6);
+  }
+  
+  .category-title {
+    font-size: var(--text-xl);
+  }
+  
+  .feature-highlight {
+    top: 12px;
+    right: 12px;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .hero-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
   }
 }
 
@@ -2277,5 +2448,70 @@ body {
     top: 0;
     width: 100%;
     box-shadow: none;
+  }
+}
+
+/* Resume Additional Features Styles */
+.resume-additional-features {
+  margin-top: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.features-tabs {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.feature-tab {
+  flex: 1;
+  padding: 15px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #6c757d;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.feature-tab:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.feature-tab.active {
+  background: white;
+  color: #0ea5e9;
+  border-bottom-color: #0ea5e9;
+}
+
+.feature-content {
+  padding: 20px;
+  min-height: 400px;
+}
+
+/* Responsive design for feature tabs */
+@media (max-width: 768px) {
+  .features-tabs {
+    flex-direction: column;
+  }
+  
+  .feature-tab {
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+    border-right: none;
+  }
+  
+  .feature-tab.active {
+    border-left: 3px solid #0ea5e9;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .feature-content {
+    padding: 15px;
   }
 }

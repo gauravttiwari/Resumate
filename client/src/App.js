@@ -12,6 +12,9 @@ import ResumeTypeSelector from './ResumeTypeSelector';
 import InterviewPrep from './InterviewPrep';
 import AIExampleUsage from './examples/AIExampleUsage';
 import AIChatModal from './components/AIChatModal';
+import ResumeAnalytics from './components/ResumeAnalytics';
+import SuggestionsHistory from './components/SuggestionsHistory';
+import NotificationCenter from './components/NotificationCenter';
 import aiService from './services/aiService';
 import './styles/App.css';
 import './styles/ReverseChrono.css'; // Import template styles
@@ -29,6 +32,7 @@ function App() {
   const [resumeType, setResumeType] = useState(null); // 'technical', 'medical', 'diploma', or 'nontechnical'
   const [isAnalyzingATS, setIsAnalyzingATS] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [activeFeatureTab, setActiveFeatureTab] = useState('analytics'); // For preview page tabs
   
   // Template search states
   const [templateSearchQuery, setTemplateSearchQuery] = useState('');
@@ -517,14 +521,12 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
             >
               🏠 Home
             </button>
-            {resumeType && (
-              <button 
-                className={`nav-link ${activeView === 'form' ? 'active' : ''}`}
-                onClick={() => setActiveView('form')}
-              >
-                📝 Create Resume
-              </button>
-            )}
+            <button 
+              className={`nav-link ${activeView === 'type-selector' || activeView === 'form' ? 'active' : ''}`}
+              onClick={() => setActiveView('type-selector')}
+            >
+              📝 Create Resume
+            </button>
             <button 
               className={`nav-link ${activeView === 'templates' ? 'active' : ''}`}
               onClick={() => resumeType ? setActiveView('templates') : showToast('Please select a resume type first', 'warning')}
@@ -762,7 +764,7 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                 onClick={handleDownloadPDF}
                 disabled={isGenerating}
               >
-                {isGenerating ? 'Generating PDF...' : 'Download PDF'}
+                📥 {isGenerating ? 'Generating PDF...' : 'Download PDF'}
               </button>
               <button 
                 className="btn-edit"
@@ -771,13 +773,13 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                   setActiveView('form');
                 }}
               >
-                Edit Resume
+                ✏️ Edit Resume
               </button>
               <button 
                 className="btn-change-template"
                 onClick={() => setActiveView('templates')}
               >
-                Change Template
+                🎨 Change Template
               </button>
               <button 
                 className="btn-ats-score"
@@ -820,6 +822,42 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                   template={selectedTemplate} 
                 />
               )}
+            </div>
+            
+            {/* Resume Analytics and Additional Features */}
+            <div className="resume-additional-features">
+              <div className="features-tabs">
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'analytics' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('analytics')}
+                >
+                  📊 Analytics
+                </button>
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'history' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('history')}
+                >
+                  🕒 History
+                </button>
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'notifications' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('notifications')}
+                >
+                  🔔 Notifications
+                </button>
+              </div>
+              
+              <div className="feature-content">
+                {activeFeatureTab === 'analytics' && (
+                  <ResumeAnalytics resumeData={resumeData} />
+                )}
+                {activeFeatureTab === 'history' && (
+                  <SuggestionsHistory userId="anonymous" />
+                )}
+                {activeFeatureTab === 'notifications' && (
+                  <NotificationCenter userId="anonymous" />
+                )}
+              </div>
             </div>
           </div>
         )}
