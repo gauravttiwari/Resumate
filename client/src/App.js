@@ -265,7 +265,13 @@ ${analysis.jobMatch ? `🎯 JOB MATCH: ${analysis.jobMatch}%` : ''}
       showToast(`Found ${searchResults.length} ATS-optimized templates!`);
     } catch (error) {
       console.error('Error searching templates:', error);
-      showToast('Failed to search templates. Please try again.', 'danger');
+      // If error has diagnostics (from aiService) show a clearer message
+      const diag = error && error.diagnostics;
+      if (diag) {
+        showToast(`Failed to search templates: ${diag.message} (API: ${diag.apiBase})`, 'danger', 8000);
+      } else {
+        showToast('Failed to search templates. Please try again.', 'danger');
+      }
     } finally {
       setIsSearchingTemplates(false);
     }
