@@ -1,0 +1,11 @@
+{
+  "name": "resumate-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tooling for local tests (responsive checks)",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.55.0",
+    "serve-handler": "^6.1.6"
+  }
+}

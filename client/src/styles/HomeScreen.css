@@ -11,7 +11,8 @@
 /* HERO */
 .hs-hero {
   display: grid;
-  grid-template-columns: 1fr 440px;
+  /* Use a fluid right column: min 260px up to a measured max to avoid overflow */
+  grid-template-columns: 1fr minmax(260px, 44ch);
   gap: 32px;
   align-items: start;
   background: linear-gradient(135deg, #f7fbff 0%, #eef6ff 40%, #ffffff 100%);
@@ -20,17 +21,17 @@
   box-shadow: 0 18px 50px rgba(6,18,63,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
   position: relative;
   overflow: visible;
-  min-height: 320px;
+  min-height: 280px; /* slightly reduced baseline */
 }
 
 .hs-hero::before {
-  /* decorative soft blob */
+  /* decorative soft blob - use fluid sizing to avoid horizontal overflow */
   content: '';
   position: absolute;
-  right: 8%;
+  right: 6%;
   top: -6%;
-  width: 360px;
-  height: 360px;
+  width: clamp(120px, 28vw, 360px);
+  height: clamp(120px, 28vw, 360px);
   background: radial-gradient(circle at 30% 30%, rgba(102,102,255,0.12), transparent 40%), radial-gradient(circle at 70% 70%, rgba(110,168,255,0.06), transparent 35%);
   filter: blur(40px);
   pointer-events: none;
@@ -112,7 +113,7 @@
 /* HERO MOCKUP */
 .mockup-wrap { display:flex; justify-content:center; align-items:center; position:relative; z-index:1; }
 .mockup {
-  width:360px;
+  width: clamp(240px, 30vw, 440px); /* fluid mockup width */
   border-radius:16px;
   box-shadow: 0 40px 90px rgba(2,6,23,0.18);
   transform-origin:center;
@@ -128,10 +129,10 @@
 .mockup::before{
   content:'';
   position:absolute;
-  left: -10%;
-  top: -30%;
-  width: 140%;
-  height: 80%;
+  left: -6%;
+  top: -18%;
+  width: clamp(140px, 40vw, 140%);
+  height: clamp(80px, 28vw, 80%);
   background: radial-gradient(closest-side, rgba(110,168,255,0.12), transparent 40%);
   transform: rotate(-18deg);
   pointer-events:none;
@@ -141,8 +142,8 @@
 
 /* Fallback mockup (simple HTML/CSS resume preview) */
 .mockup.fallback {
-  width:360px;
-  height:520px;
+  width: clamp(240px, 30vw, 440px);
+  height: clamp(360px, 54vh, 640px);
   border-radius:12px;
   background: linear-gradient(180deg,#fff,#fbfdff);
   padding:18px;
@@ -165,8 +166,8 @@
 
 /* Template-like HTML mockup styles */
 .template-mockup{
-  width:400px;
-  height:540px;
+  width: clamp(280px, 34vw, 480px);
+  height: clamp(420px, 56vh, 640px);
   border-radius:12px;
   background: #ffffff;
   box-shadow: 0 34px 90px rgba(2,6,23,0.14);
@@ -341,6 +342,8 @@
   .mockup, .template-mockup{ width:100%; max-width:420px; }
   .mock-body{ grid-template-columns: 1fr; }
   .mock-side{ order:2; }
+  /* Ensure decorative elements don't overflow on medium-small screens */
+  .hs-hero::before, .mockup::before { opacity: 0.95; }
 }
 
 @media (max-width: 620px) {
@@ -349,4 +352,16 @@
   .hs-templates-grid { grid-template-columns:1fr; }
   .hs-hero-left h1 { font-size:1.4rem; }
   .mockup { display:none; }
+}
+
+/* Flex wrap fixes and small-element responsiveness */
+.hs-quickstart .qs-row { flex-wrap: wrap; }
+.hs-quickstart input { min-width: 0; flex: 1 1 160px; }
+.hs-badges, .hs-cta-row { flex-wrap: wrap; }
+.tile { min-height: 120px; height: auto; align-items:flex-start; }
+
+/* Hide large decorative blobs on very narrow screens to avoid overflow */
+@media (max-width: 480px) {
+  .hs-hero::before, .mockup::before { display: none; }
+  .hs-hero { padding: 18px; }
 }
