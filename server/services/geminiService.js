@@ -1851,17 +1851,19 @@ function getFallbackChatResponse(message) {
 }
 
 // Interview Preparation Functions
-async function generateInterviewPrep(field, jobRole, qualification) {
-  const cacheKey = `interview_prep_${field}_${jobRole}_${qualification}`;
+async function generateInterviewPrep(field, jobRole, qualification, resumeText) {
+  const skillsFromResume = resumeText ? extractCurrentSkills(parseResumeTextToData(resumeText)) : [];
+  const skillTag = skillsFromResume.length ? `\n- Detected skills from resume: ${skillsFromResume.join(', ')}` : '';
+  const cacheKey = `interview_prep_${field}_${jobRole}_${qualification}_${skillsFromResume.join('_')}`;
   const cached = responseCache.get(cacheKey);
   if (cached) return cached;
 
   try {
-    const prompt = `
+  const prompt = `
 Generate comprehensive interview preparation content for:
 - Field: ${field}
 - Job Role: ${jobRole || 'General'}
-- Qualification: ${qualification}
+- Qualification: ${qualification}${skillTag}
 
 Please provide highly tailored, field-specific content with:
 
@@ -2314,13 +2316,42 @@ function extractCurrentSkills(resumeData) {
       if (exp.role) skills.push(exp.role);
       if (exp.description) {
         // Extract skills from experience descriptions
-        const techWords = exp.description.match(/\b(Java|Python|JavaScript|React|Node|SQL|AWS|Docker|Git|Agile)\b/gi);
+  const techWords = exp.description.match(/\b(Java|Python|JavaScript|TypeScript|React|Angular|Vue|Node|Node.js|SQL|PostgreSQL|MySQL|MongoDB|AWS|Azure|GCP|Docker|Kubernetes|Git|Agile|REST|GraphQL|Django|Flask|Spring)\b/gi);
         if (techWords) skills.push(...techWords);
       }
     });
   }
   
   return [...new Set(skills)]; // Remove duplicates
+}
+
+// Basic heuristic parser to convert resume text into a minimal resumeData shape
+function parseResumeTextToData(text) {
+  if (!text || typeof text !== 'string') return {};
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const resumeData = { skills: '', experience: [] };
+
+  // Try to find a Skills: line
+  const skillsLine = lines.find(l => /^skills[:\-]/i.test(l));
+  if (skillsLine) {
+    resumeData.skills = skillsLine.replace(/^skills[:\-]\s*/i, '').trim();
+  }
+
+  // Heuristically gather experience blocks by detecting years or company markers
+  const expBlocks = [];
+  let current = null;
+  lines.forEach(line => {
+    if (/\b(19|20)\d{2}\b/.test(line) || /\bat\b/i.test(line)) {
+      if (current) expBlocks.push(current);
+      current = { role: line.split(/ at | — | - /i)[0].trim(), description: '' };
+    } else if (current) {
+      current.description += (current.description ? ' ' : '') + line;
+    }
+  });
+  if (current) expBlocks.push(current);
+  resumeData.experience = expBlocks;
+
+  return resumeData;
 }
 
 function categorizeSkills(skills, role) {

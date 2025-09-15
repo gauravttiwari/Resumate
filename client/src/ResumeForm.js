@@ -407,8 +407,17 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
 
       <h2>Professional Summary</h2>
       <div className="form-group">
-        <div className="label-with-ai">
-          <label htmlFor="summary">Career Objective / Summary*</label>
+        <label htmlFor="summary">Career Objective / Summary*</label>
+        <div className="textarea-with-ai">
+          <textarea
+            id="summary"
+            name="summary"
+            value={formData.summary}
+            onChange={handleChange}
+            rows="3"
+            required
+            placeholder="Software Engineer with 2 years of experience building scalable web applications using React, Node.js, and cloud technologies."
+          ></textarea>
           <button
             type="button"
             className={`ai-helper-btn ${aiLoading && aiFeature === 'summary' ? 'loading' : ''}`}
@@ -419,15 +428,6 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
             {aiLoading && aiFeature === 'summary' ? '🤖 Generating...' : '✨ AI Generate'}
           </button>
         </div>
-        <textarea
-          id="summary"
-          name="summary"
-          value={formData.summary}
-          onChange={handleChange}
-          rows="3"
-          required
-          placeholder="Software Engineer with 2 years of experience building scalable web applications using React, Node.js, and cloud technologies."
-        ></textarea>
         <small className="form-text text-muted">
           2-3 lines summarizing your profile and the job role you're applying for. Keep it focused and include relevant keywords.
         </small>
@@ -435,8 +435,17 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
 
       <h2>Technical Skills</h2>
       <div className="form-group">
-        <div className="label-with-ai">
-          <label htmlFor="skills">Skills*</label>
+        <label htmlFor="skills">Skills*</label>
+        <div className="textarea-with-ai">
+          <input
+            type="text"
+            id="skills"
+            name="skills"
+            value={formData.skills}
+            onChange={handleChange}
+            required
+            placeholder="JavaScript, React, Node.js, Python, AWS, Docker, Git"
+          />
           <button
             type="button"
             className={`ai-helper-btn ${aiLoading && aiFeature === 'skills' ? 'loading' : ''}`}
@@ -447,15 +456,6 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
             {aiLoading && aiFeature === 'skills' ? '🤖 Generating...' : '⚡ AI Suggest Skills'}
           </button>
         </div>
-        <input
-          type="text"
-          id="skills"
-          name="skills"
-          value={formData.skills}
-          onChange={handleChange}
-          required
-          placeholder="JavaScript, React, Node.js, Python, AWS, Docker, Git"
-        />
         <small className="form-text text-muted">
           List your skills, separated by commas. Include technical skills, programming languages, and tools.
         </small>
@@ -503,28 +503,28 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
           </div>
           
           <div className="form-group">
-            <div className="label-with-ai">
-              <label htmlFor={`exp-description-${index}`}>Description*</label>
+            <label htmlFor={`exp-description-${index}`}>Description*</label>
+            <div className="textarea-with-ai">
+              <textarea
+                id={`exp-description-${index}`}
+                value={exp.description}
+                onChange={(e) => handleArrayItemChange(index, 'experience', 'description', e.target.value)}
+                rows="3"
+                required
+                placeholder="- Developed REST APIs using Node.js and Express.js.
+- Implemented authentication system using JWT.
+- Optimized database queries, improving performance by 30%."
+              ></textarea>
               <button
                 type="button"
                 className={`ai-helper-btn ${aiLoading && aiFeature === `experience-${index}` ? 'loading' : ''}`}
-                onClick={() => setShowChatModal(true)}
+                onClick={() => improveExperienceWithAI(index)}
                 disabled={aiLoading}
-                title="Chat with AI for experience help"
+                title="Improve experience description with AI"
               >
-                {aiLoading && aiFeature === `experience-${index}` ? '🤖 Improving...' : '� AI Experience Chat'}
+                {aiLoading && aiFeature === `experience-${index}` ? '🤖 Improving...' : '✨ Improve with AI'}
               </button>
             </div>
-            <textarea
-              id={`exp-description-${index}`}
-              value={exp.description}
-              onChange={(e) => handleArrayItemChange(index, 'experience', 'description', e.target.value)}
-              rows="3"
-              required
-              placeholder="- Developed REST APIs using Node.js and Express.js.
-- Implemented authentication system using JWT.
-- Optimized database queries, improving performance by 30%."
-            ></textarea>
             <small className="form-text text-muted">
               Enter bullet points, each on a new line. Start with action verbs and include measurable achievements.
             </small>

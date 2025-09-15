@@ -22,7 +22,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.1"><circle cx="30" cy="30" r="2"/></g></svg>') repeat;
+  background: url("data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.1%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
   pointer-events: none;
 }
 
@@ -83,13 +83,26 @@
 }
 
 .resume-form h2 {
-  color: #2c3e50;
-  margin-top: 30px;
-  margin-bottom: 15px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #eaeaea;
-  font-weight: 600;
-  font-size: 1.4rem;
+  color: #1f2937;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+  display: block;
+  padding-left: 18px; /* space for left accent */
+  position: relative;
+}
+
+/* Accent bar positioned absolutely so heading spans full width */
+.resume-form h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 22px;
+  background: linear-gradient(180deg,#667eea,#764ba2);
+  border-radius: 3px;
 }
 
 .section-header-with-options {
@@ -186,6 +199,194 @@
   border: 1px solid #eaeaea;
   border-radius: 6px;
   background-color: #fafafa;
+}
+
+/* Resume.io-like layout: centered card and two-column form */
+.resume-form {
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(20,20,30,0.06);
+}
+
+/* Decorative header for the form to make it stand out */
+.resume-form .form-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  margin: -24px -24px 18px -24px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(90deg, rgba(102,126,234,0.12), rgba(118,75,162,0.06));
+  border-bottom: 1px solid rgba(102,110,234,0.08);
+}
+
+.resume-form .form-top .title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.resume-form .form-top .title h1 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: #0f172a;
+}
+
+.resume-form .form-top .summary {
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.resume-form .form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* left main, right narrow column */
+  gap: 28px;
+  align-items: start;
+}
+
+/* Typography improvements */
+body, .resume-form {
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #111827;
+}
+
+.resume-form h1, .resume-form .form-title {
+  font-family: 'Poppins', Inter, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Reduce input padding for compact modern look */
+.resume-form input[type="text"],
+.resume-form input[type="email"],
+.resume-form input[type="tel"],
+.resume-form textarea {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6e6f0;
+  background: #fbfbfe;
+}
+
+/* Enhanced focus state */
+.resume-form input:focus,
+.resume-form textarea:focus {
+  border-color: #667eea;
+  box-shadow: 0 6px 20px rgba(102,110,234,0.12);
+}
+
+.section-item {
+  padding: 18px;
+  border-radius: 10px;
+}
+
+
+.section-item:hover {
+  transform: translateY(-3px);
+  transition: transform 180ms ease;
+  box-shadow: 0 12px 40px rgba(15,23,42,0.06);
+}
+/* Make form rows flow into the two-column grid when appropriate */
+.resume-form .form-row.two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Compact labels like resume.io */
+.resume-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #222;
+  font-size: 0.875rem;
+  letter-spacing: 0.2px;
+}
+
+/* textarea-with-ai: place button to the right of the field */
+.textarea-with-ai {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.textarea-with-ai textarea,
+.textarea-with-ai input[type="text"] {
+  flex: 1 1 auto;
+}
+
+.ai-helper-btn {
+  background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+}
+
+.ai-helper-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,110,234,0.12);} 
+
+/* small helper for icons inside buttons */
+.ai-helper-btn .icon { margin-right: 6px; }
+
+.ai-helper-btn.loading {
+  opacity: 0.95;
+  transform: translateY(0);
+}
+
+/* Responsive: single column on small screens */
+@media (max-width: 880px) {
+  .resume-form .form-grid { grid-template-columns: 1fr; }
+  .resume-form .form-row.two-column { grid-template-columns: 1fr; }
+  .ai-helper-btn { min-width: 90px; }
+  .resume-form { padding: 18px; }
+  .resume-form .form-top { margin: -18px -18px 14px -18px; padding: 14px 16px; }
+}
+
+/* Extra responsiveness for very small screens */
+@media (max-width: 520px) {
+  .resume-form { padding: 16px; }
+  .resume-form h2 { font-size: 1rem; }
+  .textarea-with-ai { flex-direction: column-reverse; }
+  .ai-helper-btn { width: 100%; }
+  .section-item { padding: 12px; }
+}
+
+/* Larger screens tweaks */
+@media (min-width: 1400px) {
+  .resume-form { max-width: 1280px; padding: 32px; }
+  .resume-form .form-top { padding: 22px 28px; }
+}
+
+/* Buttons & actions polish */
+.btn-add, .btn-remove, .btn-generate, .ai-helper-btn {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.btn-generate {
+  background: linear-gradient(90deg,#06b6d4,#3b82f6);
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.btn-generate:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(59,130,246,0.12); }
+
+/* Small visual separators between sections */
+.resume-form .section-divider { margin: 20px 0; }
+
+/* subtle divider between sections for clarity */
+.resume-form .section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #eef2ff, transparent);
+  margin: 18px 0;
 }
 
 .achievement-item {

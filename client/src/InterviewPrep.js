@@ -9,6 +9,7 @@ const InterviewPrep = () => {
     jobRole: '',
     qualification: ''
   });
+  const [resumeText, setResumeText] = useState('');
   
   const [interviewData, setInterviewData] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -49,7 +50,8 @@ const InterviewPrep = () => {
         body: JSON.stringify({
           field: profileData.field,
           jobRole: profileData.jobRole,
-          qualification: profileData.qualification
+          qualification: profileData.qualification,
+          resumeText: resumeText
         })
       });
       
@@ -81,6 +83,35 @@ const InterviewPrep = () => {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleResumeFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    // If it's plain text, read locally
+    if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setResumeText(ev.target.result || '');
+      reader.readAsText(file);
+      return;
+    }
+
+    // Otherwise upload to server for PDF parsing
+    const form = new FormData();
+    form.append('resume', file);
+    try {
+      const resp = await fetch('/api/ai/upload-resume', { method: 'POST', body: form });
+      const data = await resp.json();
+      if (data.success) {
+        setResumeText(data.text || '');
+      } else {
+        alert(data.message || 'Failed to extract resume text');
+      }
+    } catch (err) {
+      console.error('Upload error', err);
+      alert('Upload failed. Please try again.');
     }
   };
   
@@ -157,6 +188,18 @@ const InterviewPrep = () => {
               placeholder="e.g., Software Engineer, Nurse, Sales Associate"
               value={profileData.jobRole}
               onChange={(e) => handleInputChange('jobRole', e.target.value)}
+            />
+          </div>
+
+          <div className="form-section">
+            <label>Upload or paste your resume (optional)</label>
+            <input type="file" accept=".txt,.pdf" onChange={handleResumeFile} />
+            <textarea
+              className="resume-paste"
+              placeholder="Or paste your resume text here to get questions tailored to your experience and skills"
+              value={resumeText}
+              onChange={(e) => setResumeText(e.target.value)}
+              rows={6}
             />
           </div>
           

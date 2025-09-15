@@ -3,6 +3,9 @@
 const express = require('express');
 const router = express.Router();
 const geminiService = require('../services/geminiService');
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 /**
  * Route to optimize resume content for ATS systems
@@ -309,7 +312,7 @@ router.post('/search-templates', async (req, res) => {
  */
 router.post('/interview-prep', async (req, res) => {
   try {
-    const { field, jobRole, qualification } = req.body;
+  const { field, jobRole, qualification, resumeText } = req.body;
 
     if (!field || !qualification) {
       return res.status(400).json({
@@ -321,7 +324,8 @@ router.post('/interview-prep', async (req, res) => {
     const interviewData = await geminiService.generateInterviewPrep(
       field,
       jobRole,
-      qualification
+      qualification,
+      resumeText
     );
 
     res.status(200).json({
@@ -337,6 +341,36 @@ router.post('/interview-prep', async (req, res) => {
       message: 'Failed to generate interview preparation',
       error: error.message
     });
+  }
+});
+
+/**
+ * Route to upload a resume file (PDF or TXT) and extract text
+ */
+router.post('/upload-resume', upload.single('resume'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+
+    const mimetype = req.file.mimetype || '';
+    let extracted = '';
+    if (mimetype === 'application/pdf' || req.file.originalname.toLowerCase().endsWith('.pdf')) {
+      try {
+        const data = await pdfParse(req.file.buffer);
+        extracted = data.text || '';
+      } catch (e) {
+        console.error('PDF parse error:', e);
+        return res.status(500).json({ success: false, message: 'Failed to parse PDF' });
+      }
+    } else if (mimetype === 'text/plain' || req.file.originalname.toLowerCase().endsWith('.txt')) {
+      extracted = req.file.buffer.toString('utf8');
+    } else {
+      return res.status(400).json({ success: false, message: 'Unsupported file type. Upload PDF or TXT.' });
+    }
+
+    res.status(200).json({ success: true, text: extracted });
+  } catch (error) {
+    console.error('Error uploading resume:', error);
+    res.status(500).json({ success: false, message: 'Failed to extract resume text' });
   }
 });
 

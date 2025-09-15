@@ -89,8 +89,8 @@ class GoogleSearchService {
     const siteRestrictions = [
       'site:github.com',
       'site:canva.com',
-      'site:resumegenius.com',
-      'site:zety.com',
+  'site:resumegenius.com',
+  'site:resumate.com',
       'site:indeed.com',
       'site:templatemonster.com',
       'site:behance.net'

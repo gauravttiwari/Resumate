@@ -56,6 +56,18 @@
   font-size: 1.1rem;
 }
 
+.resume-paste {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  resize: vertical;
+  margin-top: 8px;
+}
+
+.form-section input[type="file"]{ margin-top:8px; }
+
 .field-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
