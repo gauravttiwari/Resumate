@@ -1,0 +1,37 @@
+name: Deploy client to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install and build client
+        working-directory: ./client
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./client/build
+          publish_branch: gh-pages
+
+      - name: Upload artifact (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-build
+          path: client/build
