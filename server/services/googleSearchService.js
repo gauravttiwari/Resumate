@@ -1,6 +1,9 @@
 // services/googleSearchService.js
 
 const https = require('https');
+const path = require('path');
+// Ensure environment variables from server/.env are loaded even when cwd differs
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 /**
  * Google Custom Search API Service for Resume Templates
@@ -24,7 +27,7 @@ class GoogleSearchService {
       console.log('Searching Google for templates:', { jobTitle, industry, experienceLevel });
 
       // Construct intelligent search query
-      const searchQuery = this.buildSearchQuery(jobTitle, industry, experienceLevel);
+      const searchQuery = this.buildSearchQuery(jobTitle, industry, experienceLevel, true);
       console.log('Google search query:', searchQuery);
 
       // Perform Google Custom Search
@@ -32,8 +35,35 @@ class GoogleSearchService {
       
       // Parse and validate results
       const templates = this.parseTemplateResults(searchResults);
-      
       console.log(`Found ${templates.length} templates from Google search`);
+
+      // If Google returned no items, log raw response to help diagnose
+      if ((!searchResults.items || searchResults.items.length === 0) && searchResults) {
+        try {
+          console.log('Google raw response (truncated):', JSON.stringify(searchResults, null, 2).substring(0, 4000));
+        } catch (e) {
+          console.log('Could not stringify Google response');
+        }
+      }
+
+      // If no templates found with site restrictions, retry a broader search without site filters
+      if (templates.length === 0) {
+        console.log('No templates found with site restrictions, retrying without site filters');
+        const broaderQuery = this.buildSearchQuery(jobTitle, industry, experienceLevel, false);
+        console.log('Broader Google search query:', broaderQuery);
+        const broaderResults = await this.performCustomSearch(broaderQuery);
+        const broaderTemplates = this.parseTemplateResults(broaderResults);
+        console.log(`Found ${broaderTemplates.length} templates from broader Google search`);
+        if ((!broaderResults.items || broaderResults.items.length === 0) && broaderResults) {
+          try {
+            console.log('Broader Google raw response (truncated):', JSON.stringify(broaderResults, null, 2).substring(0, 4000));
+          } catch (e) {
+            console.log('Could not stringify broader Google response');
+          }
+        }
+        if (broaderTemplates.length > 0) return broaderTemplates;
+      }
+
       return templates;
 
     } catch (error) {
@@ -49,7 +79,7 @@ class GoogleSearchService {
    * @param {string} experienceLevel - Experience level
    * @returns {string} - Optimized search query
    */
-  buildSearchQuery(jobTitle, industry, experienceLevel) {
+  buildSearchQuery(jobTitle, industry, experienceLevel, useSiteRestrictions = true) {
     const baseTerms = [
       'ATS-friendly resume template',
       'professional resume template',
@@ -79,10 +109,13 @@ class GoogleSearchService {
       levelTerms
     ].filter(Boolean).join(' ');
 
-    // Add site restrictions
-    const siteFilter = `(${siteRestrictions.join(' OR ')})`;
-    
-    return `${searchTerms} ${siteFilter}`;
+    // Add site restrictions when requested
+    if (useSiteRestrictions) {
+      const siteFilter = `(${siteRestrictions.join(' OR ')})`;
+      return `${searchTerms} ${siteFilter}`;
+    }
+
+    return searchTerms;
   }
 
   /**
@@ -93,7 +126,12 @@ class GoogleSearchService {
   async performCustomSearch(query) {
     return new Promise((resolve, reject) => {
       if (!this.apiKey || !this.searchEngineId) {
-        console.warn('Google API credentials not configured, using fallback');
+        // Log presence without exposing keys
+        console.warn('Google API credentials not configured, using fallback', {
+          hasApiKey: !!this.apiKey,
+          hasSearchEngineId: !!this.searchEngineId,
+          searchEngineIdPreview: this.searchEngineId ? this.searchEngineId.slice(-6) : null
+        });
         resolve({ items: [] });
         return;
       }
@@ -103,30 +141,48 @@ class GoogleSearchService {
         cx: this.searchEngineId,
         q: query,
         num: 8, // Number of results
-        searchType: 'image', // Include images for previews
+        // Do not force image-only results; allow web results so templates are discoverable
         safe: 'active',
         lr: 'lang_en'
       });
 
       const url = `${this.baseUrl}?${params}`;
+      console.log('Google Custom Search URL:', url);
 
-      https.get(url, (response) => {
+      const req = https.get(url, (response) => {
         let data = '';
-        
+
+        console.log('Google response statusCode:', response.statusCode);
+
         response.on('data', (chunk) => {
           data += chunk;
         });
-        
+
         response.on('end', () => {
+          if (response.statusCode < 200 || response.statusCode >= 300) {
+            console.error('Google API returned non-2xx status', response.statusCode, data.substring(0, 1000));
+            // Resolve with empty items so caller uses fallback templates
+            resolve({ items: [] });
+            return;
+          }
+
           try {
             const result = JSON.parse(data);
             resolve(result);
           } catch (error) {
+            console.error('Failed to parse Google API response body:', data.substring(0, 1000));
             reject(new Error('Failed to parse Google API response'));
           }
         });
-      }).on('error', (error) => {
+      });
+
+      req.on('error', (error) => {
         reject(error);
+      });
+      // safety timeout
+      req.setTimeout(10000, () => {
+        req.abort();
+        reject(new Error('Google API request timed out'));
       });
     });
   }
@@ -141,24 +197,61 @@ class GoogleSearchService {
       return [];
     }
 
-    return searchResults.items.map((item, index) => ({
-      id: `google-template-${index}`,
-      name: this.cleanTemplateName(item.title),
-      source: 'Google Search',
-      sourceUrl: item.link,
-      previewUrl: item.image?.thumbnailLink || item.link,
-      description: this.extractDescription(item.snippet),
-      atsScore: this.estimateATSScore(item.title, item.snippet),
-      industry: 'General',
-      layoutStyle: this.detectLayoutStyle(item.title, item.snippet),
-      experienceLevel: ['entry-level', 'mid-level', 'senior'],
-      features: this.extractFeatures(item.title, item.snippet),
-      relevanceScore: 85 - (index * 5), // Decrease by rank
-      aiRecommendation: 'Google Recommended',
-      isExternal: true,
-      copyright: 'External Source - Check Original License',
-      lastUpdated: new Date().toISOString()
-    })).filter(template => template.name && template.sourceUrl);
+    return searchResults.items.map((item, index) => {
+      // Helper: get best image from pagemap or metatags
+      const pageMap = item.pagemap || {};
+      let preview = null;
+
+      // prefer cse_image
+      if (Array.isArray(pageMap.cse_image) && pageMap.cse_image[0] && pageMap.cse_image[0].src) {
+        preview = pageMap.cse_image[0].src;
+      }
+
+      // try metatags og:image
+      if (!preview && Array.isArray(pageMap.metatags) && pageMap.metatags[0]) {
+        const og = pageMap.metatags[0]['og:image'] || pageMap.metatags[0]['twitter:image'];
+        if (og) preview = og;
+      }
+
+      // fallback to image thumbnail or link
+      if (!preview && item.image && item.image.thumbnailLink) preview = item.image.thumbnailLink;
+      if (!preview && item.link) preview = item.link;
+
+      // sanitize fields
+      const rawTitle = (item.title || item.htmlTitle || '').replace(/\s+/g, ' ').trim();
+      const name = this.cleanTemplateName(rawTitle);
+
+      const rawSnippet = (item.snippet || item.htmlSnippet || '').replace(/\s+/g, ' ').trim();
+      const description = this.extractDescription(rawSnippet);
+
+      const rawLink = (item.link || item.formattedUrl || '').trim();
+      // try to decode and sanitize URL
+      let sourceUrl = rawLink;
+      try {
+        sourceUrl = decodeURIComponent(rawLink);
+      } catch (e) {
+        // ignore decode errors
+      }
+
+      return {
+        id: `google-template-${index}`,
+        name,
+        source: 'Google Search',
+        sourceUrl,
+        previewUrl: preview,
+        description,
+        atsScore: this.estimateATSScore(rawTitle, rawSnippet),
+        industry: 'General',
+        layoutStyle: this.detectLayoutStyle(rawTitle, rawSnippet),
+        experienceLevel: ['entry-level', 'mid-level', 'senior'],
+        features: this.extractFeatures(rawTitle, rawSnippet),
+        relevanceScore: 85 - (index * 5), // Decrease by rank
+        aiRecommendation: 'Google Recommended',
+        isExternal: true,
+        copyright: 'External Source - Check Original License',
+        lastUpdated: new Date().toISOString()
+      };
+    }).filter(template => template.name && template.sourceUrl);
   }
 
   /**

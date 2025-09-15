@@ -2,7 +2,7 @@ import React from 'react';
 import './styles/TemplateSelector.css';
 import './styles/TemplatePreview.css';
 
-const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType }) => {
+const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, externalTemplates = [], onInspireFromTemplate = () => {}, onUseExternalTemplate = () => {} }) => {
   // All templates with their respective types
   const allTemplates = [
     {
@@ -108,343 +108,102 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType }) =>
       </p>
       
       <div className="template-grid">
-        {filteredTemplates.map((template) => (
-          <div
-            key={template.id}
-            className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
-            onClick={() => onTemplateChange(template.id)}
-          >
-            <div className="template-preview">
-              <div className="template-preview-content">
-                {template.id === 'reverse-chrono' && (
-                  <div className="resume-preview reverse-chrono-preview">
-                    <div className="preview-header">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-contact">
-                        <span>johndoe@email.com</span>
-                        <span>(123) 456-7890</span>
-                        <span>New York, NY</span>
-                      </div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Professional Summary</div>
-                      <div className="preview-description">Experienced professional with 5+ years in software development and project management.</div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Work Experience</div>
-                      <div className="preview-item">
-                        <div className="preview-job-title">Senior Software Engineer</div>
-                        <div className="preview-company">Tech Innovations Inc.</div>
-                        <div className="preview-dates">Jan 2020 - Present</div>
-                        <div className="preview-description">Led development team in creating enterprise applications.</div>
-                      </div>
-                      <div className="preview-item">
-                        <div className="preview-job-title">Software Developer</div>
-                        <div className="preview-company">Digital Solutions</div>
-                        <div className="preview-dates">Jun 2018 - Dec 2019</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {template.id === 'modern-sidebar' && (
-                  <div className="resume-preview modern-sidebar-preview">
-                    <div className="sidebar">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-section">
-                        <div className="preview-section-title">Contact</div>
-                        <div className="preview-contact">
-                          <span>johndoe@email.com</span>
-                          <span>(123) 456-7890</span>
-                          <span>New York, NY</span>
-                        </div>
-                      </div>
-                      <div className="preview-section">
-                        <div className="preview-section-title">Skills</div>
-                        <ul className="preview-skills-list">
-                          <li className="preview-skill">JavaScript</li>
-                          <li className="preview-skill">React</li>
-                          <li className="preview-skill">Node.js</li>
-                          <li className="preview-skill">UI/UX</li>
-                        </ul>
-                      </div>
-                    </div>
-                    <div className="main-content">
-                      <div className="preview-section">
-                        <div className="preview-section-title">Experience</div>
-                        <div className="preview-item">
-                          <div className="preview-job-title">Senior Developer</div>
-                          <div className="preview-company">Tech Solutions</div>
-                          <div className="preview-dates">2020 - Present</div>
-                        </div>
-                      </div>
-                      <div className="preview-section">
-                        <div className="preview-section-title">Education</div>
-                        <div className="preview-item">
-                          <div className="preview-education-degree">B.S. Computer Science</div>
-                          <div className="preview-education-school">University of Technology</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'professional-clean' && (
-                  <div className="resume-preview professional-clean-preview">
-                    <div className="preview-header">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-contact">
-                        <span>johndoe@email.com</span>
-                        <span>(123) 456-7890</span>
-                        <span>New York, NY</span>
-                      </div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Professional Summary</div>
-                      <div className="preview-description">Innovative tech professional with expertise in software development.</div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Work History</div>
-                      <div className="preview-item">
-                        <div className="preview-job-title">Senior Developer</div>
-                        <div className="preview-company">Future Tech Inc.</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'pro-profile' && (
-                  <div className="resume-preview pro-profile-preview">
-                    <div className="sidebar">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-section">
-                        <div className="preview-section-title">Contact</div>
-                        <div className="preview-contact">
-                          <span>johndoe@email.com</span>
-                          <span>(123) 456-7890</span>
-                        </div>
-                      </div>
-                      <div className="preview-section">
-                        <div className="preview-section-title">Skills</div>
-                        <ul className="preview-skills-list">
-                          <li className="preview-skill">Leadership</li>
-                          <li className="preview-skill">Strategy</li>
-                          <li className="preview-skill">Management</li>
-                        </ul>
-                      </div>
-                    </div>
-                    <div className="main-content">
-                      <div className="preview-section">
-                        <div className="preview-section-title">Executive Profile</div>
-                        <div className="preview-description">Senior executive with over 10 years of leadership experience.</div>
-                      </div>
-                      <div className="preview-section">
-                        <div className="preview-section-title">Experience</div>
-                        <div className="preview-item">
-                          <div className="preview-job-title">Chief Technology Officer</div>
-                          <div className="preview-company">Enterprise Solutions</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'jobfit-pro' && (
-                  <div className="resume-preview jobfit-pro-preview">
-                    <div className="sidebar">
-                      <div className="preview-section">
-                        <div className="preview-section-title">Contact</div>
-                        <div className="preview-contact">
-                          <span>johndoe@email.com</span>
-                          <span>(123) 456-7890</span>
-                        </div>
-                      </div>
-                      <div className="preview-section">
-                        <div className="preview-section-title">Skills</div>
-                        <ul className="preview-skills-list">
-                          <li className="preview-skill">Python</li>
-                          <li className="preview-skill">Data Analysis</li>
-                          <li className="preview-skill">Machine Learning</li>
-                        </ul>
-                      </div>
-                    </div>
-                    <div className="main-content">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-section">
-                        <div className="preview-section-title">Experience</div>
-                        <div className="preview-item">
-                          <div className="preview-job-title">Data Scientist</div>
-                          <div className="preview-company">Analytics Co.</div>
-                          <div className="preview-dates">2019 - Present</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'classic' && (
-                  <div className="resume-preview classic-preview">
-                    <div className="preview-header">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-contact">
-                        <span>johndoe@email.com</span>
-                        <span>(123) 456-7890</span>
-                        <span>New York, NY</span>
-                      </div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Experience</div>
-                      <div className="preview-item">
-                        <div className="preview-job-title">Marketing Manager</div>
-                        <div className="preview-company">Global Brands Inc.</div>
-                        <div className="preview-dates">2018 - Present</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'modern' && (
-                  <div className="resume-preview modern-preview">
-                    <div className="preview-header">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-contact">
-                        <span>johndoe@email.com</span>
-                        <span>(123) 456-7890</span>
-                      </div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Experience</div>
-                      <div className="preview-item">
-                        <div className="preview-job-title">Product Manager</div>
-                        <div className="preview-company">Innovative Products</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'minimal' && (
-                  <div className="resume-preview minimal-preview">
-                    <div className="preview-header">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-contact">
-                        <span>johndoe@email.com</span>
-                        <span>(123) 456-7890</span>
-                      </div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Experience</div>
-                      <div className="preview-item">
-                        <div className="preview-job-title">UX Designer</div>
-                        <div className="preview-company">Design Studio</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'tech' && (
-                  <div className="resume-preview tech-preview">
-                    <div className="preview-header">
-                      <div className="preview-name">John Doe</div>
-                      <div className="preview-contact">
-                        <span>johndoe@email.com</span>
-                        <span>(123) 456-7890</span>
-                        <span>github.com/johndoe</span>
-                      </div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Technical Skills</div>
-                      <ul className="preview-skills-list">
-                        <li className="preview-skill">React</li>
-                        <li className="preview-skill">Node.js</li>
-                        <li className="preview-skill">Python</li>
-                        <li className="preview-skill">AWS</li>
-                        <li className="preview-skill">Docker</li>
-                        <li className="preview-skill">Kubernetes</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'medical-pro' && (
-                  <div className="resume-preview medical-pro-preview">
-                    <div className="preview-header">
-                      <div className="preview-name">Dr. Jane Smith</div>
-                      <div className="preview-contact">
-                        <span>janesmith@email.com</span>
-                        <span>Medical License #12345</span>
-                      </div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Medical Specialization</div>
-                      <div className="preview-description">Board Certified Cardiologist with 8 years of clinical experience</div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Clinical Experience</div>
-                      <div className="preview-item">
-                        <div className="preview-job-title">Attending Physician</div>
-                        <div className="preview-company">City Hospital</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'healthcare' && (
-                  <div className="resume-preview healthcare-preview">
-                    <div className="preview-header">
-                      <div className="preview-name-title">
-                        <div className="preview-name">Sarah Johnson, RN</div>
-                        <div className="preview-description">Registered Nurse</div>
-                      </div>
-                      <div className="preview-photo"></div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Clinical Expertise</div>
-                      <ul className="preview-skills-list">
-                        <li className="preview-skill">Emergency Care</li>
-                        <li className="preview-skill">Patient Assessment</li>
-                        <li className="preview-skill">Critical Care</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                {template.id === 'diploma-focus' && (
-                  <div className="resume-preview diploma-focus-preview">
-                    <div className="preview-header">
-                      <div className="preview-name">Michael Brown</div>
-                      <div className="preview-description">Certified Electrical Technician</div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Certifications</div>
-                      <div className="preview-item">
-                        <div className="preview-education-degree">Diploma in Electrical Engineering</div>
-                        <div className="preview-education-school">Technical Institute</div>
-                      </div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-section-title">Technical Skills</div>
-                      <ul className="preview-skills-list">
-                        <li className="preview-skill">Circuit Design</li>
-                        <li className="preview-skill">Maintenance</li>
-                        <li className="preview-skill">Troubleshooting</li>
-                      </ul>
-                    </div>
-                  </div>
+        {filteredTemplates.map((template) => {
+          const previewUrl = template.image || template.previewUrl || null;
+          return (
+              <div
+              key={template.id}
+              className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
+              onClick={() => onTemplateChange(template.id)}
+            >
+              <div className="template-preview">
+                <div className="action-overlay">
+                  <button title="Select" onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}>✨</button>
+                  <button title="Preview" onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}>�️</button>
+                </div>
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt={template.name}
+                    className="template-image"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                ) : (
+                  <div className="template-placeholder" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '3rem'}}>📄</div>
                 )}
               </div>
-            </div>
-            <div className="template-info">
-              <h3>{template.name}</h3>
-              <p>{template.description}</p>
-            </div>
-            {selectedTemplate === template.id && (
-              <div className="template-selected">
-                <span className="checkmark">✓</span>
+              <div className="template-info">
+                <h3>{template.name}</h3>
+                <p>{template.description}</p>
+                <div className="template-actions">
+                  <button
+                    className="btn-select-template"
+                    onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}
+                  >
+                    ✨ Select Template
+                  </button>
+                  <button
+                    className="btn-preview-template"
+                    onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}
+                  >
+                    👁️ Preview
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+              {selectedTemplate === template.id && (
+                <div className="template-selected">
+                  <span className="checkmark">✓</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
+      {/* External templates (from Google / AI search) */}
+      {externalTemplates && externalTemplates.length > 0 && (
+        <div className="external-templates-section">
+          <h3>External Templates</h3>
+          <div className="template-grid">
+            {externalTemplates.map((template) => (
+              <div key={template.id || template.sourceUrl} className="template-card external-template-card">
+                <div className="template-preview">
+                  <div className="action-overlay">
+                    <button title="View Original" onClick={(e) => { e.stopPropagation(); window.open(template.sourceUrl, '_blank'); }}>🔗</button>
+                    <button title="Get Inspired" onClick={(e) => { e.stopPropagation(); onInspireFromTemplate(template); }}>💡</button>
+                    <button title="Use as Template" onClick={(e) => { e.stopPropagation(); onUseExternalTemplate(template); }}>✅</button>
+                  </div>
+                  {template.previewUrl ? (
+                    <img
+                      src={template.previewUrl}
+                      alt={template.name}
+                      className="template-image"
+                      onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+                    />
+                  ) : null}
+                  <div
+                    className="template-placeholder"
+                    style={{ display: template.previewUrl ? 'none' : 'flex', width: '100%', height: '100%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}
+                  >
+                    📄
+                  </div>
+                  <div className="external-badge">🌐 External</div>
+                  <div className="external-license" style={{display: 'none'}}>Third-party template — check licensing on source</div>
+                </div>
+                <div className="template-info">
+                  <h3>{template.name}</h3>
+                  <p>{template.description}</p>
+                  {template.copyright && <p className="copyright-notice">📄 {template.copyright}</p>}
+                </div>
+                <div className="template-actions">
+                  <button className="btn-visit-external" onClick={() => window.open(template.sourceUrl, '_blank')}>🔗 View Original</button>
+                  <button className="btn-inspire-template" onClick={() => onInspireFromTemplate(template)}>💡 Get Inspired</button>
+                  <button className="btn-use-external" onClick={() => onUseExternalTemplate(template)}>✅ Use as Template</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       <div className="template-selector-tips">
         <h4>Tips for MNC Applications</h4>

@@ -40,6 +40,7 @@ function App() {
   const [recommendedTemplates, setRecommendedTemplates] = useState([]);
   const [isSearchingTemplates, setIsSearchingTemplates] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [templateExperienceFilter, setTemplateExperienceFilter] = useState('');
   
   // Popular job roles for search suggestions
   const popularJobRoles = [
@@ -341,6 +342,30 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
           setActiveView('form');
         }
       }
+    }
+  };
+
+  // Handle using an external template as a basis for creating a resume
+  const handleUseExternalTemplate = (template) => {
+    // Map external layoutStyle to closest local template id
+    const layoutToLocal = {
+      'Modern': 'modern-sidebar',
+      'Minimal': 'minimal',
+      'Traditional': 'reverse-chrono',
+      'Professional': 'professional-clean',
+      'Tech': 'tech'
+    };
+
+    const localTemplateId = layoutToLocal[template.layoutStyle] || 'jobfit-pro';
+
+    setSelectedTemplate(localTemplateId);
+    showToast(`Using "${template.name}" as inspiration. Applied local template "${localTemplateId}".`);
+
+    // Optionally prefill form with example data (reuse existing preview logic)
+    if (resumeData) {
+      setActiveView('preview');
+    } else {
+      setActiveView('form');
     }
   };
 
@@ -650,6 +675,8 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
               selectedTemplate={selectedTemplate}
               onTemplateChange={handleTemplateChange}
               resumeType={resumeType}
+              onInspireFromTemplate={handleInspireFromTemplate}
+              onUseExternalTemplate={handleUseExternalTemplate}
             />
             {resumeData && (
               <div className="template-preview-actions">
@@ -676,10 +703,29 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                 ← Back to Home
               </button>
             </div>
-            
-            {recommendedTemplates.length > 0 ? (
+                  {/* Experience level filter for external templates */}
+                  <div className="template-search-filters" style={{display: 'flex', gap: '8px', alignItems: 'center', margin: '12px 0'}}>
+                    <label style={{fontWeight: 600}}>Experience:</label>
+                    <select value={templateExperienceFilter || ''} onChange={(e) => setTemplateExperienceFilter(e.target.value)}>
+                      <option value="">All</option>
+                      <option value="entry-level">Entry / Fresher</option>
+                      <option value="mid-level">Mid-level</option>
+                      <option value="senior">Senior</option>
+                    </select>
+                    <button className="btn-clear-filter" onClick={() => setTemplateExperienceFilter('')}>Clear</button>
+                  </div>
+            { (recommendedTemplates.filter(t => {
+                if (!templateExperienceFilter) return true;
+                // t.experienceLevel may be array or string
+                const levels = Array.isArray(t.experienceLevel) ? t.experienceLevel.map(l => l.toLowerCase()) : [String(t.experienceLevel || '').toLowerCase()];
+                return levels.includes(templateExperienceFilter.toLowerCase());
+              })).length > 0 ? (
               <div className="template-grid">
-                {recommendedTemplates.map((template, index) => (
+                {recommendedTemplates.filter(t => {
+                  if (!templateExperienceFilter) return true;
+                  const levels = Array.isArray(t.experienceLevel) ? t.experienceLevel.map(l => l.toLowerCase()) : [String(t.experienceLevel || '').toLowerCase()];
+                  return levels.includes(templateExperienceFilter.toLowerCase());
+                }).map((template, index) => (
                   <div key={template.id} className="template-card">
                     <div className="template-rank">#{index + 1}</div>
                     {template.source && (
@@ -750,6 +796,12 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                             onClick={() => handleInspireFromTemplate(template)}
                           >
                             💡 Get Inspired
+                          </button>
+                          <button
+                            className="btn-use-external"
+                            onClick={() => handleUseExternalTemplate(template)}
+                          >
+                            ✅ Use as Template
                           </button>
                         </>
                       ) : (
