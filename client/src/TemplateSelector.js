@@ -2,7 +2,7 @@ import React from 'react';
 import './styles/TemplateSelector.css';
 import './styles/TemplatePreview.css';
 
-const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, externalTemplates = [], onInspireFromTemplate = () => {}, onUseExternalTemplate = () => {} }) => {
+const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, externalTemplates = [], onInspireFromTemplate = () => {}, onUseExternalTemplate = () => {}, onTemplatePreview = () => {} }) => {
   // All templates with their respective types
   const allTemplates = [
     {
@@ -57,10 +57,16 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, exte
     },
     {
       id: 'minimal',
-      name: 'Minimal',
+      name: 'Minimalist',
       description: 'Streamlined and focused on content. Maximum ATS compatibility.',
       types: ['technical', 'nontechnical', 'diploma'],
       // image: minimalThumbnail
+    },
+    {
+      id: 'smart-resume',
+      name: 'SmartResume – Structured Minimalist Design',
+      description: 'Structured minimalist layout inspired by a professional PDF design. Focus on clarity and hierarchy.',
+      types: ['technical', 'nontechnical'],
     },
     {
       id: 'tech',
@@ -119,7 +125,7 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, exte
               <div className="template-preview">
                 <div className="action-overlay">
                   <button title="Select" onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}>✨</button>
-                  <button title="Preview" onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}>�️</button>
+                  <button title="Preview" onClick={(e) => { e.stopPropagation(); onTemplatePreview(template.id); }}>�️</button>
                 </div>
                 {previewUrl ? (
                   <img
@@ -130,6 +136,15 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, exte
                   />
                 ) : (
                   <div className="template-placeholder" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '3rem'}}>📄</div>
+                )}
+                {/* SmartResume preview small thumbnail */}
+                {template.id === 'smart-resume' && (
+                  <div className="template-mini-preview">
+                    <div style={{padding: '8px'}}>
+                      <div style={{fontWeight: 700}}>John Doe</div>
+                      <div style={{fontSize: 12, color: '#666'}}>Senior Software Engineer</div>
+                    </div>
+                  </div>
                 )}
               </div>
               <div className="template-info">
@@ -144,7 +159,7 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, exte
                   </button>
                   <button
                     className="btn-preview-template"
-                    onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}
+                    onClick={(e) => { e.stopPropagation(); onTemplatePreview(template.id); }}
                   >
                     👁️ Preview
                   </button>

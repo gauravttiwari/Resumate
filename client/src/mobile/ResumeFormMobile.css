@@ -1,0 +1,24 @@
+.resume-form-mobile-container{ padding:16px; background:linear-gradient(180deg,#081025,#0b1526); color:#fff; min-height:100vh; }
+.resume-form-mobile-header h2{ margin:0 0 12px 0; }
+.resume-form-mobile-form label{ display:block; margin-bottom:10px; color:#cbd5e1; }
+.resume-form-mobile-form input, .resume-form-mobile-form textarea{ width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff; }
+.resume-form-mobile-submit{ margin-top:12px; padding:12px 16px; border-radius:10px; background:linear-gradient(90deg,#3b82f6,#6b46ff); border:none; color:#fff; font-weight:700; }
+
+.ai-btn, .ai-optimize-btn {
+	background: linear-gradient(90deg,#3b82f6,#6b46ff);
+	color: #fff;
+	border: none;
+	padding: 10px 12px;
+	border-radius: 10px;
+	font-weight: 800;
+	cursor: pointer;
+}
+
+.ai-btn.loading, .ai-optimize-btn.loading {
+	opacity: 0.8;
+}
+
+.ai-btn[disabled], .ai-optimize-btn[disabled] {
+	opacity: 0.6;
+	cursor: not-allowed;
+}

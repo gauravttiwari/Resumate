@@ -7,7 +7,9 @@ import ModernSidebarResume from './ModernSidebarResume';
 import ProfessionalCleanResume from './ProfessionalCleanResume';
 import JobFitProResume from './JobFitProResume';
 import ProProfileResume from './ProProfileResume';
+import SmartResume from './SmartResume';
 import HomeScreen from './HomeScreen';
+import HomeDesktop from './HomeDesktop';
 import ResumeTypeSelector from './ResumeTypeSelector';
 import InterviewPrep from './InterviewPrep';
 import AIExampleUsage from './examples/AIExampleUsage';
@@ -16,6 +18,9 @@ import ResumeAnalytics from './components/ResumeAnalytics';
 import SuggestionsHistory from './components/SuggestionsHistory';
 import NotificationCenter from './components/NotificationCenter';
 import aiService from './services/aiService';
+import HomeMobile from './mobile/HomeMobile';
+import ResumeFormMobile from './mobile/ResumeFormMobile';
+import ResumePreviewMobile from './mobile/ResumePreviewMobile';
 import './styles/App.css';
 import './styles/ReverseChrono.css'; // Import template styles
 import './styles/ModernSidebar.css';
@@ -34,6 +39,25 @@ function App() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [activeFeatureTab, setActiveFeatureTab] = useState('analytics'); // For preview page tabs
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile menu toggle
+  // Responsive: determine if we're in mobile viewport using matchMedia so changes are immediate
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(max-width: 768px)').matches;
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mql = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    if (mql.addEventListener) mql.addEventListener('change', handler);
+    else mql.addListener(handler);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', handler);
+      else mql.removeListener(handler);
+    };
+  }, []);
   
   // Template search states
   const [templateSearchQuery, setTemplateSearchQuery] = useState('');
@@ -85,6 +109,12 @@ function App() {
   // Handle template selection change
   const handleTemplateChange = (template) => {
     setSelectedTemplate(template);
+  };
+
+  // Handle template preview (select + navigate to preview)
+  const handleTemplatePreview = (template) => {
+    setSelectedTemplate(template);
+    setActiveView('preview');
   };
   
   // Show toast notification
@@ -375,6 +405,13 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
     }
   };
 
+  // Centralized open chat handler (use named function so we can log during debugging)
+  const openAIChat = () => {
+    console.log('openAIChat called - toggling chat modal open');
+    setShowChatModal(true);
+    setIsMobileMenuOpen(false);
+  };
+
   // Handle template preview
   const handlePreviewTemplate = (template) => {
     if (template.isExternal) {
@@ -460,6 +497,45 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
       showToast(`Previewing "${template.name}" template with sample data`);
     }
   };
+
+  // If mobile viewport, show mobile app routes immediately
+  if (isMobile) {
+    return (
+      <div className="app-mobile">
+        {activeView === 'home' && (
+          <HomeMobile
+            onNavigate={(view) => { setActiveView(view); setIsMobileMenuOpen(false); }}
+            onOpenAIChat={openAIChat}
+            resumeType={resumeType}
+            showToast={showToast}
+          />
+        )}
+        {activeView === 'type-selector' && (
+          <ResumeTypeSelector
+            onSelect={(type) => {
+              setResumeType(type);
+              setActiveView('form');
+            }}
+          />
+        )}
+  {activeView === 'form' && (
+    <ResumeFormMobile onOpenAIChat={openAIChat} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />
+  )}
+  {activeView === 'preview' && (
+    <ResumePreviewMobile onOpenAIChat={openAIChat} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />
+  )}
+        {activeView === 'interview-prep' && <InterviewPrep />}
+        {/* AI Chat modal for mobile */}
+        <AIChatModal
+          isOpen={showChatModal}
+          onClose={() => setShowChatModal(false)}
+          onAutoFill={handleChatAutoFill}
+        />
+      </div>
+    );
+  }
+
+  // Ensure AIChatModal is also available in mobile view by rendering inside the mobile return above.
 
   return (
     <div className="app">
@@ -624,7 +700,7 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
       {!showChatModal && (
         <main className="app-content">
           {activeView === 'home' && (
-            <HomeScreen onStartClick={() => setActiveView('type-selector')} />
+            <HomeDesktop onStartClick={() => setActiveView('type-selector')} />
           )}
         
         {activeView === 'type-selector' && (
@@ -680,6 +756,7 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
             <TemplateSelector
               selectedTemplate={selectedTemplate}
               onTemplateChange={handleTemplateChange}
+              onTemplatePreview={handleTemplatePreview}
               resumeType={resumeType}
               onInspireFromTemplate={handleInspireFromTemplate}
               onUseExternalTemplate={handleUseExternalTemplate}
@@ -881,7 +958,7 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
               </button>
             </div>
             <div className="resume-preview" id="resume-to-pdf">
-              {selectedTemplate === 'reverse-chrono' ? (
+                    {selectedTemplate === 'reverse-chrono' ? (
                 <ReverseChronoResume
                   data={resumeData}
                   showProfile={true}
@@ -906,6 +983,8 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                   data={resumeData}
                   showProfile={true}
                 />
+                    ) : selectedTemplate === 'smart-resume' ? (
+                      <SmartResume data={resumeData} template={selectedTemplate} />
               ) : (
                 <MncResume 
                   data={resumeData} 

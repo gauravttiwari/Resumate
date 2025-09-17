@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import * as aiService from '../services/aiService';
 import './AIChatModal.css';
 
 const AIChatModal = ({ isOpen, onClose, onAutoFill }) => {
+  console.log('AIChatModal render - isOpen=', isOpen);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -89,8 +91,8 @@ const AIChatModal = ({ isOpen, onClose, onAutoFill }) => {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="chat-modal-overlay">
+  const modalContent = (
+    <div className="chat-modal-overlay" style={{ zIndex: 99999 }}>
       <div className="chat-modal">
         <div className="chat-header">
           <div className="chat-title">
@@ -179,6 +181,12 @@ const AIChatModal = ({ isOpen, onClose, onAutoFill }) => {
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return ReactDOM.createPortal(modalContent, document.body);
+  }
+
+  return modalContent;
 };
 
 export default AIChatModal;

@@ -39,6 +39,17 @@
   gap: var(--space-4);
 }
 
+/* Gradient text utility (used for highlighting a word in the title) */
+.title-gradient {
+  background: linear-gradient(90deg, #6b46ff 0%, #4f46e5 50%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.title-line { display: inline-block; }
+
 .title-icon {
   font-size: 1.2em;
   animation: pulse 2s ease-in-out infinite;
@@ -51,7 +62,8 @@
 
 .selector-description {
   font-size: var(--text-xl);
-  color: var(--gray-600);
+  /* Make description text bright on dark/mobile hero to match HomeMobile */
+  color: #ffffff;
   max-width: 800px;
   margin: 0 auto;
   line-height: 1.6;
@@ -293,6 +305,62 @@
   
   .card-footer {
     padding: var(--space-4);
+  }
+
+  /* Mobile dark theme overrides to match HomeMobile colors */
+  .resume-type-selector {
+    background: linear-gradient(180deg,#081025 0%, #0b1526 100%);
+    color: #e6eef8;
+  }
+
+  .selector-description {
+    color: #ffffff !important;
+  }
+
+  /* Make title white overall and keep the highlighted word gradient */
+  .selector-title { color: #fff; }
+  .selector-title .title-line { color: #fff; }
+  /* .selector-title .title-gradient intentionally left without extra overrides */
+
+  .resume-types-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-type-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.006));
+    border: 1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 18px 40px rgba(2,6,23,0.28);
+    color: #e6eef8;
+  }
+
+  .card-header {
+    background: transparent;
+  }
+
+  .card-gradient-bg {
+    opacity: 0.9;
+  }
+
+  .type-icon-wrapper {
+    background: rgba(255,255,255,0.04);
+    box-shadow: 0 8px 20px rgba(2,6,23,0.2);
+  }
+
+  .card-title { color: #ffffff; }
+  .card-description { color: #cbd5e1; }
+  .feature-item { color: #9fb9db; }
+  .feature-check { color: #60a5fa; }
+
+  .card-footer {
+    border-top: 1px solid rgba(255,255,255,0.03);
+    background: transparent;
+  }
+
+  .select-type-btn {
+    background: linear-gradient(90deg,#3b82f6,#6b46ff);
+    color: white;
+    box-shadow: 0 12px 30px rgba(75,85,99,0.18);
+    border: none;
   }
 }
 

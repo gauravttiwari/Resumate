@@ -9,7 +9,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 100000; /* ensure overlay is above all other UI layers */
   backdrop-filter: blur(5px);
 }
 
