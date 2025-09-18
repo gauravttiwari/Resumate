@@ -13,6 +13,8 @@ import InterviewPrep from './InterviewPrep';
 import AIExampleUsage from './examples/AIExampleUsage';
 import AIChatModal from './components/AIChatModal';
 import aiService from './services/aiService';
+
+
 import './styles/App.css';
 import './styles/ReverseChrono.css'; // Import template styles
 import './styles/ModernSidebar.css';
