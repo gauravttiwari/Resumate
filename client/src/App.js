@@ -7,14 +7,20 @@ import ModernSidebarResume from './ModernSidebarResume';
 import ProfessionalCleanResume from './ProfessionalCleanResume';
 import JobFitProResume from './JobFitProResume';
 import ProProfileResume from './ProProfileResume';
+import SmartResume from './SmartResume';
 import HomeScreen from './HomeScreen';
+import HomeDesktop from './HomeDesktop';
 import ResumeTypeSelector from './ResumeTypeSelector';
 import InterviewPrep from './InterviewPrep';
 import AIExampleUsage from './examples/AIExampleUsage';
 import AIChatModal from './components/AIChatModal';
+import ResumeAnalytics from './components/ResumeAnalytics';
+import SuggestionsHistory from './components/SuggestionsHistory';
+import NotificationCenter from './components/NotificationCenter';
 import aiService from './services/aiService';
-
-
+import HomeMobile from './mobile/HomeMobile';
+import ResumeFormMobile from './mobile/ResumeFormMobile';
+import ResumePreviewMobile from './mobile/ResumePreviewMobile';
 import './styles/App.css';
 import './styles/ReverseChrono.css'; // Import template styles
 import './styles/ModernSidebar.css';
@@ -31,12 +37,34 @@ function App() {
   const [resumeType, setResumeType] = useState(null); // 'technical', 'medical', 'diploma', or 'nontechnical'
   const [isAnalyzingATS, setIsAnalyzingATS] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [activeFeatureTab, setActiveFeatureTab] = useState('analytics'); // For preview page tabs
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile menu toggle
+  // Responsive: determine if we're in mobile viewport using matchMedia so changes are immediate
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(max-width: 768px)').matches;
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mql = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    if (mql.addEventListener) mql.addEventListener('change', handler);
+    else mql.addListener(handler);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', handler);
+      else mql.removeListener(handler);
+    };
+  }, []);
   
   // Template search states
   const [templateSearchQuery, setTemplateSearchQuery] = useState('');
   const [recommendedTemplates, setRecommendedTemplates] = useState([]);
   const [isSearchingTemplates, setIsSearchingTemplates] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [templateExperienceFilter, setTemplateExperienceFilter] = useState('');
   
   // Popular job roles for search suggestions
   const popularJobRoles = [
@@ -81,6 +109,12 @@ function App() {
   // Handle template selection change
   const handleTemplateChange = (template) => {
     setSelectedTemplate(template);
+  };
+
+  // Handle template preview (select + navigate to preview)
+  const handleTemplatePreview = (template) => {
+    setSelectedTemplate(template);
+    setActiveView('preview');
   };
   
   // Show toast notification
@@ -261,7 +295,13 @@ ${analysis.jobMatch ? `🎯 JOB MATCH: ${analysis.jobMatch}%` : ''}
       showToast(`Found ${searchResults.length} ATS-optimized templates!`);
     } catch (error) {
       console.error('Error searching templates:', error);
-      showToast('Failed to search templates. Please try again.', 'danger');
+      // If error has diagnostics (from aiService) show a clearer message
+      const diag = error && error.diagnostics;
+      if (diag) {
+        showToast(`Failed to search templates: ${diag.message} (API: ${diag.apiBase})`, 'danger', 8000);
+      } else {
+        showToast('Failed to search templates. Please try again.', 'danger');
+      }
     } finally {
       setIsSearchingTemplates(false);
     }
@@ -339,6 +379,37 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
         }
       }
     }
+  };
+
+  // Handle using an external template as a basis for creating a resume
+  const handleUseExternalTemplate = (template) => {
+    // Map external layoutStyle to closest local template id
+    const layoutToLocal = {
+      'Modern': 'modern-sidebar',
+      'Minimal': 'minimal',
+      'Traditional': 'reverse-chrono',
+      'Professional': 'professional-clean',
+      'Tech': 'tech'
+    };
+
+    const localTemplateId = layoutToLocal[template.layoutStyle] || 'jobfit-pro';
+
+    setSelectedTemplate(localTemplateId);
+    showToast(`Using "${template.name}" as inspiration. Applied local template "${localTemplateId}".`);
+
+    // Optionally prefill form with example data (reuse existing preview logic)
+    if (resumeData) {
+      setActiveView('preview');
+    } else {
+      setActiveView('form');
+    }
+  };
+
+  // Centralized open chat handler (use named function so we can log during debugging)
+  const openAIChat = () => {
+    console.log('openAIChat called - toggling chat modal open');
+    setShowChatModal(true);
+    setIsMobileMenuOpen(false);
   };
 
   // Handle template preview
@@ -427,6 +498,45 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
     }
   };
 
+  // If mobile viewport, show mobile app routes immediately
+  if (isMobile) {
+    return (
+      <div className="app-mobile">
+        {activeView === 'home' && (
+          <HomeMobile
+            onNavigate={(view) => { setActiveView(view); setIsMobileMenuOpen(false); }}
+            onOpenAIChat={openAIChat}
+            resumeType={resumeType}
+            showToast={showToast}
+          />
+        )}
+        {activeView === 'type-selector' && (
+          <ResumeTypeSelector
+            onSelect={(type) => {
+              setResumeType(type);
+              setActiveView('form');
+            }}
+          />
+        )}
+  {activeView === 'form' && (
+    <ResumeFormMobile onOpenAIChat={openAIChat} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />
+  )}
+  {activeView === 'preview' && (
+    <ResumePreviewMobile onOpenAIChat={openAIChat} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />
+  )}
+        {activeView === 'interview-prep' && <InterviewPrep />}
+        {/* AI Chat modal for mobile */}
+        <AIChatModal
+          isOpen={showChatModal}
+          onClose={() => setShowChatModal(false)}
+          onAutoFill={handleChatAutoFill}
+        />
+      </div>
+    );
+  }
+
+  // Ensure AIChatModal is also available in mobile view by rendering inside the mobile return above.
+
   return (
     <div className="app">
       {!showChatModal && (
@@ -436,6 +546,15 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
               <h1>ResuMate</h1>
               <p className="app-tagline">AI-Powered Professional Resume Builder</p>
             </div>
+
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="mobile-nav-toggle"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? '✕' : '☰'}
+            </button>
           
           {/* Template Search Bar - Center of Navigation */}
           <div className="template-search-container">
@@ -512,44 +631,64 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
           </div>
 
           {/* Navigation */}
-          <nav className="app-nav">
+          <nav className={`app-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             <button 
               className={`nav-link ${activeView === 'home' ? 'active' : ''}`}
-              onClick={() => setActiveView('home')}
+              onClick={() => {
+                setActiveView('home');
+                setIsMobileMenuOpen(false);
+              }}
             >
               🏠 Home
             </button>
-            {resumeType && (
-              <button 
-                className={`nav-link ${activeView === 'form' ? 'active' : ''}`}
-                onClick={() => setActiveView('form')}
-              >
-                📝 Create Resume
-              </button>
-            )}
+            <button 
+              className={`nav-link ${activeView === 'type-selector' || activeView === 'form' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('type-selector');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              📝 Create Resume
+            </button>
             <button 
               className={`nav-link ${activeView === 'templates' ? 'active' : ''}`}
-              onClick={() => resumeType ? setActiveView('templates') : showToast('Please select a resume type first', 'warning')}
+              onClick={() => {
+                if (resumeType) {
+                  setActiveView('templates');
+                  setIsMobileMenuOpen(false);
+                } else {
+                  showToast('Please select a resume type first', 'warning');
+                }
+              }}
             >
               📋 Templates
             </button>
             <button 
               className={`nav-link ${activeView === 'interview-prep' ? 'active' : ''}`}
-              onClick={() => setActiveView('interview-prep')}
+              onClick={() => {
+                setActiveView('interview-prep');
+                setIsMobileMenuOpen(false);
+              }}
             >
               🎯 Interview Prep
             </button>
             {resumeData && (
               <button 
                 className={`nav-link ${activeView === 'preview' ? 'active' : ''}`}
-                onClick={() => setActiveView('preview')}
+                onClick={() => {
+                  setActiveView('preview');
+                  setIsMobileMenuOpen(false);
+                }}
               >
                 👁️ Preview
               </button>
             )}
             <button 
               className="nav-link ai-chat-btn"
-              onClick={() => setShowChatModal(true)}
+              onClick={() => {
+                setShowChatModal(true);
+                setIsMobileMenuOpen(false);
+              }}
             >
               💬 AI Chat
             </button>
@@ -561,7 +700,7 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
       {!showChatModal && (
         <main className="app-content">
           {activeView === 'home' && (
-            <HomeScreen onStartClick={() => setActiveView('type-selector')} />
+            <HomeDesktop onStartClick={() => setActiveView('type-selector')} />
           )}
         
         {activeView === 'type-selector' && (
@@ -617,7 +756,10 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
             <TemplateSelector
               selectedTemplate={selectedTemplate}
               onTemplateChange={handleTemplateChange}
+              onTemplatePreview={handleTemplatePreview}
               resumeType={resumeType}
+              onInspireFromTemplate={handleInspireFromTemplate}
+              onUseExternalTemplate={handleUseExternalTemplate}
             />
             {resumeData && (
               <div className="template-preview-actions">
@@ -644,10 +786,29 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                 ← Back to Home
               </button>
             </div>
-            
-            {recommendedTemplates.length > 0 ? (
+                  {/* Experience level filter for external templates */}
+                  <div className="template-search-filters" style={{display: 'flex', gap: '8px', alignItems: 'center', margin: '12px 0'}}>
+                    <label style={{fontWeight: 600}}>Experience:</label>
+                    <select value={templateExperienceFilter || ''} onChange={(e) => setTemplateExperienceFilter(e.target.value)}>
+                      <option value="">All</option>
+                      <option value="entry-level">Entry / Fresher</option>
+                      <option value="mid-level">Mid-level</option>
+                      <option value="senior">Senior</option>
+                    </select>
+                    <button className="btn-clear-filter" onClick={() => setTemplateExperienceFilter('')}>Clear</button>
+                  </div>
+            { (recommendedTemplates.filter(t => {
+                if (!templateExperienceFilter) return true;
+                // t.experienceLevel may be array or string
+                const levels = Array.isArray(t.experienceLevel) ? t.experienceLevel.map(l => l.toLowerCase()) : [String(t.experienceLevel || '').toLowerCase()];
+                return levels.includes(templateExperienceFilter.toLowerCase());
+              })).length > 0 ? (
               <div className="template-grid">
-                {recommendedTemplates.map((template, index) => (
+                {recommendedTemplates.filter(t => {
+                  if (!templateExperienceFilter) return true;
+                  const levels = Array.isArray(t.experienceLevel) ? t.experienceLevel.map(l => l.toLowerCase()) : [String(t.experienceLevel || '').toLowerCase()];
+                  return levels.includes(templateExperienceFilter.toLowerCase());
+                }).map((template, index) => (
                   <div key={template.id} className="template-card">
                     <div className="template-rank">#{index + 1}</div>
                     {template.source && (
@@ -719,6 +880,12 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                           >
                             💡 Get Inspired
                           </button>
+                          <button
+                            className="btn-use-external"
+                            onClick={() => handleUseExternalTemplate(template)}
+                          >
+                            ✅ Use as Template
+                          </button>
                         </>
                       ) : (
                         <>
@@ -764,7 +931,7 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                 onClick={handleDownloadPDF}
                 disabled={isGenerating}
               >
-                {isGenerating ? 'Generating PDF...' : 'Download PDF'}
+                📥 {isGenerating ? 'Generating PDF...' : 'Download PDF'}
               </button>
               <button 
                 className="btn-edit"
@@ -773,13 +940,13 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                   setActiveView('form');
                 }}
               >
-                Edit Resume
+                ✏️ Edit Resume
               </button>
               <button 
                 className="btn-change-template"
                 onClick={() => setActiveView('templates')}
               >
-                Change Template
+                🎨 Change Template
               </button>
               <button 
                 className="btn-ats-score"
@@ -791,7 +958,7 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
               </button>
             </div>
             <div className="resume-preview" id="resume-to-pdf">
-              {selectedTemplate === 'reverse-chrono' ? (
+                    {selectedTemplate === 'reverse-chrono' ? (
                 <ReverseChronoResume
                   data={resumeData}
                   showProfile={true}
@@ -816,12 +983,50 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                   data={resumeData}
                   showProfile={true}
                 />
+                    ) : selectedTemplate === 'smart-resume' ? (
+                      <SmartResume data={resumeData} template={selectedTemplate} />
               ) : (
                 <MncResume 
                   data={resumeData} 
                   template={selectedTemplate} 
                 />
               )}
+            </div>
+            
+            {/* Resume Analytics and Additional Features */}
+            <div className="resume-additional-features">
+              <div className="features-tabs">
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'analytics' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('analytics')}
+                >
+                  📊 Analytics
+                </button>
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'history' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('history')}
+                >
+                  🕒 History
+                </button>
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'notifications' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('notifications')}
+                >
+                  🔔 Notifications
+                </button>
+              </div>
+              
+              <div className="feature-content">
+                {activeFeatureTab === 'analytics' && (
+                  <ResumeAnalytics resumeData={resumeData} />
+                )}
+                {activeFeatureTab === 'history' && (
+                  <SuggestionsHistory userId="anonymous" />
+                )}
+                {activeFeatureTab === 'notifications' && (
+                  <NotificationCenter userId="anonymous" />
+                )}
+              </div>
             </div>
           </div>
         )}

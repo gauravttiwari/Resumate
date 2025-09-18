@@ -4,9 +4,25 @@
  * Service to interact with the AI endpoints
  */
 
-// API base URL - adjust based on your server configuration
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// API base URL - choose depending on environment
+function detectApiBaseUrl() {
+  const envUrl = process.env.REACT_APP_API_URL;
+  if (envUrl) return envUrl.replace(/\/$/, '');
+
+  // If app is running on localhost (dev), use localhost server
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+
+  // If served from GitHub Pages (or other static host) and no API configured,
+  // prefer relative '/api' so a proxied API on the same origin will work.
+  if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+    return window.location.origin + '/api';
+  }
+
+  // Default local dev server
+  return 'http://localhost:5000/api';
+}
+
+const API_BASE_URL = detectApiBaseUrl();
 
 /**
  * Get resume optimization suggestions
@@ -280,8 +296,17 @@ export const searchTemplates = async (searchParams) => {
 
     return result.data;
   } catch (error) {
+    // Augment the error with helpful diagnostics
     console.error('Error searching templates:', error);
-    throw error;
+    const message = (error && error.message) ? error.message : 'Network error';
+    const diagnostics = {
+      message,
+      apiBase: API_BASE_URL,
+      locationHostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
+    };
+    const err = new Error('Failed to search templates');
+    err.diagnostics = diagnostics;
+    throw err;
   }
 };
 

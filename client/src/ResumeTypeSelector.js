@@ -42,7 +42,7 @@ const ResumeTypeSelector = ({ onSelect }) => {
       <div className="selector-header">
         <h1 className="selector-title">
           <span className="title-icon">🎯</span>
-          Choose Your Resume Type
+          <span className="title-line">Choose a <span className="title-gradient">Professional</span> Resume</span>
         </h1>
         <p className="selector-description">
           Select the perfect template type that matches your career profile and industry for maximum impact

@@ -2,7 +2,7 @@ import React from 'react';
 import './styles/TemplateSelector.css';
 import './styles/TemplatePreview.css';
 
-const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType }) => {
+const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, onTemplatePreview = () => {} }) => {
   // All templates with their respective types
   const allTemplates = [
     {
@@ -57,10 +57,16 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType }) =>
     },
     {
       id: 'minimal',
-      name: 'Minimal',
+      name: 'Minimalist',
       description: 'Streamlined and focused on content. Maximum ATS compatibility.',
       types: ['technical', 'nontechnical', 'diploma'],
       // image: minimalThumbnail
+    },
+    {
+      id: 'smart-resume',
+      name: 'SmartResume – Structured Minimalist Design',
+      description: 'Structured minimalist layout inspired by a professional PDF design. Focus on clarity and hierarchy.',
+      types: ['technical', 'nontechnical'],
     },
     {
       id: 'tech',
@@ -113,8 +119,10 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType }) =>
             key={template.id}
             className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
             onClick={() => onTemplateChange(template.id)}
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTemplateChange(template.id); } }}
           >
-            <div className="template-preview">
+            <div className="template-preview" onClick={() => onTemplateChange(template.id)}>
               <div className="template-preview-content">
                 {template.id === 'reverse-chrono' && (
                   <div className="resume-preview reverse-chrono-preview">
@@ -322,6 +330,27 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType }) =>
                   </div>
                 )}
 
+                {template.id === 'smart-resume' && (
+                  <div className="resume-preview smart-resume-preview">
+                    <div className="preview-header">
+                      <div className="preview-name">John Doe</div>
+                      <div className="preview-contact">
+                        <span>johndoe@email.com</span>
+                        <span>(123) 456-7890</span>
+                        <span>San Francisco, CA</span>
+                      </div>
+                    </div>
+                    <div className="preview-section">
+                      <div className="preview-section-title">Profile</div>
+                      <div className="preview-description">Structured, minimalist resume layout with clear sections and readable typography.</div>
+                    </div>
+                    <div className="preview-section">
+                      <div className="preview-section-title">Key Skills</div>
+                      <div className="preview-description">React • Node.js • AWS • Docker</div>
+                    </div>
+                  </div>
+                )}
+
                 {template.id === 'minimal' && (
                   <div className="resume-preview minimal-preview">
                     <div className="preview-header">
@@ -436,6 +465,20 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType }) =>
             <div className="template-info">
               <h3>{template.name}</h3>
               <p>{template.description}</p>
+                <div className="template-actions">
+                <button
+                  className="select-template-btn"
+                  onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}
+                >
+                  Select
+                </button>
+                <button
+                  className="preview-template-btn"
+                  onClick={(e) => { e.stopPropagation(); onTemplatePreview(template.id); }}
+                >
+                  Preview
+                </button>
+              </div>
             </div>
             {selectedTemplate === template.id && (
               <div className="template-selected">

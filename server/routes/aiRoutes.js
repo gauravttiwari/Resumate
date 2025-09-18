@@ -375,4 +375,241 @@ router.post('/mock-interview-feedback', async (req, res) => {
   }
 });
 
+/**
+ * Route to generate career path recommendations
+ */
+router.post('/career-path-recommendations', async (req, res) => {
+  try {
+    const { resumeData, currentRole, experienceLevel } = req.body;
+
+    if (!resumeData || !currentRole) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Resume data and current role are required' });
+    }
+
+    const careerRecommendations = await geminiService.generateCareerPathRecommendations(
+      resumeData, 
+      currentRole, 
+      experienceLevel || 'mid-level'
+    );
+    
+    res.status(200).json({ success: true, data: careerRecommendations });
+  } catch (error) {
+    console.error('Error generating career path recommendations:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to generate career path recommendations',
+        error: error.message,
+      });
+  }
+});
+
+/**
+ * Route to generate skill gap analysis
+ */
+router.post('/skill-gap-analysis', async (req, res) => {
+  try {
+    const { resumeData, currentRole, targetRole } = req.body;
+
+    if (!resumeData || !currentRole) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Resume data and current role are required' });
+    }
+
+    const skillGapAnalysis = await geminiService.generateSkillGapAnalysis(
+      resumeData, 
+      currentRole, 
+      targetRole || currentRole
+    );
+    
+    res.status(200).json({ success: true, data: skillGapAnalysis });
+  } catch (error) {
+    console.error('Error generating skill gap analysis:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to generate skill gap analysis',
+        error: error.message,
+      });
+  }
+});
+
+/**
+ * Route to get industry trends and notifications
+ */
+router.get('/industry-trends/:industry?', async (req, res) => {
+  try {
+    const { industry } = req.params;
+    const trends = geminiService.getIndustryTrends(industry || 'IT');
+    
+    res.status(200).json({ success: true, data: trends });
+  } catch (error) {
+    console.error('Error getting industry trends:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to get industry trends',
+        error: error.message,
+      });
+  }
+});
+
+/**
+ * Route to get personalized trend notifications
+ */
+router.post('/trend-notifications', async (req, res) => {
+  try {
+    const { resumeData, currentRole } = req.body;
+    
+    if (!resumeData) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Resume data is required' });
+    }
+
+    const industry = geminiService.getIndustryTrends().industry || 'IT';
+    const trends = geminiService.getIndustryTrends(industry);
+    const notifications = geminiService.generateTrendNotifications(trends, industry);
+    
+    res.status(200).json({ success: true, data: { notifications, trends } });
+  } catch (error) {
+    console.error('Error generating trend notifications:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to generate trend notifications',
+        error: error.message,
+      });
+  }
+});
+
+/**
+ * Route to get suggestions history for a user
+ */
+router.get('/suggestions-history', async (req, res) => {
+  try {
+    const { userId = 'anonymous', limit, type, startDate, endDate } = req.query;
+
+    const options = {};
+    if (limit) options.limit = parseInt(limit);
+    if (type) options.type = type;
+    if (startDate) options.startDate = startDate;
+    if (endDate) options.endDate = endDate;
+
+    const history = await geminiService.getSuggestionsHistory(userId, options);
+    res.status(200).json({ success: true, data: history });
+  } catch (error) {
+    console.error('Error getting suggestions history:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to get suggestions history',
+        error: error.message,
+      });
+  }
+});
+
+/**
+ * Route to get suggestions statistics for a user
+ */
+router.get('/suggestions-stats', async (req, res) => {
+  try {
+    const { userId = 'anonymous' } = req.query;
+
+    const stats = await geminiService.getSuggestionStats(userId);
+    res.status(200).json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error getting suggestions stats:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to get suggestions stats',
+        error: error.message,
+      });
+  }
+});
+
+/**
+ * Route to mark a suggestion as read
+ */
+router.patch('/suggestions/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await geminiService.markSuggestionAsRead(id);
+    
+    if (result.success) {
+      res.status(200).json({ success: true, data: result.suggestion });
+    } else {
+      res.status(404).json({ success: false, message: result.error });
+    }
+  } catch (error) {
+    console.error('Error marking suggestion as read:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to mark suggestion as read',
+        error: error.message,
+      });
+  }
+});
+
+/**
+ * Route to delete a suggestion from history
+ */
+router.delete('/suggestions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId = 'anonymous' } = req.query;
+
+    const result = await geminiService.deleteSuggestionFromHistory(id, userId);
+    
+    if (result.success) {
+      res.status(200).json({ success: true, data: result.suggestion });
+    } else {
+      res.status(404).json({ success: false, message: result.error });
+    }
+  } catch (error) {
+    console.error('Error deleting suggestion:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to delete suggestion',
+        error: error.message,
+      });
+  }
+});
+
+/**
+ * Route to clear all suggestions history for a user
+ */
+router.delete('/suggestions-history', async (req, res) => {
+  try {
+    const { userId = 'anonymous' } = req.query;
+
+    const result = await geminiService.clearSuggestionsHistory(userId);
+    res.status(200).json({ success: true, data: { clearedCount: result.clearedCount } });
+  } catch (error) {
+    console.error('Error clearing suggestions history:', error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Failed to clear suggestions history',
+        error: error.message,
+      });
+  }
+});
+
 module.exports = router;

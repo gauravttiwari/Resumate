@@ -79,6 +79,39 @@
   line-height: 1.4;
 }
 
+.template-actions {
+  margin-top: 10px;
+}
+
+.select-template-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.select-template-btn:hover {
+  background: #1d4ed8;
+}
+
+.preview-template-btn {
+  background: transparent;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.preview-template-btn:hover {
+  background: rgba(37,99,235,0.06);
+}
+
 .template-selected {
   position: absolute;
   top: 10px;
