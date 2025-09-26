@@ -2,7 +2,7 @@ import React from 'react';
 import './styles/TemplateSelector.css';
 import './styles/TemplatePreview.css';
 
-const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, onTemplatePreview = () => {} }) => {
+const TemplateSelector = ({ selectedTemplate, onTemplateChange, onTemplateSelect, onResumeTypeChange, resumeType, onTemplatePreview = () => {} }) => {
   // All templates with their respective types
   const allTemplates = [
     {
@@ -103,6 +103,18 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, onTe
     ? allTemplates.filter(template => template.types.includes(resumeType))
     : allTemplates;
 
+  const [localType, setLocalType] = React.useState(resumeType || 'technical');
+
+  React.useEffect(() => {
+    // inform parent of initial type
+    if (onResumeTypeChange) onResumeTypeChange(localType);
+  }, []);
+
+  const handleTypeChange = (t) => {
+    setLocalType(t);
+    if (onResumeTypeChange) onResumeTypeChange(t);
+  };
+
   return (
     <div className="template-selector">
       <h2>Choose a Resume Template</h2>
@@ -113,12 +125,26 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, onTe
         All templates are ATS-friendly and formatted to highlight your skills and experience.
       </p>
       
+      <div className="template-type-select">
+        <label>Resume type</label>
+        <div className="type-options">
+          <button type="button" className={`type-btn ${localType === 'technical' ? 'active' : ''}`} onClick={() => handleTypeChange('technical')}>Technical</button>
+          <button type="button" className={`type-btn ${localType === 'nontechnical' ? 'active' : ''}`} onClick={() => handleTypeChange('nontechnical')}>Non-Technical</button>
+          <button type="button" className={`type-btn ${localType === 'diploma' ? 'active' : ''}`} onClick={() => handleTypeChange('diploma')}>Diploma</button>
+          <button type="button" className={`type-btn ${localType === 'medical' ? 'active' : ''}`} onClick={() => handleTypeChange('medical')}>Medical</button>
+        </div>
+      </div>
+
       <div className="template-grid">
         {filteredTemplates.map((template) => (
           <div
             key={template.id}
             className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
-            onClick={() => onTemplateChange(template.id)}
+            onClick={() => {
+              // prefer onTemplateSelect which includes type, fallback to onTemplateChange
+              if (onTemplateSelect) onTemplateSelect(template.id, localType);
+              else onTemplateChange && onTemplateChange(template.id);
+            }}
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTemplateChange(template.id); } }}
           >
@@ -462,23 +488,13 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, resumeType, onTe
                 )}
               </div>
             </div>
-            <div className="template-info">
+                <div className="template-info">
               <h3>{template.name}</h3>
               <p>{template.description}</p>
-                <div className="template-actions">
-                <button
-                  className="select-template-btn"
-                  onClick={(e) => { e.stopPropagation(); onTemplateChange(template.id); }}
-                >
-                  Select
-                </button>
-                <button
-                  className="preview-template-btn"
-                  onClick={(e) => { e.stopPropagation(); onTemplatePreview(template.id); }}
-                >
-                  Preview
-                </button>
-              </div>
+                  <div className="template-actions">
+                    <button className="btn-select-template" onClick={(e) => { e.stopPropagation(); if (onTemplateSelect) onTemplateSelect(template.id, localType); else if (onTemplateChange) onTemplateChange(template.id); }}>Use</button>
+                    <button className="btn-preview-template" onClick={(e) => { e.stopPropagation(); if (onTemplatePreview) onTemplatePreview(template); }}>Preview</button>
+                  </div>
             </div>
             {selectedTemplate === template.id && (
               <div className="template-selected">
