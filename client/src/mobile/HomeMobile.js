@@ -87,7 +87,7 @@ const HomeMobile = ({ onNavigate, onOpenAIChat, resumeType, showToast }) => {
         <div className="hm-hero-inner">
           <h1 className="hm-title">Create a <span className="grad">Professional<br/>Resume</span> in Minutes</h1>
           <p className="hm-sub">Build ATS-optimized resumes with AI assistance. Tailored for different countries and languages.</p>
-          <button className="hm-cta">Create Free Resume</button>
+          <button className="hm-cta" onClick={() => { if (onNavigate) onNavigate('type-selector'); else navigate('/create'); }}>Create Free Resume</button>
 
           <div className="hm-selects">
             <label>Target Country</label>
@@ -166,7 +166,7 @@ const HomeMobile = ({ onNavigate, onOpenAIChat, resumeType, showToast }) => {
         <div className="hm-cta-wrap">
           <h3>Ready to Create Your Perfect Resume?</h3>
           <p>Join thousands of professionals who landed their dream jobs with ResuMate</p>
-          <button className="hm-cta-primary">Start Building Now</button>
+          <button className="hm-cta-primary" onClick={() => { if (onNavigate) onNavigate('type-selector'); else navigate('/create'); }}>Start Building Now</button>
           <div className="template-previews">
             <div className="tpl">Modern</div>
             <div className="tpl">Professional</div>

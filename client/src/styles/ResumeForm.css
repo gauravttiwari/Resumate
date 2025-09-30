@@ -36,14 +36,13 @@
 }
 
 .form-title {
-  font-family: var(--font-heading);
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: var(--font-bold);
-  margin-bottom: var(--space-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
+  font-family: var(--font-heading, 'Inter', 'Helvetica Neue', Arial, sans-serif);
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: block;
+  text-align: center;
+  letter-spacing: -0.5px;
 }
 
 .form-icon {
@@ -58,12 +57,15 @@
 }
 
 .form-subtitle {
-  font-size: var(--text-xl);
-  opacity: 0.9;
-  margin-bottom: var(--space-6);
-  max-width: 600px;
+  font-size: 1.05rem;
+  color: #374151;
+  opacity: 0.95;
+  margin-bottom: 20px;
+  max-width: 820px;
   margin-left: auto;
   margin-right: auto;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .resume-type-badge {
@@ -90,6 +92,17 @@
   border-bottom: 2px solid #eaeaea;
   font-weight: 600;
   font-size: 1.4rem;
+}
+
+.section-name {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 0.85rem;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(2,6,23,0.04);
 }
 
 .section-header-with-options {
@@ -155,6 +168,8 @@
   border-radius: 4px;
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
+  background: #ffffff; /* white inputs for desktop form */
+  color: #0f172a; /* dark input text */
 }
 
 .resume-form input[type="file"] {
@@ -171,6 +186,22 @@
 .resume-form textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+/* Form card container (centered) */
+.form-card {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 26px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(2,6,23,0.06);
+}
+
+/* Placeholder color */
+.resume-form input::placeholder,
+.resume-form textarea::placeholder {
+  color: #94a3b8;
 }
 
 .form-text {
@@ -212,52 +243,34 @@
   margin-top: 10px;
 }
 
-.btn-add {
-  background-color: #2ecc71;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.btn-add:hover {
-  background-color: #27ae60;
-}
-
-.btn-remove {
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: background-color 0.2s;
-}
-
-.btn-remove:hover {
-  background-color: #c0392b;
-}
-
+.btn-add,
+.btn-remove,
 .btn-remove-all {
-  background-color: #e74c3c;
+  background-color: #3498db; /* same as generate button */
   color: white;
   border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
+  padding: 12px 24px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  margin-left: 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  transition: background-color 0.2s, transform 0.12s;
+  box-shadow: 0 6px 18px rgba(41, 128, 185, 0.12);
 }
 
+.btn-add:hover,
+.btn-remove:hover,
 .btn-remove-all:hover {
-  background-color: #c0392b;
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.btn-add:disabled,
+.btn-remove:disabled,
+.btn-remove-all:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .form-actions {
@@ -359,6 +372,32 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.input-with-ai .ai-helper-btn {
+  align-self: flex-start;
+  margin-top: 5px;
+}
+
+/* Ensure textarea AI helpers are also left-aligned to match inputs (skills, summary, etc.) */
+.textarea-with-ai {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.textarea-with-ai textarea {
+  margin-bottom: 10px;
+}
+
+.textarea-with-ai .ai-helper-btn {
+  align-self: flex-start;
+  margin-top: 5px;
+}
+
+/* Make single-line inputs have the same spacing as textareas so AI buttons align consistently */
+.input-with-ai input {
+  margin-bottom: 10px;
 }
 
 .ai-generate-btn, .ai-improve-btn {

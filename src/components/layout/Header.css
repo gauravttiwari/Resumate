@@ -8,6 +8,17 @@
   z-index: 1000;
 }
 
+/* hide-on-scroll modifier */
+.header {
+  transition: transform 280ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+  will-change: transform, opacity;
+}
+.header--hidden {
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .header-container {
   max-width: 1200px;
   margin: 0 auto;

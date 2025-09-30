@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ResumeForm from './ResumeForm';
 import TemplateSelector from './TemplateSelector';
 import MncResume from './MncResume';
@@ -19,7 +19,7 @@ import SuggestionsHistory from './components/SuggestionsHistory';
 import NotificationCenter from './components/NotificationCenter';
 import aiService from './services/aiService';
 import HomeMobile from './mobile/HomeMobile';
-import ResumeFormMobile from './mobile/ResumeFormMobile';
+import MobileResumeForm from './mobile/MobileResumeForm';
 import ResumePreviewMobile from './mobile/ResumePreviewMobile';
 import './styles/App.css';
 import './styles/ReverseChrono.css'; // Import template styles
@@ -39,6 +39,7 @@ function App() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [activeFeatureTab, setActiveFeatureTab] = useState('analytics'); // For preview page tabs
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile menu toggle
+  const resumePreviewRef = useRef(null);
   // Responsive: determine if we're in mobile viewport using matchMedia so changes are immediate
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
@@ -57,6 +58,33 @@ function App() {
       if (mql.removeEventListener) mql.removeEventListener('change', handler);
       else mql.removeListener(handler);
     };
+  }, []);
+
+  // Hide app header when scrolling down, show when scrolling up
+  React.useEffect(() => {
+    let lastY = typeof window !== 'undefined' ? window.scrollY : 0;
+    let ticking = false;
+
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const hdr = document.querySelector('.app-header');
+          if (!hdr) { ticking = false; return; }
+          if (currentY > lastY && currentY > 80) {
+            hdr.classList.add('app-header--hidden');
+          } else {
+            hdr.classList.remove('app-header--hidden');
+          }
+          lastY = currentY > 0 ? currentY : 0;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
   
   // Template search states
@@ -108,14 +136,64 @@ function App() {
   
   // Handle template selection change
   const handleTemplateChange = (template) => {
-    setSelectedTemplate(template);
+    const templateId = template && typeof template === 'object' ? (template.id || '') : template;
+    setSelectedTemplate(templateId);
+    // After user selects a template, take them to the form to edit
+    setActiveView('form');
+  };
+
+  // Handle template select (from TemplateSelector with resumeType)
+  const handleTemplateSelect = (templateId, type) => {
+    setSelectedTemplate(templateId);
+    if (type) setResumeType(type);
+    setActiveView('form');
   };
 
   // Handle template preview (select + navigate to preview)
   const handleTemplatePreview = (template) => {
-    setSelectedTemplate(template);
+    // TemplateSelector may call this with either a template id (string)
+    // or a template object. Ensure we store the id so later comparisons
+    // (e.g. selectedTemplate === 'modern-sidebar') work correctly.
+    const templateId = template && typeof template === 'object' ? (template.id || '') : template;
+    setSelectedTemplate(templateId);
     setActiveView('preview');
   };
+  
+  // When preview is active, scale the resume inside #resume-to-pdf so it fits the viewport
+  useEffect(() => {
+    if (activeView !== 'preview') return;
+
+    const applyFit = () => {
+      const container = document.getElementById('resume-to-pdf');
+      if (!container) return;
+
+      const resumeEl = container.firstElementChild;
+      if (!resumeEl) return;
+
+      // Reset transform to measure natural size
+      resumeEl.style.transform = '';
+      resumeEl.style.transformOrigin = 'top left';
+
+      // Calculate available space (use a fraction of window to leave controls visible)
+      const availableWidth = Math.min(window.innerWidth * 0.8, container.clientWidth || window.innerWidth);
+      const availableHeight = Math.max(window.innerHeight * 0.7, 600); // at least 600px
+
+      const naturalWidth = resumeEl.offsetWidth || resumeEl.scrollWidth || 800;
+      const naturalHeight = resumeEl.offsetHeight || resumeEl.scrollHeight || 1100;
+
+      const scaleX = availableWidth / naturalWidth;
+      const scaleY = availableHeight / naturalHeight;
+      const scale = Math.min(1, Math.min(scaleX, scaleY));
+
+      // Apply scale with small padding so nothing clips
+      resumeEl.style.transform = `scale(${scale * 0.98})`;
+    };
+
+    // Apply immediately and on resize
+    applyFit();
+    window.addEventListener('resize', applyFit);
+    return () => window.removeEventListener('resize', applyFit);
+  }, [activeView, selectedTemplate, resumeData]);
   
   // Show toast notification
   const showToast = (message, type = 'success', duration = 5000) => {
@@ -134,12 +212,21 @@ function App() {
       const html2canvas = await import('html2canvas').then(module => module.default);
       const { jsPDF } = await import('jspdf');
       
-      const resumeElement = document.getElementById('resume-to-pdf');
+  const resumeElement = document.getElementById('resume-to-pdf');
       
       if (!resumeElement) {
         throw new Error('Resume element not found');
       }
       
+      // Temporarily remove any scaling transform applied for preview so pdf capture is full-size
+      let innerResume = null;
+      let prevTransform = '';
+      if (resumeElement && resumeElement.firstElementChild) {
+        innerResume = resumeElement.firstElementChild;
+        prevTransform = innerResume.style.transform || '';
+        innerResume.style.transform = '';
+      }
+
       // Process images before capturing
       const images = resumeElement.querySelectorAll('img');
       // Wait for all images to load
@@ -162,6 +249,11 @@ function App() {
         backgroundColor: '#ffffff',
         imageTimeout: 15000 // Longer timeout for images
       });
+
+      // Restore any transform used for preview
+      if (innerResume) {
+        innerResume.style.transform = prevTransform;
+      }
       
       // Calculate dimensions to maintain aspect ratio
       const imgData = canvas.toDataURL('image/png');
@@ -451,8 +543,8 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
             achievements: ['Built 3 major client applications', 'Improved performance by 60%']
           }
         ],
-        skills: 'JavaScript, React, Node.js, Python, AWS, Docker, MongoDB, PostgreSQL',
-        technicalSkills: 'React, Node.js, Python, AWS, Docker, Kubernetes',
+  skills: 'JavaScript, React, Node.js, AWS, Docker, MongoDB, PostgreSQL',
+  technicalSkills: 'React, Node.js, AWS, Docker, Kubernetes',
         softSkills: 'Leadership, Communication, Problem-solving, Team management',
         projects: [
           {
@@ -519,11 +611,48 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
           />
         )}
   {activeView === 'form' && (
-    <ResumeFormMobile onOpenAIChat={openAIChat} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />
+    <MobileResumeForm 
+      onNavigate={(view) => { setActiveView(view); setIsMobileMenuOpen(false); }}
+      onOpenTemplates={() => { if (resumeType) { setActiveView('templates'); setIsMobileMenuOpen(false); } else { showToast('Please select a resume type first', 'warning'); } }}
+      resumeType={resumeType}
+      onOpenInterview={() => { setActiveView('interview-prep'); setIsMobileMenuOpen(false); }}
+      onOpenAIChat={() => { openAIChat(); }}
+    />
   )}
   {activeView === 'preview' && (
-    <ResumePreviewMobile onOpenAIChat={openAIChat} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />
+    <ResumePreviewMobile
+      onOpenAIChat={openAIChat}
+      onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }}
+      resumeData={resumeData}
+      selectedTemplate={selectedTemplate}
+      onDownload={handleDownloadPDF}
+      onSave={() => { showToast('Progress saved', 'success'); }}
+    />
   )}
+        {activeView === 'templates' && (
+          <>
+            <TemplateSelector
+              selectedTemplate={selectedTemplate}
+              onTemplateChange={handleTemplateChange}
+              onTemplateSelect={handleTemplateSelect}
+              onResumeTypeChange={(t) => setResumeType(t)}
+              onTemplatePreview={handleTemplatePreview}
+              resumeType={resumeType}
+              onInspireFromTemplate={handleInspireFromTemplate}
+              onUseExternalTemplate={handleUseExternalTemplate}
+            />
+            {resumeData && (
+              <div className="template-preview-actions">
+                <button 
+                  className="btn-preview"
+                  onClick={() => setActiveView('preview')}
+                >
+                  Preview Resume
+                </button>
+              </div>
+            )}
+          </>
+        )}
         {activeView === 'interview-prep' && <InterviewPrep />}
         {/* AI Chat modal for mobile */}
         <AIChatModal

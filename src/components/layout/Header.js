@@ -6,8 +6,38 @@ const Header = () => {
   // State to control mobile menu visibility
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
+  // State to control header visibility on scroll
+  const headerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    function onScroll() {
+      const currentY = window.scrollY;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (!headerRef.current) return;
+          if (currentY > lastScrollY && currentY > 80) {
+            // Scrolling down -> hide header
+            headerRef.current.classList.add('header--hidden');
+          } else {
+            // Scrolling up -> show header
+            headerRef.current.classList.remove('header--hidden');
+          }
+          lastScrollY = currentY > 0 ? currentY : 0;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <header className="header">
+    <header className="header" ref={headerRef}>
       <div className="header-container">
         <div className="header-content">
           {/* Logo */}
