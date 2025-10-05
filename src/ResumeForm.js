@@ -495,7 +495,7 @@ const ResumeForm = ({ initialData, onSubmit, onChange, isSubmitting, resumeType 
               value={formData.skills}
               onChange={handleChange}
               required
-              placeholder="JavaScript, React, Node.js, Python, AWS, Docker, Git"
+              placeholder="JavaScript, React, Node.js, AWS, Docker, Git"
             />
             <small className="form-text text-muted">
               List your skills, separated by commas. Include technical skills, programming languages, and tools.

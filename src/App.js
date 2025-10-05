@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { isMobileDevice } from './mobile/deviceUtils';
 import HomeMobile from './mobile/HomeMobile';
-import ResumeFormMobile from './mobile/ResumeFormMobile';
+import MobileResumeForm from './mobile/MobileResumeForm';
 import ResumePreviewMobile from './mobile/ResumePreviewMobile';
 import ResumeForm from './ResumeForm';
 import TemplateSelector from './TemplateSelector';
@@ -75,6 +75,15 @@ function App() {
   // Handle template selection change
   const handleTemplateChange = (template) => {
     setSelectedTemplate(template);
+    // After selecting a template, open the resume form for immediate editing
+    setActiveView('form');
+  };
+
+  // Handle template select with resumeType (called from TemplateSelector when user selects with a type)
+  const handleTemplateSelect = (templateId, type) => {
+    setSelectedTemplate(templateId);
+    if (type) setResumeType(type);
+    setActiveView('form');
   };
   // Handle template preview (select + navigate to preview)
   const handleTemplatePreview = (template) => {
@@ -178,8 +187,21 @@ function App() {
             }}
           />
         )}
+        {activeView === 'templates' && (
+          <TemplateSelector
+            selectedTemplate={selectedTemplate}
+            onTemplateChange={handleTemplateChange}
+            onTemplatePreview={handleTemplatePreview}
+            resumeType={resumeType}
+          />
+        )}
         {activeView === 'form' && (
-          <ResumeFormMobile onOpenAIChat={() => { setShowChatModal(true); setIsMobileMenuOpen(false); }} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />
+          <MobileResumeForm 
+            onNavigate={(view) => { setActiveView(view); }}
+            onOpenTemplates={() => { resumeType ? setActiveView('templates') : showToast('Please select a resume type first', 'warning'); }}
+            onOpenInterview={() => { setActiveView('ai-test'); }}
+            onOpenAIChat={() => { setShowChatModal(true); }}
+          />
         )}
         {activeView === 'preview' && (
           <ResumePreviewMobile onOpenAIChat={() => { setShowChatModal(true); setIsMobileMenuOpen(false); }} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />

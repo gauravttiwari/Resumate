@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ATS Score API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin: 10px 0;
+            padding: 10px;
+            font-family: monospace;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .breakdown {
+            margin-top: 20px;
+        }
+        .breakdown-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .good {
+            color: green;
+        }
+        .bad {
+            color: red;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 ATS Score API Tester</h1>
+    
+    <h3>Resume Text:</h3>
+    <textarea id="resumeText" placeholder="Paste your resume text here...">
+John Doe
+Email: john.doe@example.com
+Phone: +1-234-567-8900
+
+SUMMARY
+Experienced Full Stack Developer with 5 years of expertise in building scalable web applications.
+
+SKILLS
+• JavaScript, React, Node.js
+• MongoDB, SQL
+• AWS, Docker
+
+EXPERIENCE
+Senior Software Engineer - Tech Company (2020-2024)
+• Developed microservices using Node.js
+• Built REST APIs serving 1M+ requests daily
+• Led team of 5 developers
+
+EDUCATION
+Bachelor of Science in Computer Science
+University (2014-2018)
+
+PROJECTS
+• E-commerce Platform - Built using MERN stack
+    </textarea>
+
+    <h3>Job Description (Optional):</h3>
+    <textarea id="jobDescription" placeholder="Paste job description here (optional)...">
+Looking for Full Stack Developer with:
+- React, Node.js, Express
+- MongoDB, SQL
+- Docker, Kubernetes
+- REST API development
+    </textarea>
+
+    <button onclick="testAPI()">Test ATS Score API</button>
+
+    <div id="result" class="result" style="display:none;">
+        <h2>Results:</h2>
+        <div class="score" id="score">-</div>
+        <div id="rating"></div>
+        <div class="breakdown" id="breakdown"></div>
+        <h3>Raw Response:</h3>
+        <pre id="rawResponse"></pre>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resumeText = document.getElementById('resumeText').value;
+            const jobDescription = document.getElementById('jobDescription').value;
+
+            if (!resumeText.trim()) {
+                alert('Please enter resume text!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/ai/exact-ats-score', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        resumeData: resumeText,
+                        jobDescription: jobDescription || null
+                    })
+                });
+
+                const result = await response.json();
+                
+                // Display results
+                document.getElementById('result').style.display = 'block';
+                
+                if (result.success && result.data) {
+                    const data = result.data;
+                    const score = data.atsScore.totalScore;
+                    
+                    document.getElementById('score').textContent = score + '/100';
+                    document.getElementById('rating').innerHTML = `<strong>Rating:</strong> ${data.atsScore.rating}`;
+                    
+                    // Display breakdown
+                    let breakdownHTML = '<h3>Breakdown:</h3>';
+                    for (const [key, value] of Object.entries(data.atsScore.breakdown)) {
+                        if (typeof value === 'object' && value !== null) continue; // Skip nested objects
+                        const isGood = String(value).includes('Present') || String(value).includes('✓') || 
+                                     String(value).includes('Excellent') || String(value).includes('Good');
+                        const className = isGood ? 'good' : 'bad';
+                        const keyName = key.replace(/([A-Z])/g, ' $1').trim();
+                        breakdownHTML += `<div class="breakdown-item"><strong>${keyName}:</strong> <span class="${className}">${value}</span></div>`;
+                    }
+                    
+                    // Display issues
+                    if (data.issues && data.issues.length > 0) {
+                        breakdownHTML += '<h3>Issues Found:</h3><ul>';
+                        data.issues.forEach(issue => {
+                            breakdownHTML += `<li>${issue}</li>`;
+                        });
+                        breakdownHTML += '</ul>';
+                    }
+                    
+                    document.getElementById('breakdown').innerHTML = breakdownHTML;
+                } else {
+                    document.getElementById('score').textContent = 'Error';
+                    document.getElementById('rating').textContent = 'Failed to get score';
+                }
+                
+                // Show raw response
+                document.getElementById('rawResponse').textContent = JSON.stringify(result, null, 2);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('score').textContent = 'Error';
+                document.getElementById('rating').textContent = error.message;
+                document.getElementById('rawResponse').textContent = error.toString();
+            }
+        }
+    </script>
+</body>
+</html>

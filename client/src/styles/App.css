@@ -198,6 +198,16 @@ body {
   background: rgba(255, 255, 255, 0.98);
 }
 
+/* Hide-on-scroll variant */
+.app-header {
+  transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease, box-shadow 220ms ease;
+}
+.app-header--hidden {
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .header-container {
   display: flex;
   align-items: center;
@@ -2718,4 +2728,42 @@ body {
   .feature-content {
     padding: 15px;
   }
+}
+
+/* === Full-bleed mobile resume form overrides ===
+   Forces the mobile form to fill the viewport and removes parent padding/margins
+   so it appears like a native full-screen mobile experience. Scoped to small
+   viewports so desktop layout isn't affected. */
+@media (max-width: 900px) {
+  /* Ensure the mobile app container doesn't constrain children */
+  .app-mobile {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Make the mobile resume form fixed and full-screen */
+  .app-mobile .mobile-resume-form {
+    position: fixed !important;
+    inset: 0 0 0 0 !important; /* top/right/bottom/left 0 */
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 18px !important;
+    overflow-y: auto !important;
+    z-index: 9999 !important;
+    background: linear-gradient(180deg, #0b1220 0%, #071019 100%) !important;
+  }
+
+  /* Inputs should fit nicely inside fixed container */
+  .app-mobile .mobile-resume-form input,
+  .app-mobile .mobile-resume-form textarea {
+    width: calc(100% - 20px) !important;
+  }
+
+  /* Keep progress and headings readable */
+  .app-mobile .mobile-resume-form .progress-bar { margin-top: 6px; }
+  .app-mobile .mobile-resume-form h2 { margin-top: 4px; }
 }

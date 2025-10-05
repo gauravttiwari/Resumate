@@ -75,8 +75,8 @@ const HomeDesktop = ({ onStartClick }) => {
           <div className="hd-hero-inner">
             <div className="hd-animated-line" aria-hidden="true"></div>
             <div className="hd-hero-text">
-              <h1>Build Your Professional Resume in Minutes</h1>
-              <p className="hd-lead">Create ATS-friendly resumes that get you noticed by top companies like Google, Microsoft, Amazon and more. Choose from professional templates designed by experts.</p>
+              <h1>Create Your ATS-Friendly Resume for Top MNCs</h1>
+              <p className="hd-lead">Build a professional resume optimized for Applicant Tracking Systems used by companies like Google, Microsoft, Amazon, and other tech giants.</p>
               <div className="hd-cta-row">
                 <button className="hd-cta" onClick={onStartClick}>Get Started</button>
                 <a className="hd-secondary" href="#">Explore Templates</a>

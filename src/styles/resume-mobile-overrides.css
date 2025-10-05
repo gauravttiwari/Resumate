@@ -1,0 +1,75 @@
+/* Mobile overrides for resume templates - applied only on small screens */
+@media (max-width: 900px) {
+  .resume-template-reverse-chrono,
+  .template-modern-sidebar,
+  .template-professional-clean,
+  .jobfit-pro-resume,
+  .template-proprofile,
+  .smart-resume,
+  .mnc-resume {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 12px !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .template-modern-sidebar,
+  .jobfit-pro-resume,
+  .template-proprofile {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .jobfit-pro-resume .sidebar,
+  .template-proprofile .sidebar,
+  .template-modern-sidebar .sidebar {
+    width: 100% !important;
+    min-height: auto !important;
+    padding: 10px !important;
+  }
+
+  .jobfit-pro-resume,
+  .template-proprofile,
+  .resume-template-reverse-chrono {
+    min-height: auto !important;
+  }
+
+  .resume-template-reverse-chrono img,
+  .template-modern-sidebar img,
+  .jobfit-pro-resume img,
+  .template-proprofile img,
+  .smart-resume img {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: cover !important;
+  }
+
+  .resume-preview,
+  #resume-to-pdf,
+  .rp-preview-paper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .resume-preview h1,
+  .resume-preview h2,
+  .resume-preview h3 {
+    font-size: 1.2rem !important;
+  }
+
+  #resume-to-pdf {
+    transform-origin: top left !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .resume-template-reverse-chrono,
+  .template-modern-sidebar,
+  .template-professional-clean {
+    padding: 8px !important;
+  }
+}

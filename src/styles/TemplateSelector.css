@@ -162,6 +162,34 @@
   color: #2c3e50;
 }
 
+/* Safety overrides: ensure buttons visible on touch devices and not hidden by global rules */
+.template-selector .template-actions {
+  display: flex !important;
+  gap: 8px !important;
+  margin-top: auto !important;
+  z-index: 6;
+}
+.template-selector .template-actions button {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+.template-selector .template-preview .action-overlay {
+  z-index: 12;
+  background: rgba(255,255,255,0.9);
+  padding: 4px;
+  border-radius: 6px;
+}
+
+@media (hover: none) {
+  .template-selector .template-preview .action-overlay {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+  }
+}
+
 /* Optional: Dark mode support */
 @media (prefers-color-scheme: dark) {
   .template-selector h2 {

@@ -153,7 +153,7 @@ const NotificationCenter = ({ userId = 'anonymous' }) => {
                 <div className="top-skills">
                   <span className="skills-label">Hot Skills:</span>
                   <div className="skills-tags">
-                    {(data.topSkills || ['React', 'Python', 'AWS']).slice(0, 3).map(skill => (
+                    {(data.topSkills || ['React', 'AWS', 'Docker']).slice(0, 3).map(skill => (
                       <span key={skill} className="skill-tag">{skill}</span>
                     ))}
                   </div>

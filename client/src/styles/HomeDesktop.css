@@ -37,29 +37,30 @@
 
 .hd-hero {
   display: grid;
-  grid-template-columns: 1fr 600px; /* give more space for the preview */
-  gap: 40px;
+  grid-template-columns: 1fr 580px; /* left text + right preview */
+  gap: 48px;
   align-items: center;
-  padding: 64px 48px;
-  background: linear-gradient(90deg, rgba(232,244,255,0.8) 0%, rgba(255,250,252,0.9) 100%);
-  border-radius: 8px;
-  margin: 24px 24px 40px 24px;
+  padding: 72px 56px;
+  background: linear-gradient(90deg, rgba(232,244,255,0.9) 0%, rgba(255,250,252,0.95) 100%);
+  border-radius: 12px;
+  margin: 28px 28px 44px 28px;
   overflow: visible; /* allow rotated card to show */
 }
 
 .hd-hero-content h1 {
-  font-size: 56px;
+  font-size: 64px;
   line-height: 1.02;
-  margin-bottom: 18px;
-  color: #0b3550;
-  font-weight: 800;
+  margin-bottom: 14px;
+  color: #06293b;
+  font-weight: 900;
+  letter-spacing: -0.6px;
 }
 
 .hd-lead {
-  font-size: 18px;
+  font-size: 20px;
   color: #334155;
   margin-bottom: 28px;
-  max-width: 620px;
+  max-width: 720px;
 }
 
 .hd-cta-row {
@@ -95,14 +96,14 @@
 }
 
 .hd-cta {
-  background: linear-gradient(90deg,#0ea5e9,#2563eb);
+  background: linear-gradient(90deg,#06b6d4,#2563eb);
   color: #fff;
-  padding: 14px 26px;
+  padding: 16px 30px;
   border: none;
-  border-radius: 28px;
-  font-weight: 800;
+  border-radius: 32px;
+  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(37,99,235,0.16);
+  box-shadow: 0 14px 36px rgba(37,99,235,0.18);
 }
 
 .hd-secondary {
@@ -121,25 +122,25 @@
 .hd-hero-visual .hd-preview-card {
   background: linear-gradient(180deg,#ffffff,#fbfdff);
   border: 1px solid #eef3fb;
-  padding: 18px 22px;
+  padding: 20px 24px;
   border-radius: 18px;
-  width: 520px;
+  width: 540px;
   max-width: 100%;
-  min-height: 420px;
+  min-height: 480px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #64748b;
   font-weight: 600;
-  box-shadow: 0 40px 120px rgba(16,24,40,0.12);
-  transform: rotate(-6deg) translateX(10px);
-  transition: transform 300ms ease, box-shadow 300ms ease;
+  box-shadow: 0 50px 140px rgba(16,24,40,0.12);
+  transform: rotate(-8deg) translateX(16px);
+  transition: transform 320ms ease, box-shadow 320ms ease;
   overflow: visible;
 }
 
 .hd-hero-visual .hd-preview-card:hover {
-  transform: rotate(-4deg) translateX(6px) translateY(-6px);
-  box-shadow: 0 50px 140px rgba(16,24,40,0.16);
+  transform: rotate(-6deg) translateX(10px) translateY(-8px);
+  box-shadow: 0 60px 160px rgba(16,24,40,0.16);
 }
 
 .hd-preview-card img {
@@ -178,7 +179,7 @@
 @media (max-width: 900px) {
   .hd-hero {
     grid-template-columns: 1fr;
-    padding: 48px 24px;
+    padding: 36px 20px;
   }
 
   .hd-hero-visual {

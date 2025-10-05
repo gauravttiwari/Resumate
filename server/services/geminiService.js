@@ -558,7 +558,16 @@ async function generateEnhancedATSAnalysis(resumeData, jobDescription = null) {
       suggestions: suggestions,
       jobMatch: jobRequirements ? calculateJobMatchPercentage(resumeData, jobRequirements) : null
     };
-    
+    // Diagnostic: if total is 0, log intermediate parts to help debugging
+    if (typeof atsScore.total === 'number' && atsScore.total === 0) {
+      console.warn('🔍 ATS total score is 0 — diagnostic details:');
+      console.warn('keywordAnalysis:', JSON.stringify(keywordAnalysis, null, 2));
+      console.warn('formattingScore:', JSON.stringify(formattingScore, null, 2));
+      console.warn('contentQuality:', JSON.stringify(contentQuality, null, 2));
+      console.warn('keywordPlacement:', JSON.stringify(keywordPlacement, null, 2));
+      console.warn('computedScores:', JSON.stringify(atsScore, null, 2));
+    }
+
     console.log('Enhanced ATS analysis completed:', result);
     return result;
     
@@ -623,6 +632,8 @@ function detectJobRoleAndIndustry(resumeData) {
   }
 
   return {
+    // Provide both `detectedRole` and `role` for backward compatibility
+    detectedRole: detectedRole,
     role: detectedRole,
     industry: detectedIndustry,
     keywords: ATS_KEYWORD_DATABASE[detectedRole]?.keywords || [],
@@ -742,7 +753,8 @@ function performEnhancedKeywordAnalysis(resumeData, roleInfo, jobRequirements) {
     missingKeywords: missingKeywords.slice(0, 10),
     keywordDensity,
     totalKeywords: allKeywords.length,
-    matchRate: matchedKeywords.length / allKeywords.length
+    // Avoid division by zero when there are no keywords to check
+    matchRate: allKeywords.length > 0 ? matchedKeywords.length / allKeywords.length : 0
   };
 }
 
@@ -871,12 +883,13 @@ function analyzeKeywordPlacement(resumeData, matchedKeywords) {
   }
   
   const totalPlacement = placement.summary + placement.skills + placement.experience;
-  const placementScore = Math.min(100, (totalPlacement / matchedKeywords.length) * 100);
-  
+  // Avoid division by zero when there are no matched keywords
+  const placementScore = matchedKeywords.length > 0 ? Math.min(100, (totalPlacement / matchedKeywords.length) * 100) : 0;
+
   return {
     placement,
     score: placementScore,
-    recommendations: generatePlacementRecommendations(placement, matchedKeywords.length)
+    recommendations: generatePlacementRecommendations(placement, matchedKeywords.length || 0)
   };
 }
 
@@ -912,6 +925,21 @@ function calculateComprehensiveATSScore(analysis) {
     total: Math.min(100, total),
     ...scores
   };
+}
+
+/**
+ * Convert a numeric ATS score (0-100) into a human-friendly rating string
+ * @param {number} score
+ * @returns {string} One of 'Excellent', 'Good', 'Fair', 'Poor'
+ */
+function getATSRating(score) {
+  // Ensure numeric
+  const s = typeof score === 'number' ? score : Number(score) || 0;
+
+  if (s >= 80) return 'Excellent';
+  if (s >= 60) return 'Good';
+  if (s >= 40) return 'Fair';
+  return 'Poor';
 }
 
 /**
@@ -989,6 +1017,8 @@ function calculateJobMatchPercentage(resumeData, jobRequirements) {
     });
   }
   
+  // If there were no criteria to evaluate, return null to indicate not applicable
+  if (totalCriteria === 0) return null;
   return Math.round((matchScore / totalCriteria) * 100);
 }
 
@@ -1176,13 +1206,15 @@ function performKeywordAnalysis(resumeData, roleInfo) {
     }
   });
   
-  const keywordMatchRate = (matchedKeywords.length / roleInfo.keywords.length) * 100;
-  
+  // Avoid division by zero if there are no role-specific keywords
+  const totalKeywords = Array.isArray(roleInfo.keywords) ? roleInfo.keywords.length : 0;
+  const keywordMatchRate = totalKeywords > 0 ? (matchedKeywords.length / totalKeywords) * 100 : 0;
+
   return {
     matchedKeywords,
     missingKeywords,
     keywordMatchRate: Math.round(keywordMatchRate),
-    totalKeywords: roleInfo.keywords.length
+    totalKeywords: totalKeywords
   };
 }
 
@@ -2374,7 +2406,8 @@ function calculateSkillScore(currentSkills, requiredSkills) {
       current.toLowerCase().includes(required.toLowerCase())
     )
   ).length;
-  
+  // Avoid division by zero
+  if (!Array.isArray(requiredSkills) || requiredSkills.length === 0) return 0;
   return Math.round((matchCount / requiredSkills.length) * 100);
 }
 

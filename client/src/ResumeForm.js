@@ -3,21 +3,25 @@ import './styles/ResumeForm.css';
 import * as aiService from './services/aiService';
 
 const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
+  const EDUCATION_SEQUENCE = ['Class 10', 'Class 12', 'Graduation', 'Post Graduation'];
+
   const [formData, setFormData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@email.com',
-    phone: '+1234567890',
-    address: 'New York, NY',
-    linkedin: 'linkedin.com/in/johndoe',
-    github: 'github.com/johndoe',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    linkedin: '',
+    github: '',
     summary: '',
-    skills: 'JavaScript, React, Node.js, Python, SQL',
-    education: [{ degree: 'Bachelor of Computer Science', institution: 'ABC University', year: '2020', percentage: '8.5 CGPA' }],
-    experience: [{ role: 'Software Developer', company: 'Tech Company', duration: '2020-2023', description: 'Developed web applications using React and Node.js' }],
-    projects: [{ title: 'E-commerce Website', description: 'Built a full-stack e-commerce platform using React, Node.js, and MongoDB' }],
-    achievements: ['Published research paper on AI'],
+    skills: '',
+    education: [{ degree: '', institution: '', year: '', percentage: '', type: 'Class 10' }],
+    experience: [{ role: '', company: '', duration: '', description: '' }],
+    projects: [{ title: '', description: '' }],
+    achievements: [{ text: '', start: '', end: '' }],
     profilePic: null
   });
+
+  const [isFresher, setIsFresher] = useState(false);
 
   // AI-related states
   const [aiLoading, setAiLoading] = useState(false);
@@ -30,6 +34,36 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
       onChange(formData);
     }
   }, [formData, onChange]);
+
+  // Helper to compute a small label for each section based on current data
+  const getSectionLabel = (section) => {
+    switch(section) {
+      case 'personal':
+        return formData.name || '';
+      case 'summary':
+        return formData.summary ? formData.summary.slice(0, 40) + (formData.summary.length > 40 ? '…' : '') : '';
+      case 'skills':
+        return formData.skills ? formData.skills.split(',').slice(0,3).join(', ') : '';
+      case 'experience':
+        if (formData.experience && formData.experience.length) {
+          const e = formData.experience[0];
+          return `${e.role || ''}${e.role && e.company ? ' @ ' : ''}${e.company || ''}`.trim();
+        }
+        return '';
+      case 'projects':
+        return (formData.projects && formData.projects[0] && formData.projects[0].title) || '';
+      case 'education':
+        if (formData.education && formData.education[0]) {
+          const ed = formData.education[0];
+          return `${ed.type || ''}${ed.degree ? ': ' + ed.degree : ed.institution ? ': ' + ed.institution : ''}`.trim();
+        }
+        return '';
+      case 'achievements':
+        return (formData.achievements && formData.achievements[0] && formData.achievements[0].text) || '';
+      default:
+        return '';
+    }
+  };
 
   // Handle input changes
   const handleChange = (e) => {
@@ -55,15 +89,14 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
     });
   };
 
-  // Handle achievements as a simple array of strings
-  const handleAchievementChange = (index, value) => {
+  // Handle achievements as array of objects { text, start, end }
+  const handleAchievementChange = (index, field, value) => {
     setFormData(prevData => {
-      const updatedAchievements = [...prevData.achievements];
-      updatedAchievements[index] = value;
-      return {
-        ...prevData,
-        achievements: updatedAchievements
-      };
+      const updated = [...prevData.achievements];
+      const item = { ...(updated[index] || { text: '', start: '', end: '' }) };
+      item[field] = value;
+      updated[index] = item;
+      return { ...prevData, achievements: updated };
     });
   };
 
@@ -71,10 +104,13 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
   const handleAddItem = (field) => {
     setFormData(prevData => {
       let newItem;
-      
+
       switch(field) {
         case 'education':
-          newItem = { degree: '', institution: '', year: '', percentage: '' };
+          // Determine next education type from sequence
+          const existingTypes = prevData.education.map(e => e.type).filter(Boolean);
+          const nextType = EDUCATION_SEQUENCE.find(t => !existingTypes.includes(t)) || 'Other';
+          newItem = { degree: '', institution: '', year: '', percentage: '', type: nextType };
           break;
         case 'experience':
           newItem = { role: '', company: '', duration: '', description: '' };
@@ -85,12 +121,12 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         case 'achievements':
           return {
             ...prevData,
-            achievements: [...prevData.achievements, '']
+            achievements: [...prevData.achievements, { text: '', start: '', end: '' }]
           };
         default:
           return prevData;
       }
-      
+
       return {
         ...prevData,
         [field]: [...prevData[field], newItem]
@@ -103,31 +139,7 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
     setFormData(prevData => {
       const updatedItems = [...prevData[field]];
       updatedItems.splice(index, 1);
-      
-      // Ensure there's always at least one empty item
-      if (updatedItems.length === 0) {
-        switch(field) {
-          case 'education':
-            updatedItems.push({ degree: '', institution: '', year: '', percentage: '' });
-            break;
-          case 'experience':
-            updatedItems.push({ role: '', company: '', duration: '', description: '' });
-            break;
-          case 'projects':
-            updatedItems.push({ title: '', description: '' });
-            break;
-          case 'achievements':
-            updatedItems.push('');
-            break;
-          default:
-            break;
-        }
-      }
-      
-      return {
-        ...prevData,
-        [field]: updatedItems
-      };
+      return { ...prevData, [field]: updatedItems };
     });
   };
 
@@ -156,8 +168,8 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
 
   // AI Helper Functions
   const generateSummaryWithAI = async () => {
-    if (!formData.name || !formData.experience.length) {
-      alert('Please fill in your name and at least one work experience before generating summary.');
+    if (!formData.name) {
+      alert('Please fill in your name before generating summary.');
       return;
     }
 
@@ -220,8 +232,8 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
   };
 
   const generateSkillsWithAI = async () => {
-    if (!formData.name || !formData.experience.length) {
-      alert('Please fill in your name and experience before generating skills.');
+    if (!formData.name) {
+      alert('Please fill in your name before generating skills.');
       return;
     }
 
@@ -310,9 +322,38 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
     setAiFeature('');
   };
 
+  const improveAchievementWithAI = async (index) => {
+    const achievement = formData.achievements[index];
+    if (!achievement || !achievement.text || achievement.text.trim() === '') {
+      alert('Please enter the achievement text before improving it with AI.');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiFeature(`achievement-${index}`);
+    try {
+      console.log('Improving achievement text...');
+      const base = achievement.text;
+      const improvedText = base.includes('•') ?
+        `${base}\n• Recognized for outstanding contribution and measurable impact` :
+        `${base} — Recognized for outstanding contribution and measurable impact.`;
+
+      const updated = [...formData.achievements];
+      updated[index] = { ...achievement, text: improvedText };
+      setFormData(prev => ({ ...prev, achievements: updated }));
+      alert('Achievement improved successfully!');
+    } catch (error) {
+      console.error('Error improving achievement:', error);
+      alert('Failed to improve achievement. Please try again.');
+    }
+    setAiLoading(false);
+    setAiFeature('');
+  };
+
   return (
-    <form className="resume-form" onSubmit={handleSubmit}>
-      <h2>Personal Information</h2>
+    <div className="form-card">
+      <form className="resume-form" onSubmit={handleSubmit}>
+        <h2>Personal Information <span className="section-name">{getSectionLabel('personal')}</span></h2>
       <div className="form-group">
         <label htmlFor="name">Full Name*</label>
         <input
@@ -405,10 +446,19 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </small>
       </div>
 
-      <h2>Professional Summary</h2>
+  <h2>Professional Summary <span className="section-name">{getSectionLabel('summary')}</span></h2>
       <div className="form-group">
-        <div className="label-with-ai">
-          <label htmlFor="summary">Career Objective / Summary*</label>
+        <label htmlFor="summary">Career Objective / Summary*</label>
+        <div className="textarea-with-ai">
+          <textarea
+            id="summary"
+            name="summary"
+            value={formData.summary}
+            onChange={handleChange}
+            rows="3"
+            required
+            placeholder="Software Engineer with 2 years of experience building scalable web applications using React, Node.js, and cloud technologies."
+          ></textarea>
           <button
             type="button"
             className={`ai-helper-btn ${aiLoading && aiFeature === 'summary' ? 'loading' : ''}`}
@@ -419,24 +469,24 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
             {aiLoading && aiFeature === 'summary' ? '🤖 Generating...' : '✨ AI Generate'}
           </button>
         </div>
-        <textarea
-          id="summary"
-          name="summary"
-          value={formData.summary}
-          onChange={handleChange}
-          rows="3"
-          required
-          placeholder="Software Engineer with 2 years of experience building scalable web applications using React, Node.js, and cloud technologies."
-        ></textarea>
         <small className="form-text text-muted">
           2-3 lines summarizing your profile and the job role you're applying for. Keep it focused and include relevant keywords.
         </small>
       </div>
 
-      <h2>Technical Skills</h2>
+  <h2>Technical Skills <span className="section-name">{getSectionLabel('skills')}</span></h2>
       <div className="form-group">
-        <div className="label-with-ai">
-          <label htmlFor="skills">Skills*</label>
+        <label htmlFor="skills">Skills*</label>
+        <div className="input-with-ai">
+          <input
+            type="text"
+            id="skills"
+            name="skills"
+            value={formData.skills}
+            onChange={handleChange}
+            required
+            placeholder="JavaScript, React, Node.js, AWS, Docker, Git"
+          />
           <button
             type="button"
             className={`ai-helper-btn ${aiLoading && aiFeature === 'skills' ? 'loading' : ''}`}
@@ -447,22 +497,19 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
             {aiLoading && aiFeature === 'skills' ? '🤖 Generating...' : '⚡ AI Suggest Skills'}
           </button>
         </div>
-        <input
-          type="text"
-          id="skills"
-          name="skills"
-          value={formData.skills}
-          onChange={handleChange}
-          required
-          placeholder="JavaScript, React, Node.js, Python, AWS, Docker, Git"
-        />
         <small className="form-text text-muted">
           List your skills, separated by commas. Include technical skills, programming languages, and tools.
         </small>
       </div>
 
-      <h2>Work Experience</h2>
-      {formData.experience.map((exp, index) => (
+  <h2>Work Experience <span className="section-name">{getSectionLabel('experience')}</span></h2>
+      <div className="form-group fresher-toggle">
+        <label>
+          <input type="checkbox" checked={isFresher} onChange={() => setIsFresher(prev => !prev)} />{' '}
+          I'm a fresher (hide work experience)
+        </label>
+      </div>
+      {!isFresher && formData.experience.map((exp, index) => (
         <div key={index} className="section-item">
           <div className="form-row">
             <div className="form-group">
@@ -505,41 +552,41 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
           <div className="form-group">
             <div className="label-with-ai">
               <label htmlFor={`exp-description-${index}`}>Description*</label>
+            </div>
+            <div className="textarea-with-ai">
+              <textarea
+                id={`exp-description-${index}`}
+                value={exp.description}
+                onChange={(e) => handleArrayItemChange(index, 'experience', 'description', e.target.value)}
+                rows="3"
+                required
+                placeholder="- Developed REST APIs using Node.js and Express.js.
+- Implemented authentication system using JWT.
+- Optimized database queries, improving performance by 30%."
+              ></textarea>
               <button
                 type="button"
                 className={`ai-helper-btn ${aiLoading && aiFeature === `experience-${index}` ? 'loading' : ''}`}
-                onClick={() => setShowChatModal(true)}
+                onClick={() => improveExperienceWithAI(index)}
                 disabled={aiLoading}
-                title="Chat with AI for experience help"
+                title="Improve this experience description with AI"
               >
-                {aiLoading && aiFeature === `experience-${index}` ? '🤖 Improving...' : '� AI Experience Chat'}
+                {aiLoading && aiFeature === `experience-${index}` ? '🤖 Improving...' : '✨ Improve with AI'}
               </button>
             </div>
-            <textarea
-              id={`exp-description-${index}`}
-              value={exp.description}
-              onChange={(e) => handleArrayItemChange(index, 'experience', 'description', e.target.value)}
-              rows="3"
-              required
-              placeholder="- Developed REST APIs using Node.js and Express.js.
-- Implemented authentication system using JWT.
-- Optimized database queries, improving performance by 30%."
-            ></textarea>
             <small className="form-text text-muted">
               Enter bullet points, each on a new line. Start with action verbs and include measurable achievements.
             </small>
           </div>
           
           <div className="section-item-actions">
-            {formData.experience.length > 1 && (
-              <button 
-                type="button" 
-                className="btn-remove" 
-                onClick={() => handleRemoveItem('experience', index)}
-              >
-                Remove Experience
-              </button>
-            )}
+            <button 
+              type="button" 
+              className="btn-remove" 
+              onClick={() => handleRemoveItem('experience', index)}
+            >
+              Remove Experience
+            </button>
           </div>
         </div>
       ))}
@@ -554,7 +601,7 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </button>
       </div>
 
-      <h2>Projects</h2>
+  <h2>Projects <span className="section-name">{getSectionLabel('projects')}</span></h2>
       {formData.projects.map((project, index) => (
         <div key={index} className="section-item">
           <div className="form-group">
@@ -621,60 +668,89 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </button>
       </div>
 
-      <h2>Education</h2>
-      {formData.education.map((edu, index) => (
-        <div key={index} className="section-item">
-          <div className="form-group">
-            <label htmlFor={`edu-degree-${index}`}>Degree/Course*</label>
-            <input
-              type="text"
-              id={`edu-degree-${index}`}
-              value={edu.degree}
-              onChange={(e) => handleArrayItemChange(index, 'education', 'degree', e.target.value)}
-              required
-              placeholder="B.Sc Computer Science"
-            />
-          </div>
-          
-          <div className="form-row">
+  <h2>Education <span className="section-name">{getSectionLabel('education')}</span></h2>
+      {formData.education.map((edu, index) => {
+        const type = edu.type || 'Other';
+        // Choose labels/placeholders based on type
+        let degreeLabel = 'Degree/Course*';
+        let degreePlaceholder = 'B.Sc Computer Science';
+        let institutionLabel = 'Institution*';
+        let institutionPlaceholder = 'XYZ University';
+
+        if (type === 'Class 10') {
+          degreeLabel = 'Board/Exam*';
+          degreePlaceholder = 'CBSE / ICSE / State Board';
+          institutionLabel = 'School*';
+          institutionPlaceholder = 'ABC High School';
+        } else if (type === 'Class 12') {
+          degreeLabel = 'Board/Stream*';
+          degreePlaceholder = 'CBSE - Science / Commerce / Arts';
+          institutionLabel = 'School/College*';
+          institutionPlaceholder = 'ABC Senior Secondary School';
+        } else if (type === 'Graduation') {
+          degreeLabel = 'Degree*';
+          degreePlaceholder = 'B.Sc / B.Tech / B.Com';
+          institutionLabel = 'University/College*';
+          institutionPlaceholder = 'XYZ University';
+        } else if (type === 'Post Graduation') {
+          degreeLabel = 'Postgrad Degree*';
+          degreePlaceholder = 'M.Sc / M.Tech / MBA';
+          institutionLabel = 'University/College*';
+          institutionPlaceholder = 'XYZ University';
+        }
+
+        return (
+          <div key={index} className="section-item">
             <div className="form-group">
-              <label htmlFor={`edu-institution-${index}`}>Institution*</label>
+              <label htmlFor={`edu-degree-${index}`}>{type} - {degreeLabel}</label>
               <input
                 type="text"
-                id={`edu-institution-${index}`}
-                value={edu.institution}
-                onChange={(e) => handleArrayItemChange(index, 'education', 'institution', e.target.value)}
+                id={`edu-degree-${index}`}
+                value={edu.degree}
+                onChange={(e) => handleArrayItemChange(index, 'education', 'degree', e.target.value)}
                 required
-                placeholder="XYZ University"
+                placeholder={degreePlaceholder}
               />
             </div>
-            
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor={`edu-institution-${index}`}>{institutionLabel}</label>
+                <input
+                  type="text"
+                  id={`edu-institution-${index}`}
+                  value={edu.institution}
+                  onChange={(e) => handleArrayItemChange(index, 'education', 'institution', e.target.value)}
+                  required
+                  placeholder={institutionPlaceholder}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor={`edu-year-${index}`}>Year*</label>
+                <input
+                  type="text"
+                  id={`edu-year-${index}`}
+                  value={edu.year}
+                  onChange={(e) => handleArrayItemChange(index, 'education', 'year', e.target.value)}
+                  required
+                  placeholder="2023"
+                />
+              </div>
+            </div>
+
             <div className="form-group">
-              <label htmlFor={`edu-year-${index}`}>Year*</label>
+              <label htmlFor={`edu-percentage-${index}`}>GPA/Percentage</label>
               <input
                 type="text"
-                id={`edu-year-${index}`}
-                value={edu.year}
-                onChange={(e) => handleArrayItemChange(index, 'education', 'year', e.target.value)}
-                required
-                placeholder="2023"
+                id={`edu-percentage-${index}`}
+                value={edu.percentage}
+                onChange={(e) => handleArrayItemChange(index, 'education', 'percentage', e.target.value)}
+                placeholder="3.8 GPA or 85%"
               />
             </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor={`edu-percentage-${index}`}>GPA/Percentage</label>
-            <input
-              type="text"
-              id={`edu-percentage-${index}`}
-              value={edu.percentage}
-              onChange={(e) => handleArrayItemChange(index, 'education', 'percentage', e.target.value)}
-              placeholder="3.8 GPA or 85%"
-            />
-          </div>
-          
-          <div className="section-item-actions">
-            {formData.education.length > 1 && (
+
+            <div className="section-item-actions">
               <button 
                 type="button" 
                 className="btn-remove" 
@@ -682,10 +758,10 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
               >
                 Remove Education
               </button>
-            )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       
       <div className="section-actions">
         <button 
@@ -697,30 +773,45 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </button>
       </div>
 
-      <h2>Achievements & Certifications</h2>
+  <h2>Achievements & Certifications <span className="section-name">{getSectionLabel('achievements')}</span></h2>
       {formData.achievements.map((achievement, index) => (
-        <div key={index} className="section-item achievement-item">
-          <div className="form-group">
-            <label htmlFor={`achievement-${index}`}>Achievement/Certification {index + 1}</label>
-            <input
-              type="text"
-              id={`achievement-${index}`}
-              value={achievement}
-              onChange={(e) => handleAchievementChange(index, e.target.value)}
-              placeholder="AWS Certified Solutions Architect (2024)"
-            />
+        <div key={index} className="section-item">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor={`achievement-text-${index}`}>Achievement/Certification {index + 1}</label>
+              <div className="input-with-ai">
+                <input
+                  type="text"
+                  id={`achievement-text-${index}`}
+                  value={achievement.text}
+                  onChange={(e) => handleAchievementChange(index, 'text', e.target.value)}
+                  placeholder="AWS Certified Solutions Architect"
+                />
+                <button
+                  type="button"
+                  className={`ai-helper-btn ${aiLoading && aiFeature === `achievement-${index}` ? 'loading' : ''}`}
+                  onClick={() => improveAchievementWithAI(index)}
+                  disabled={aiLoading}
+                  title="Improve this achievement with AI"
+                >
+                  {aiLoading && aiFeature === `achievement-${index}` ? '🤖 Improving...' : '✨ Improve with AI'}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Start Date</label>
+              <input type="text" value={achievement.start} onChange={(e) => handleAchievementChange(index, 'start', e.target.value)} placeholder="Jan 2020" />
+            </div>
+
+            <div className="form-group">
+              <label>End Date</label>
+              <input type="text" value={achievement.end} onChange={(e) => handleAchievementChange(index, 'end', e.target.value)} placeholder="Dec 2020 or Present" />
+            </div>
           </div>
-          
+
           <div className="section-item-actions">
-            {formData.achievements.length > 1 && (
-              <button 
-                type="button" 
-                className="btn-remove" 
-                onClick={() => handleRemoveItem('achievements', index)}
-              >
-                Remove
-              </button>
-            )}
+            <button type="button" className="btn-remove" onClick={() => handleRemoveItem('achievements', index)}>Remove Achievement</button>
           </div>
         </div>
       ))}
@@ -753,7 +844,8 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
           {isSubmitting ? 'Generating...' : 'Generate Resume'}
         </button>
       </div>
-    </form>
+      </form>
+    </div>
   );
 };
 
