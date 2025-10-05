@@ -442,7 +442,17 @@ router.post('/skill-gap-analysis', async (req, res) => {
 /**
  * Route to get industry trends and notifications
  */
-router.get('/industry-trends/:industry?', async (req, res) => {
+router.get('/industry-trends', async (req, res) => {
+  try {
+    const trends = geminiService.getIndustryTrends('IT');
+    res.status(200).json({ success: true, data: trends });
+  } catch (error) {
+    console.error('Error getting industry trends:', error);
+    res.status(500).json({ success: false, message: 'Failed to get industry trends' });
+  }
+});
+
+router.get('/industry-trends/:industry', async (req, res) => {
   try {
     const { industry } = req.params;
     const trends = geminiService.getIndustryTrends(industry || 'IT');
