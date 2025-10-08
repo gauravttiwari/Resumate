@@ -3,10 +3,11 @@ import './styles/HomeDesktop.css';
 
 const HomeDesktop = ({ onStartClick, onOpenATS }) => {
   const [rotatingText, setRotatingText] = useState('a remote job');
-  const rotatingTexts = ['a remote job', 'paid more', 'hired faster', 'promoted', 'an interview'];
   
   useEffect(() => {
+    const rotatingTexts = ['a remote job', 'paid more', 'hired faster', 'promoted', 'an interview'];
     let currentIndex = 0;
+    
     const rotateInterval = setInterval(() => {
       currentIndex = (currentIndex + 1) % rotatingTexts.length;
       setRotatingText(rotatingTexts[currentIndex]);
@@ -86,7 +87,7 @@ const HomeDesktop = ({ onStartClick, onOpenATS }) => {
       <section className="hd-hero">
         <div className="hd-hero-inner">
           <div className="hd-hero-left">
-            <h1 className="hd-hero-title">This resume builder gets you<br /><span className="hd-highlight" key={rotatingText}>{rotatingText}</span></h1>
+            <h1 className="hd-hero-title">This resume builder gets you<br /><span className="hd-highlight" key={rotatingText}>{String(rotatingText)}</span></h1>
             <p className="hd-lead">Only 2% of resumes win. Yours will be one of them.</p>
 
             <div className="hd-cta-row">
