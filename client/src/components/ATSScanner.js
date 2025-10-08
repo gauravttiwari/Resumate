@@ -18,6 +18,11 @@ const ATSScanner = ({ onBack }) => {
   const [showSummary, setShowSummary] = useState(false);
   const [status, setStatus] = useState('');
 
+  // Debug: log mount/update to help diagnose blank render issues
+  React.useEffect(() => {
+    console.log('ATSScanner mounted/updated', { showSummary, loading, status });
+  }, [showSummary, loading, status]);
+
   // helper to analyze already-parsed resume data (used after file upload)
   async function analyzeResume(resumeData) {
     if (!resumeData) return;
@@ -380,6 +385,9 @@ const ATSScanner = ({ onBack }) => {
 
   return (
     <div className="ats-scanner hero-page">
+      <button className="btn-back-icon" onClick={() => { console.log('ATSScanner: Back clicked'); if (onBack) onBack(); }} title="Go back">
+        ✕
+      </button>
       <div className="hero-wrap">
         <div className="hero-grid">
           <div className="hero-left">

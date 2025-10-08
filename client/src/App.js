@@ -21,6 +21,7 @@ import aiService from './services/aiService';
 import HomeMobile from './mobile/HomeMobile';
 import MobileResumeForm from './mobile/MobileResumeForm';
 import ResumePreviewMobile from './mobile/ResumePreviewMobile';
+import ATSScanner from './components/ATSScanner';
 import './styles/App.css';
 import './styles/ReverseChrono.css'; // Import template styles
 import './styles/ModernSidebar.css';
@@ -653,6 +654,12 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
             )}
           </>
         )}
+
+        {activeView === 'ats-scanner' && (
+          <div style={{ minHeight: '520px', padding: '20px 0' }}>
+            <ATSScanner onBack={() => setActiveView('home')} />
+          </div>
+        )}
         {activeView === 'interview-prep' && <InterviewPrep />}
         {/* AI Chat modal for mobile */}
         <AIChatModal
@@ -792,6 +799,13 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
             >
               📋 Templates
             </button>
+            {/* ATS Scan button in nav (opens ATS Scanner page) */}
+            <button
+              className={`nav-link ${activeView === 'ats-scanner' ? 'active' : ''} ats-scan-btn`}
+              onClick={() => { console.log('NAV: ATS Scan clicked'); setActiveView('ats-scanner'); setIsMobileMenuOpen(false); }}
+            >
+              📊 ATS Scan
+            </button>
             <button 
               className={`nav-link ${activeView === 'interview-prep' ? 'active' : ''}`}
               onClick={() => {
@@ -829,7 +843,7 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
       {!showChatModal && (
         <main className="app-content">
           {activeView === 'home' && (
-            <HomeDesktop onStartClick={() => setActiveView('type-selector')} />
+            <HomeDesktop onStartClick={() => setActiveView('type-selector')} onOpenATS={() => setActiveView('ats-scanner')} />
           )}
         
         {activeView === 'type-selector' && (
@@ -1052,6 +1066,10 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
           </div>
         )}
         
+        {activeView === 'ats-scanner' && (
+          <ATSScanner onBack={() => setActiveView('home')} />
+        )}
+
         {activeView === 'preview' && resumeData && (
           <div className="resume-preview-container">
             <div className="resume-actions">

@@ -50,9 +50,6 @@ body {
   .hd-features,
   .features-section,
   .usecases,
-  .templates-section,
-  .templates-inner,
-  .templates-top-center,
   .carousel-card,
   .cards-row,
   .feature,
@@ -60,6 +57,11 @@ body {
   .home-screen,
   .app-container {
     background: transparent !important;
+  }
+  
+  /* Keep templates section with its own background */
+  .templates-section {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%) !important;
   }
 
   /* Keep cards and small panels visually distinct by preserving their box shadows and borders */

@@ -174,8 +174,9 @@ const AIChatModal = ({ isOpen, onClose, onAutoFill }) => {
             onClick={handleSendMessage}
             disabled={!input.trim() || isLoading}
             className="send-btn"
+            title="Send message"
           >
-            {isLoading ? '⏳' : '🚀'}
+            {isLoading ? '⏳' : '✏️'}
           </button>
         </div>
       </div>

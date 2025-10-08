@@ -10,6 +10,38 @@
 .ats-header .muted { color:#64748b }
 .btn-back { background:transparent; border:0; cursor:pointer; font-size:18px; padding:6px 8px; border-radius:6px }
 
+/* Back icon button - top right */
+.btn-back-icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.btn-back-icon:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: scale(1.05);
+}
+
+.btn-back-icon:active {
+  transform: scale(0.95);
+}
+
 .ats-grid { display:grid; grid-template-columns: 380px 1fr; gap:20px }
 .ats-left { background: #fff; padding:18px; border-radius:12px; border:1px solid #e6eef8 }
 .ats-right { min-height: 320px }
@@ -102,7 +134,7 @@
 .muted { color:#6b7280 }
 
 /* Hero layout styles to match the reference screenshots */
-.hero-page { padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
+.hero-page { padding: 40px 20px; max-width: 1200px; margin: 0 auto; position: relative; }
 .hero-wrap { position:relative; padding: 64px 48px; border-radius: 18px; overflow:visible; background: radial-gradient(1200px 400px at 20% 30%, rgba(166,245,224,0.35) 0%, rgba(245,236,255,0.4) 30%, rgba(245,238,255,0.08) 60%, rgba(255,255,255,0.0) 100%), linear-gradient(135deg,#fbfeff 0%, #fff 100%); }
 .hero-grid { display:grid; grid-template-columns: 1fr 540px; gap:36px; align-items:center }
 .hero-left .eyebrow { color:#7c3aed; font-weight:700; letter-spacing:1px; margin-bottom:14px; font-size:12px }

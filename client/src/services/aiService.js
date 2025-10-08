@@ -275,6 +275,67 @@ export const getEnhancedATSAnalysis = async (resumeData, jobDescription = null) 
 };
 
 /**
+ * Call the deterministic exact ATS scoring endpoint on the server
+ * @param {String|Object} resumeData - resume text or parsed resume
+ * @param {String} jobDescription
+ * @param {String} jobTitle
+ * @returns {Promise<Object>} - exact ats result
+ */
+export const getExactATSScore = async (resumeData, jobDescription = null, jobTitle = '') => {
+  try {
+    const body = { resumeData, jobDescription, jobTitle };
+    const response = await fetch(`${API_BASE_URL}/ai/exact-ats-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || 'Exact ATS score request failed');
+    }
+    return result.data;
+  } catch (error) {
+    console.warn('getExactATSScore failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Hybrid analysis: attempts hybrid endpoint, falls back to exact or enhanced analysis
+ * @param {String|Object} resumeData
+ * @param {Object} opts - { jobTitle, jobDescription }
+ */
+export const getHybridAnalysis = async (resumeData, opts = {}) => {
+  const { jobTitle = '', jobDescription = '' } = opts || {};
+  try {
+    // Preferential hybrid endpoint if server implements it
+    const response = await fetch(`${API_BASE_URL}/ai/hybrid-analysis`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resumeData, jobTitle, jobDescription }),
+    });
+
+    if (response.ok) {
+      const payload = await response.json();
+      if (payload && payload.success) return payload.data;
+      // if server returns non-success, fall through to fallback
+    }
+
+    // If hybrid endpoint not available or returned error, try exact ATS score
+    try {
+      return await getExactATSScore(resumeData, jobDescription, jobTitle);
+    } catch (exactErr) {
+      console.warn('Hybrid endpoint failed and exact ATS failed, falling back to enhanced analysis', exactErr);
+      // Final fallback: enhanced AI analysis
+      return await getEnhancedATSAnalysis(resumeData, jobDescription);
+    }
+  } catch (err) {
+    console.warn('getHybridAnalysis top-level error, falling back:', err);
+    try { return await getExactATSScore(resumeData, jobDescription, jobTitle); } catch (e) { return await getEnhancedATSAnalysis(resumeData, jobDescription); }
+  }
+};
+
+/**
  * Search for ATS-optimized templates using AI analysis
  * @param {Object} searchParams - Search parameters (jobTitle, industry, experienceLevel)
  * @returns {Promise<Array>} - Array of recommended templates
