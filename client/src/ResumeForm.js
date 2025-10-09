@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import './styles/ResumeForm.css';
 import * as aiService from './services/aiService';
 
-const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
+const ResumeForm = ({ onSubmit, onChange, isSubmitting, initialData }) => {
   const EDUCATION_SEQUENCE = ['Class 10', 'Class 12', 'Graduation', 'Post Graduation'];
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(initialData || {
     name: '',
     email: '',
     phone: '',
@@ -18,6 +18,8 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
     experience: [{ role: '', company: '', duration: '', description: '' }],
     projects: [{ title: '', description: '' }],
     achievements: [{ text: '', start: '', end: '' }],
+    languages: [{ language: '', proficiency: 'Intermediate' }],
+    hobbies: '',
     profilePic: null
   });
 
@@ -60,6 +62,10 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         return '';
       case 'achievements':
         return (formData.achievements && formData.achievements[0] && formData.achievements[0].text) || '';
+      case 'languages':
+        return (formData.languages && formData.languages[0] && formData.languages[0].language) || '';
+      case 'hobbies':
+        return formData.hobbies ? formData.hobbies.slice(0, 30) + (formData.hobbies.length > 30 ? '…' : '') : '';
       default:
         return '';
     }
@@ -123,6 +129,9 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
             ...prevData,
             achievements: [...prevData.achievements, { text: '', start: '', end: '' }]
           };
+        case 'languages':
+          newItem = { language: '', proficiency: 'Intermediate' };
+          break;
         default:
           return prevData;
       }
@@ -162,7 +171,21 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSubmit) {
-      onSubmit(formData);
+      // Convert achievements objects to strings for preview
+      const processedData = {
+        ...formData,
+        achievements: formData.achievements
+          .map(ach => {
+            if (typeof ach === 'object' && ach.text) {
+              // Combine text with dates if available
+              const dates = [ach.start, ach.end].filter(Boolean).join(' - ');
+              return dates ? `${ach.text} (${dates})` : ach.text;
+            }
+            return ach;
+          })
+          .filter(Boolean)
+      };
+      onSubmit(processedData);
     }
   };
 
@@ -351,9 +374,11 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
   };
 
   return (
-    <div className="form-card">
-      <form className="resume-form" onSubmit={handleSubmit}>
-        <h2>Personal Information <span className="section-name">{getSectionLabel('personal')}</span></h2>
+    <div className="resume-form-container">
+      {/* Form Content */}
+      <div className="form-card">
+        <form className="resume-form" onSubmit={handleSubmit}>
+          <h2><span className="section-icon">👤</span> Personal Information <span className="section-name">{getSectionLabel('personal')}</span></h2>
       <div className="form-group">
         <label htmlFor="name">Full Name*</label>
         <input
@@ -446,7 +471,7 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </small>
       </div>
 
-  <h2>Professional Summary <span className="section-name">{getSectionLabel('summary')}</span></h2>
+  <h2><span className="section-icon">📝</span> Professional Summary <span className="section-name">{getSectionLabel('summary')}</span></h2>
       <div className="form-group">
         <label htmlFor="summary">Career Objective / Summary*</label>
         <div className="textarea-with-ai">
@@ -474,7 +499,7 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </small>
       </div>
 
-  <h2>Technical Skills <span className="section-name">{getSectionLabel('skills')}</span></h2>
+  <h2><span className="section-icon">🛠️</span> Technical Skills <span className="section-name">{getSectionLabel('skills')}</span></h2>
       <div className="form-group">
         <label htmlFor="skills">Skills*</label>
         <div className="input-with-ai">
@@ -502,7 +527,7 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </small>
       </div>
 
-  <h2>Work Experience <span className="section-name">{getSectionLabel('experience')}</span></h2>
+  <h2><span className="section-icon">💼</span> Work Experience <span className="section-name">{getSectionLabel('experience')}</span></h2>
       <div className="form-group fresher-toggle">
         <label>
           <input type="checkbox" checked={isFresher} onChange={() => setIsFresher(prev => !prev)} />{' '}
@@ -601,7 +626,7 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </button>
       </div>
 
-  <h2>Projects <span className="section-name">{getSectionLabel('projects')}</span></h2>
+  <h2><span className="section-icon">🚀</span> Projects <span className="section-name">{getSectionLabel('projects')}</span></h2>
       {formData.projects.map((project, index) => (
         <div key={index} className="section-item">
           <div className="form-group">
@@ -668,7 +693,7 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </button>
       </div>
 
-  <h2>Education <span className="section-name">{getSectionLabel('education')}</span></h2>
+  <h2><span className="section-icon">🎓</span> Education <span className="section-name">{getSectionLabel('education')}</span></h2>
       {formData.education.map((edu, index) => {
         const type = edu.type || 'Other';
         // Choose labels/placeholders based on type
@@ -773,7 +798,7 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </button>
       </div>
 
-  <h2>Achievements & Certifications <span className="section-name">{getSectionLabel('achievements')}</span></h2>
+  <h2><span className="section-icon">🏆</span> Achievements & Certifications <span className="section-name">{getSectionLabel('achievements')}</span></h2>
       {formData.achievements.map((achievement, index) => (
         <div key={index} className="section-item">
           <div className="form-row">
@@ -826,6 +851,68 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
         </button>
       </div>
 
+      {/* Languages Section */}
+      <h2><span className="section-icon">🌐</span> Languages <span className="section-name">{getSectionLabel('languages')}</span></h2>
+      {formData.languages.map((language, index) => (
+        <div key={index} className="section-item">
+          <div className="form-row">
+            <div className="form-group">
+              <label>Language</label>
+              <input
+                type="text"
+                value={language.language}
+                onChange={(e) => handleArrayItemChange(index, 'languages', 'language', e.target.value)}
+                placeholder="English, Hindi, Spanish..."
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Proficiency Level</label>
+              <select
+                value={language.proficiency}
+                onChange={(e) => handleArrayItemChange(index, 'languages', 'proficiency', e.target.value)}
+              >
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Fluent">Fluent</option>
+                <option value="Native">Native</option>
+              </select>
+            </div>
+          </div>
+          <div className="section-item-actions">
+            <button type="button" className="btn-remove" onClick={() => handleRemoveItem('languages', index)}>Remove Language</button>
+          </div>
+        </div>
+      ))}
+      
+      <div className="section-actions">
+        <button 
+          type="button" 
+          className="btn-add" 
+          onClick={() => handleAddItem('languages')}
+        >
+          Add Language
+        </button>
+      </div>
+
+      {/* Hobbies Section */}
+      <h2><span className="section-icon">🎨</span> Hobbies & Interests <span className="section-name">{getSectionLabel('hobbies')}</span></h2>
+      <div className="form-group">
+        <label htmlFor="hobbies">Hobbies & Interests</label>
+        <textarea
+          id="hobbies"
+          name="hobbies"
+          value={formData.hobbies}
+          onChange={handleChange}
+          placeholder="Photography, Reading, Traveling, Playing Guitar, Coding, Sports, etc."
+          rows="4"
+        />
+        <div className="form-text">
+          List your hobbies and interests that show your personality and might be relevant to your career
+        </div>
+      </div>
+
       <div className="form-actions">
         <button
           type="button"
@@ -844,7 +931,8 @@ const ResumeForm = ({ onSubmit, onChange, isSubmitting }) => {
           {isSubmitting ? 'Generating...' : 'Generate Resume'}
         </button>
       </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

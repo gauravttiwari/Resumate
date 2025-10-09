@@ -8,6 +8,7 @@ import ProfessionalCleanResume from './ProfessionalCleanResume';
 import JobFitProResume from './JobFitProResume';
 import ProProfileResume from './ProProfileResume';
 import SmartResume from './SmartResume';
+import EnhancvResume from './EnhancvResume';
 import HomeScreen from './HomeScreen';
 import HomeDesktop from './HomeDesktop';
 import ResumeTypeSelector from './ResumeTypeSelector';
@@ -23,11 +24,13 @@ import MobileResumeForm from './mobile/MobileResumeForm';
 import ResumePreviewMobile from './mobile/ResumePreviewMobile';
 import ATSScanner from './components/ATSScanner';
 import './styles/App.css';
+import './styles/ResumeForm.css'; // Import form styles for header
 import './styles/ReverseChrono.css'; // Import template styles
 import './styles/ModernSidebar.css';
 import './styles/ProfessionalClean.css';
 import './styles/JobFitPro.css';
 import './styles/ProProfile.css';
+import './styles/EnhancvResume.css';
 
 function App() {
   const [resumeData, setResumeData] = useState(null);
@@ -679,8 +682,16 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
         <header className="app-header">
           <div className="header-container">
             <div className="app-logo">
-              <h1>ResuMate</h1>
-              <p className="app-tagline">AI-Powered Professional Resume Builder</p>
+              <div className="main-logo-icon">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <rect width="40" height="40" rx="8" fill="#8b5cf6"/>
+                  <path d="M10 12h20v2.5H10v-2.5zm0 5h20v2.5H10v-2.5zm0 5h15v2.5H10v-2.5zm0 5h17v2.5H10v-2.5z" fill="white"/>
+                </svg>
+              </div>
+              <div className="main-logo-content">
+                <h1>ResuMate</h1>
+                <p className="app-tagline">AI-Powered Professional Resume Builder</p>
+              </div>
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -861,29 +872,59 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
         
         {activeView === 'form' && (
           <>
-            <div className="app-intro">
-              <h2>Create Your ATS-Friendly Resume for Top MNCs</h2>
-              <p>
-                Build a professional resume optimized for Applicant Tracking Systems 
-                used by companies like Google, Microsoft, Amazon, and other tech giants.
-              </p>
-              {resumeType && (
-                <div className="selected-resume-type">
-                  <span>Selected Resume Type: </span>
-                  <strong>
-                    {resumeType === 'technical' ? 'Technical' : 
-                     resumeType === 'medical' ? 'Medical' : 
-                     resumeType === 'diploma' ? 'Diploma/Certificate' : 'Non-Technical'}
-                  </strong>
-                  <button 
-                    onClick={() => setActiveView('type-selector')} 
-                    className="change-type-btn"
-                  >
-                    Change
-                  </button>
+            {/* Form Header/Intro Section */}
+            <div className="form-header">
+              <div className="form-header-content">
+                <h1 className="form-title">
+                  <span className="form-icon">📝</span>
+                  Build Your Professional Resume
+                </h1>
+                <p className="form-subtitle">
+                  Create a standout resume in minutes with our AI-powered form. 
+                  Fill out your information below and we'll help you craft the perfect resume 
+                  that gets you noticed by employers and beats ATS systems.
+                </p>
+                <div className="resume-type-badge">
+                  <span className="badge-icon">🎯</span>
+                  {resumeData?.name ? `Building resume for ${resumeData.name}` : 'Professional Resume Builder'}
                 </div>
-              )}
+                
+                {/* Progress Indicator */}
+                <div className="form-progress">
+                  <div className="progress-steps">
+                    <div className={`progress-step ${resumeData?.name ? 'completed' : 'active'}`}>
+                      <span className="step-icon">👤</span>
+                      <span className="step-label">Personal Info</span>
+                    </div>
+                    <div className={`progress-step ${resumeData?.summary ? 'completed' : (resumeData?.name ? 'active' : '')}`}>
+                      <span className="step-icon">📝</span>
+                      <span className="step-label">Summary</span>
+                    </div>
+                    <div className={`progress-step ${resumeData?.skills ? 'completed' : (resumeData?.summary ? 'active' : '')}`}>
+                      <span className="step-icon">🛠️</span>
+                      <span className="step-label">Skills</span>
+                    </div>
+                    <div className={`progress-step ${resumeData?.experience?.[0]?.role ? 'completed' : (resumeData?.skills ? 'active' : '')}`}>
+                      <span className="step-icon">💼</span>
+                      <span className="step-label">Experience</span>
+                    </div>
+                    <div className={`progress-step ${resumeData?.projects?.[0]?.title ? 'completed' : (resumeData?.experience?.[0]?.role ? 'active' : '')}`}>
+                      <span className="step-icon">🚀</span>
+                      <span className="step-label">Projects</span>
+                    </div>
+                    <div className={`progress-step ${resumeData?.languages?.[0]?.language ? 'completed' : (resumeData?.projects?.[0]?.title ? 'active' : '')}`}>
+                      <span className="step-icon">🌐</span>
+                      <span className="step-label">Languages</span>
+                    </div>
+                    <div className={`progress-step ${resumeData?.hobbies ? 'completed' : (resumeData?.languages?.[0]?.language ? 'active' : '')}`}>
+                      <span className="step-icon">🎨</span>
+                      <span className="step-label">Hobbies</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+            
             <ResumeForm 
               initialData={resumeData} // Pass existing resume data when editing
               onSubmit={handleFormSubmit} 
@@ -1132,6 +1173,11 @@ Would you like to use our "${template.layoutStyle}" template with similar stylin
                 />
                     ) : selectedTemplate === 'smart-resume' ? (
                       <SmartResume data={resumeData} template={selectedTemplate} />
+              ) : selectedTemplate === 'enhancv-pro' ? (
+                <EnhancvResume
+                  data={resumeData}
+                  showProfile={true}
+                />
               ) : (
                 <MncResume 
                   data={resumeData} 

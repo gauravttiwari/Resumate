@@ -5,9 +5,10 @@
  * Single-column layout with clean sections and visual highlights
  */
 import React from 'react';
+import { safeText, safeAchievement, safeArray } from './utils/safeRender';
 import './styles/ProfessionalClean.css';
 
-const ProfessionalCleanResume = React.forwardRef(({ data, showProfile = true }, ref) => {
+const ProfessionalCleanResume = React.forwardRef(({ data = {}, showProfile = true }, ref) => {
   // Destructure resume data with defaults
   const { 
     name = '', 
@@ -28,12 +29,22 @@ const ProfessionalCleanResume = React.forwardRef(({ data, showProfile = true }, 
     achievements = [],
     certifications = [],
     profilePic = null
-  } = data || {};
+  } = data;
+
+  // Helper to safely convert values to text
+  const safeText = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value.text !== undefined) return String(value.text || '');
+    if (Array.isArray(value)) return value.map(v => safeText(v)).filter(Boolean).join(', ');
+    return '';
+  };
 
   // Format skills into an array
   const formatSkillsList = (skillsString) => {
     if (!skillsString) return [];
-    return skillsString.split(',').map(skill => skill.trim()).filter(Boolean);
+    const text = safeText(skillsString);
+    return text.split(',').map(skill => skill.trim()).filter(Boolean);
   };
 
   // Create skill arrays
@@ -46,7 +57,7 @@ const ProfessionalCleanResume = React.forwardRef(({ data, showProfile = true }, 
     experience[0].role || 'Professional' : 'Professional';
   
   // Get combined professional summary
-  const professionalSummary = summary || objective || '';
+  const professionalSummary = safeText(summary) || safeText(objective) || '';
 
   return (
     <div ref={ref} className="template-professional-clean">
@@ -129,12 +140,11 @@ const ProfessionalCleanResume = React.forwardRef(({ data, showProfile = true }, 
         </section>
       )}
 
-      {/* Experience Section */}
-      {experience && experience.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">Professional Experience</h2>
-          {/* Sort by most recent first */}
-          {experience.sort((a, b) => {
+      {/* Experience Section - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">Professional Experience</h2>
+        {experience && experience.length > 0 ? (
+          experience.sort((a, b) => {
             // Try to parse years from duration strings
             const getEndYear = (duration) => {
               const match = duration?.match(/\d{4}/) || [''];
@@ -152,33 +162,52 @@ const ProfessionalCleanResume = React.forwardRef(({ data, showProfile = true }, 
               </div>
               <div className="experience-description">{job.description || 'Job description'}</div>
             </div>
-          ))}
-        </section>
-      )}
+          ))
+        ) : (
+          <div className="experience-item">
+            <div className="experience-header">
+              <div className="experience-title">Software Developer</div>
+            </div>
+            <div className="company-duration">
+              <div className="experience-company">Tech Company Inc.</div>
+              <div className="experience-duration">Jan 2020 - Present</div>
+            </div>
+            <div className="experience-description">Your work experience will appear here</div>
+          </div>
+        )}
+      </section>
 
       {/* Projects Section */}
-      {projects && projects.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">Projects</h2>
-          {projects.map((project, index) => (
+      {/* Projects Section - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">Projects</h2>
+        {projects && projects.length > 0 ? (
+          projects.map((project, index) => (
             <div key={index} className="experience-item">
               <div className="experience-header">
                 <div className="experience-title">{project.title || 'Project Title'}</div>
               </div>
               <div className="experience-description">{project.description || 'Project description'}</div>
             </div>
-          ))}
-        </section>
-      )}
+          ))
+        ) : (
+          <div className="experience-item">
+            <div className="experience-header">
+              <div className="experience-title">Sample Project</div>
+            </div>
+            <div className="experience-description">Your projects will appear here</div>
+          </div>
+        )}
+      </section>
 
       {/* Two Column Layout for Education and Certifications */}
       <div className="two-column">
-        {/* Education Section */}
-        {education && education.length > 0 && (
-          <div className="column">
-            <section className="resume-section">
-              <h2 className="section-title">Education</h2>
-              {education.map((edu, index) => (
+        {/* Education Section - Always visible */}
+        <div className="column">
+          <section className="resume-section">
+            <h2 className="section-title">Education</h2>
+            {education && education.length > 0 ? (
+              education.map((edu, index) => (
                 <div key={index} className="education-item">
                   <div className="education-left">
                     <div className="education-degree">{edu.degree || 'Degree'}</div>
@@ -189,27 +218,51 @@ const ProfessionalCleanResume = React.forwardRef(({ data, showProfile = true }, 
                     {edu.percentage && <div className="education-gpa">{edu.percentage}%</div>}
                   </div>
                 </div>
-              ))}
-            </section>
-          </div>
-        )}
+              ))
+            ) : (
+              <div className="education-item">
+                <div className="education-left">
+                  <div className="education-degree">Bachelor of Technology in Computer Science</div>
+                  <div className="education-institution">University Name</div>
+                </div>
+                <div className="education-right">
+                  <div className="education-date">2020</div>
+                  <div className="education-gpa">75%</div>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
 
-        {/* Certifications & Achievements Section */}
-        {((certifications && certifications.length > 0) || (achievements && achievements.length > 0)) && (
-          <div className="column">
-            <section className="resume-section">
-              <h2 className="section-title">Certifications & Achievements</h2>
-              <ul className="cert-achievements-list">
-                {certifications && certifications.map((cert, index) => (
-                  <li key={`cert-${index}`}>{cert}</li>
-                ))}
-                {achievements && achievements.map((achievement, index) => (
-                  <li key={`achv-${index}`}>{achievement}</li>
-                ))}
-              </ul>
-            </section>
-          </div>
-        )}
+        {/* Certifications & Achievements Section - Always visible */}
+        <div className="column">
+          <section className="resume-section">
+            <h2 className="section-title">Certifications & Achievements</h2>
+            <ul className="cert-achievements-list">
+              {(() => {
+                const certItems = certifications && certifications.length > 0 
+                  ? certifications.map((cert, index) => {
+                      const text = safeText(cert);
+                      return text ? <li key={`cert-${index}`}>{text}</li> : null;
+                    }).filter(Boolean)
+                  : [];
+                
+                const achvItems = achievements && achievements.length > 0
+                  ? achievements.map((achievement, index) => {
+                      const text = safeAchievement(achievement);
+                      return text ? <li key={`achv-${index}`}>{text}</li> : null;
+                    }).filter(Boolean)
+                  : [];
+                
+                const allItems = [...certItems, ...achvItems];
+                
+                return allItems.length > 0 ? allItems : (
+                  <li>Your certifications and achievements will appear here</li>
+                );
+              })()}
+            </ul>
+          </section>
+        </div>
       </div>
     </div>
   );

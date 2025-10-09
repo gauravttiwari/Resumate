@@ -5,9 +5,10 @@
  * Featuring a colored sidebar with contact info, skills and languages
  */
 import React from 'react';
+import { safeText, safeAchievement, safeArray } from './utils/safeRender';
 import './styles/ModernSidebar.css';
 
-const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref) => {
+const ModernSidebarResume = React.forwardRef(({ data = {}, showProfile = true }, ref) => {
   // Destructure resume data with defaults
   const { 
     name = '', 
@@ -29,7 +30,7 @@ const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref)
     certifications = [],
     profilePic = null,
     sidebarColor = '#800000' // Default maroon color if not specified
-  } = data || {};
+  } = data;
   
   // Create styles object with dynamic colors for headers
   const dynamicStyles = {
@@ -44,10 +45,20 @@ const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref)
     }
   };
 
+  // Helper to safely convert values to text
+  const safeText = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value.text !== undefined) return String(value.text || '');
+    if (Array.isArray(value)) return value.map(v => safeText(v)).filter(Boolean).join(', ');
+    return '';
+  };
+
   // Format skills into an array
   const formatSkillsList = (skillsString) => {
     if (!skillsString) return [];
-    return skillsString.split(',').map(skill => skill.trim()).filter(Boolean);
+    const text = safeText(skillsString);
+    return text.split(',').map(skill => skill.trim()).filter(Boolean);
   };
 
   // Create skill arrays
@@ -59,7 +70,7 @@ const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref)
   const allSkills = [...technicalSkillsList, ...generalSkillsList, ...softSkillsList];
   
   // Format languages into an array
-  const languagesList = languages ? languages.split(',').map(lang => {
+  const languagesList = languages ? safeText(languages).split(',').map(lang => {
     // Check if language has proficiency level indicated with a dash
     const parts = lang.trim().split('-');
     if (parts.length > 1) {
@@ -75,7 +86,7 @@ const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref)
   }) : [];
 
   // Professional summary
-  const professionalSummary = summary || objective || '';
+  const professionalSummary = safeText(summary) || safeText(objective) || '';
 
   return (
     <div ref={ref} className="template-modern-sidebar">
@@ -143,12 +154,11 @@ const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref)
           )}
         </div>
         
-        {/* Work Experience Section */}
-        {experience && experience.length > 0 && (
-          <section className="experience">
-            <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Work Experience</h2>
-            {/* Sort by most recent first */}
-            {experience.sort((a, b) => {
+        {/* Work Experience Section - Always visible */}
+        <section className="experience">
+          <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Work Experience</h2>
+          {experience && experience.length > 0 ? (
+            experience.sort((a, b) => {
               // Try to parse years from duration strings
               const getEndYear = (duration) => {
                 const match = duration?.match(/\d{4}/) || [''];
@@ -164,30 +174,47 @@ const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref)
                 <div className="experience-company">{job.company || 'Company'}</div>
                 <div className="experience-description">{job.description || 'Job description'}</div>
               </div>
-            ))}
-          </section>
-        )}
+            ))
+          ) : (
+            <div className="experience-item">
+              <div className="experience-header">
+                <div className="experience-title">Software Developer</div>
+                <div className="experience-duration">Jan 2020 - Present</div>
+              </div>
+              <div className="experience-company">Tech Company Inc.</div>
+              <div className="experience-description">Your work experience will appear here</div>
+            </div>
+          )}
+        </section>
         
         {/* Projects Section */}
-        {projects && projects.length > 0 && (
-          <section className="projects">
-            <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Projects</h2>
-            {projects.map((project, index) => (
+        {/* Projects Section - Always visible */}
+        <section className="projects">
+          <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Projects</h2>
+          {projects && projects.length > 0 ? (
+            projects.map((project, index) => (
               <div key={index} className="experience-item">
                 <div className="experience-header">
                   <div className="experience-title">{project.title || 'Project'}</div>
                 </div>
                 <div className="experience-description">{project.description || 'Project description'}</div>
               </div>
-            ))}
-          </section>
-        )}
+            ))
+          ) : (
+            <div className="experience-item">
+              <div className="experience-header">
+                <div className="experience-title">Sample Project</div>
+              </div>
+              <div className="experience-description">Your projects will appear here</div>
+            </div>
+          )}
+        </section>
         
-        {/* Education Section */}
-        {education && education.length > 0 && (
-          <section className="education">
-            <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Education</h2>
-            {education.map((edu, index) => (
+        {/* Education Section - Always visible */}
+        <section className="education">
+          <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Education</h2>
+          {education && education.length > 0 ? (
+            education.map((edu, index) => (
               <div key={index} className="education-item">
                 <div className="education-degree">{edu.degree || 'Degree'}</div>
                 <div className="education-institution">{edu.institution || 'Institution'}</div>
@@ -196,24 +223,46 @@ const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref)
                   {edu.percentage && <span> - {edu.percentage}%</span>}
                 </div>
               </div>
-            ))}
-          </section>
-        )}
+            ))
+          ) : (
+            <div className="education-item">
+              <div className="education-degree">Bachelor of Technology in Computer Science</div>
+              <div className="education-institution">University Name</div>
+              <div className="education-details">
+                <span>2020</span>
+                <span> - 75%</span>
+              </div>
+            </div>
+          )}
+        </section>
         
-        {/* Certifications & Achievements Section */}
-        {((certifications && certifications.length > 0) || (achievements && achievements.length > 0)) && (
-          <section className="certifications">
-            <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Certifications & Achievements</h2>
-            <ul className="certifications-list">
-              {certifications && certifications.map((cert, index) => (
-                <li key={`cert-${index}`}>{cert}</li>
-              ))}
-              {achievements && achievements.map((achievement, index) => (
-                <li key={`achv-${index}`}>{achievement}</li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {/* Certifications & Achievements Section - Always visible */}
+        <section className="certifications">
+          <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Certifications & Achievements</h2>
+          <ul className="certifications-list">
+            {(() => {
+              const certItems = certifications && certifications.length > 0 
+                ? certifications.map((cert, index) => {
+                    const text = safeText(cert);
+                    return text ? <li key={`cert-${index}`}>{text}</li> : null;
+                  }).filter(Boolean)
+                : [];
+              
+              const achvItems = achievements && achievements.length > 0
+                ? achievements.map((achievement, index) => {
+                    const text = safeAchievement(achievement);
+                    return text ? <li key={`achv-${index}`}>{text}</li> : null;
+                  }).filter(Boolean)
+                : [];
+              
+              const allItems = [...certItems, ...achvItems];
+              
+              return allItems.length > 0 ? allItems : (
+                <li>Your certifications and achievements will appear here</li>
+              );
+            })()}
+          </ul>
+        </section>
       </div>
     </div>
   );

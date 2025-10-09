@@ -1,0 +1,315 @@
+import React, { useState } from 'react';
+import './ResumePreview.css';
+
+const ResumePreview = ({ formData, templateType = 'modern' }) => {
+  const [viewMode, setViewMode] = useState('desktop'); // desktop, tablet, mobile
+  const [zoomLevel, setZoomLevel] = useState(100);
+  
+  // Use formData for preview
+  const data = formData;
+
+  return (
+    <div className="modern-resume-preview">
+      {/* Preview Header */}
+      <div className="preview-header">
+        <div className="preview-header-content">
+          <div className="preview-title-section">
+            <h1 className="preview-title">
+              <span className="preview-icon">👁️</span>
+              Resume Preview
+            </h1>
+            <p className="preview-subtitle">
+              See how your resume will look across different devices
+            </p>
+          </div>
+          
+          {/* Preview Controls */}
+          <div className="preview-controls">
+            <div className="view-mode-selector">
+              <button 
+                className={`view-mode-btn ${viewMode === 'desktop' ? 'active' : ''}`}
+                onClick={() => setViewMode('desktop')}
+                title="Desktop View"
+              >
+                🖥️
+              </button>
+              <button 
+                className={`view-mode-btn ${viewMode === 'tablet' ? 'active' : ''}`}
+                onClick={() => setViewMode('tablet')}
+                title="Tablet View"
+              >
+                📱
+              </button>
+              <button 
+                className={`view-mode-btn ${viewMode === 'mobile' ? 'active' : ''}`}
+                onClick={() => setViewMode('mobile')}
+                title="Mobile View"
+              >
+                📱
+              </button>
+            </div>
+            
+            <div className="zoom-controls">
+              <button 
+                className="zoom-btn"
+                onClick={() => setZoomLevel(Math.max(50, zoomLevel - 10))}
+                disabled={zoomLevel <= 50}
+              >
+                🔍−
+              </button>
+              <span className="zoom-level">{zoomLevel}%</span>
+              <button 
+                className="zoom-btn"
+                onClick={() => setZoomLevel(Math.min(150, zoomLevel + 10))}
+                disabled={zoomLevel >= 150}
+              >
+                🔍+
+              </button>
+            </div>
+            
+            <div className="preview-actions">
+              <button className="action-btn">
+                <span>📄</span> Export PDF
+              </button>
+              <button className="action-btn">
+                <span>📤</span> Share
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview Viewport */}
+      <div className={`preview-viewport ${viewMode}`}>
+        <div className="preview-device">
+          <div className="device-frame">
+            <div 
+              className="preview-content" 
+              style={{ transform: `scale(${zoomLevel / 100})` }}
+            >
+              <div className={`resume-document template-${templateType}`}>
+                {/* Header / Personal Info */}
+                <div className="document-section document-header">
+                  <div className="header-layout">
+                    {data.profilePic && (
+                      <div className="profile-photo">
+                        <img 
+                          src={data.profilePic} 
+                          alt="Profile" 
+                          className="profile-image"
+                        />
+                      </div>
+                    )}
+                    <div className="personal-details">
+                      <h1 className="full-name">{data.name || 'Your Name'}</h1>
+                      <div className="contact-info">
+                        {data.email && (
+                          <div className="contact-item">
+                            <span className="contact-icon">📧</span>
+                            <span>{data.email}</span>
+                          </div>
+                        )}
+                        {data.phone && (
+                          <div className="contact-item">
+                            <span className="contact-icon">📞</span>
+                            <span>{data.phone}</span>
+                          </div>
+                        )}
+                        {data.address && (
+                          <div className="contact-item">
+                            <span className="contact-icon">📍</span>
+                            <span>{data.address}</span>
+                          </div>
+                        )}
+                        {data.linkedin && (
+                          <div className="contact-item">
+                            <span className="contact-icon">💼</span>
+                            <span>{data.linkedin}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Professional Summary */}
+                {data.summary && (
+                  <div className="document-section">
+                    <h2 className="section-title">Professional Summary</h2>
+                    <div className="section-content">
+                      <p className="summary-text">{data.summary}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Experience */}
+                {data.experience && data.experience.length > 0 && (
+                  <div className="document-section">
+                    <h2 className="section-title">Professional Experience</h2>
+                    <div className="section-content">
+                      {data.experience.map((exp, index) => (
+                        <div key={index} className="experience-item">
+                          <div className="experience-header">
+                            <h3 className="position-title">{exp.role || exp.position}</h3>
+                            <span className="duration">{exp.duration}</span>
+                          </div>
+                          <div className="company-name">{exp.company}</div>
+                          {exp.description && (
+                            <div className="experience-description">
+                              {exp.description.split('\n').map((line, i) => (
+                                <p key={i}>{line}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Education */}
+                {data.education && data.education.length > 0 && (
+                  <div className="document-section">
+                    <h2 className="section-title">Education</h2>
+                    <div className="section-content">
+                      {data.education.map((edu, index) => (
+                        <div key={index} className="education-item">
+                          <div className="education-header">
+                            <h3 className="degree-title">{edu.degree}</h3>
+                            <span className="graduation-year">{edu.year}</span>
+                          </div>
+                          <div className="institution-name">{edu.institution}</div>
+                          {edu.percentage && (
+                            <div className="academic-performance">{edu.percentage}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Skills */}
+                {(data.skills || data.technicalSkills) && (
+                  <div className="document-section">
+                    <h2 className="section-title">Skills</h2>
+                    <div className="section-content">
+                      {data.technicalSkills && (
+                        <div className="skills-category">
+                          <h4>Technical Skills</h4>
+                          <p>{data.technicalSkills}</p>
+                        </div>
+                      )}
+                      {data.softSkills && (
+                        <div className="skills-category">
+                          <h4>Soft Skills</h4>
+                          <p>{data.softSkills}</p>
+                        </div>
+                      )}
+                      {data.skills && (
+                        <div className="skills-category">
+                          <p>{data.skills}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Projects */}
+                {data.projects && data.projects.length > 0 && (
+                  <div className="document-section">
+                    <h2 className="section-title">Projects</h2>
+                    <div className="section-content">
+                      {data.projects.map((project, index) => (
+                        <div key={index} className="project-item">
+                          <h3 className="project-title">{project.title}</h3>
+                          {project.description && (
+                            <div className="project-description">
+                              {project.description.split('\n').map((line, i) => (
+                                <p key={i}>{line}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+        )}
+
+        {/* Education */}
+        {data.education && data.education.length > 0 && (
+          <div className="preview-section">
+            <h3 className="preview-section-title">Education</h3>
+            {data.education.map((edu, index) => (
+              <div key={index} className="preview-education-item">
+                <div className="preview-degree">{edu.degree || 'Degree'}</div>
+                <div className="preview-institution">{edu.institution || 'Institution'}</div>
+                <div className="preview-edu-details">
+                  <span>{edu.year || 'Year'}</span>
+                  {edu.percentage && <span> • {edu.percentage}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Experience */}
+        {data.experience && data.experience.length > 0 && (
+          <div className="preview-section">
+            <h3 className="preview-section-title">Experience</h3>
+            {data.experience.map((exp, index) => (
+              <div key={index} className="preview-experience-item">
+                <div className="preview-role">{exp.role || 'Role'}</div>
+                <div className="preview-company">{exp.company || 'Company'}</div>
+                <div className="preview-duration">{exp.duration || 'Duration'}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Projects */}
+        {data.projects && data.projects.length > 0 && (
+          <div className="preview-section">
+            <h3 className="preview-section-title">Projects</h3>
+            {data.projects.map((proj, index) => (
+              <div key={index} className="preview-project-item">
+                <div className="preview-project-title">{proj.title || 'Project Title'}</div>
+                <div className="preview-project-description">{proj.description || 'Description'}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Skills */}
+        {data.skills && data.skills.length > 0 && (
+          <div className="preview-section">
+            <h3 className="preview-section-title">Skills</h3>
+            <div className="preview-skills">
+              {data.skills.join(' • ')}
+            </div>
+          </div>
+        )}
+
+        {/* Achievements */}
+        {data.achievements && data.achievements.filter(Boolean).length > 0 && (
+          <div className="preview-section">
+            <h3 className="preview-section-title">Achievements</h3>
+            <ul className="preview-achievements">
+              {data.achievements.filter(Boolean).map((achievement, index) => (
+                <li key={index} className="preview-achievement-item">{achievement}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ResumePreview;

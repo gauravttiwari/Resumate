@@ -6,6 +6,7 @@
 import React from 'react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { safeText, safeAchievement, safeArray } from './utils/safeRender';
 import '../styles/HTMLResume.css'; // We'll create this file for resume styling
 
 // Map of template names to their style classes
@@ -20,9 +21,18 @@ const templateStyles = {
 /**
  * Renders a resume in HTML format based on template and data
  */
-const HTMLResume = React.forwardRef(({ data, template = 'modern' }, ref) => {
+const HTMLResume = React.forwardRef(({ data = {}, template = 'modern' }, ref) => {
   // Default template to modern if not provided or invalid
   const templateClass = templateStyles[template] || templateStyles.modern;
+  
+  // Helper to safely convert values to text
+  const safeText = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value.text !== undefined) return String(value.text || '');
+    if (Array.isArray(value)) return value.map(v => safeText(v)).filter(Boolean).join(', ');
+    return '';
+  };
   
   // Destructure resume data
   const { 
@@ -67,76 +77,102 @@ const HTMLResume = React.forwardRef(({ data, template = 'modern' }, ref) => {
       {objective && (
         <section className="resume-section">
           <h2 className="section-title">CAREER OBJECTIVE</h2>
-          <p className="objective-text">{objective}</p>
+          <p className="objective-text">{safeText(objective)}</p>
         </section>
       )}
 
-      {/* Education section */}
-      {education && education.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">EDUCATION</h2>
-          <ul className="education-list">
-            {education.map((edu, index) => (
+      {/* Education section - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">EDUCATION</h2>
+        <ul className="education-list">
+          {education && education.length > 0 ? (
+            education.map((edu, index) => (
               <li key={index} className="education-item">
-                <div className="education-degree">{edu.degree}</div>
+                <div className="education-degree">{safeText(edu.degree)}</div>
                 <div className="education-details">
-                  {edu.institution} 
-                  {edu.year && <span> • {edu.year}</span>} 
-                  {edu.percentage && <span> • {edu.percentage}</span>}
+                  {safeText(edu.institution)} 
+                  {edu.year && <span> • {safeText(edu.year)}</span>} 
+                  {edu.percentage && <span> • {safeText(edu.percentage)}</span>}
                 </div>
               </li>
-            ))}
-          </ul>
-        </section>
-      )}
+            ))
+          ) : (
+            <li className="education-item">
+              <div className="education-degree">Bachelor of Technology in Computer Science</div>
+              <div className="education-details">
+                University Name • 2020 • 75%
+              </div>
+            </li>
+          )}
+        </ul>
+      </section>
 
-      {/* Experience section */}
-      {experience && experience.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">PROFESSIONAL EXPERIENCE</h2>
-          <ul className="experience-list">
-            {experience.map((exp, index) => (
+      {/* Experience section - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">PROFESSIONAL EXPERIENCE</h2>
+        <ul className="experience-list">
+          {experience && experience.length > 0 ? (
+            experience.map((exp, index) => (
               <li key={index} className="experience-item">
                 <div className="experience-role">
-                  <strong>{exp.role}</strong> at {exp.company}
+                  <strong>{safeText(exp.role)}</strong> at {safeText(exp.company)}
                 </div>
-                <div className="experience-duration">{exp.duration}</div>
+                <div className="experience-duration">{safeText(exp.duration)}</div>
               </li>
-            ))}
-          </ul>
-        </section>
-      )}
+            ))
+          ) : (
+            <li className="experience-item">
+              <div className="experience-role">
+                <strong>Software Developer</strong> at Tech Company Inc.
+              </div>
+              <div className="experience-duration">Jan 2020 - Present</div>
+            </li>
+          )}
+        </ul>
+      </section>
 
-      {/* Projects section */}
-      {projects && projects.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">PROJECTS</h2>
-          <ul className="projects-list">
-            {projects.map((project, index) => (
+      {/* Projects section - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">PROJECTS</h2>
+        <ul className="projects-list">
+          {projects && projects.length > 0 ? (
+            projects.map((project, index) => (
               <li key={index} className="project-item">
-                <div className="project-title">{project.title}</div>
-                <div className="project-description">{project.description}</div>
+                <div className="project-title">{safeText(project.title)}</div>
+                <div className="project-description">{safeText(project.description)}</div>
               </li>
-            ))}
-          </ul>
-        </section>
-      )}
+            ))
+          ) : (
+            <li className="project-item">
+              <div className="project-title">Sample Project</div>
+              <div className="project-description">Your projects will appear here</div>
+            </li>
+          )}
+        </ul>
+      </section>
 
       {/* Skills section */}
       {skills && (
         <section className="resume-section">
           <h2 className="section-title">SKILLS</h2>
-          <p className="skills-text">{skills}</p>
+          <p className="skills-text">{safeText(skills)}</p>
         </section>
       )}
 
-      {/* Achievements section */}
-      {achievements && (
-        <section className="resume-section">
-          <h2 className="section-title">ACHIEVEMENTS</h2>
-          <p className="achievements-text">{achievements}</p>
-        </section>
-      )}
+      {/* Achievements section - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">ACHIEVEMENTS</h2>
+        {achievements && achievements.length > 0 ? (
+          <ul className="achievements-list">
+            {achievements.map((achievement, index) => {
+              const text = safeAchievement(achievement);
+              return text ? <li key={index}>{text}</li> : null;
+            })}
+          </ul>
+        ) : (
+          <p className="achievements-text">Your achievements will appear here</p>
+        )}
+      </section>
     </div>
   );
 });

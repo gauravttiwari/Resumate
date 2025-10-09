@@ -137,14 +137,14 @@ const ReverseChronoResume = React.forwardRef(({ data, showProfile = false }, ref
       )}
 
       {/* 7. Certifications & Achievements */}
-      {(certifications.length > 0 || achievements.length > 0) && (
+      {((certifications && certifications.length > 0) || (achievements && achievements.length > 0)) && (
         <section className="resume-section">
           <h2 className="section-title">CERTIFICATIONS & ACHIEVEMENTS</h2>
           <ul className="cert-achievements-list">
-            {certifications.map((cert, index) => (
+            {certifications && certifications.map((cert, index) => (
               <li key={`cert-${index}`}>{cert}</li>
             ))}
-            {achievements.map((achievement, index) => (
+            {achievements && achievements.map((achievement, index) => (
               <li key={`achv-${index}`}>{achievement}</li>
             ))}
           </ul>

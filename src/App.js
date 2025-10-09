@@ -1,9 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
-import { isMobileDevice } from './mobile/deviceUtils';
-import HomeMobile from './mobile/HomeMobile';
-import MobileResumeForm from './mobile/MobileResumeForm';
-import ResumePreviewMobile from './mobile/ResumePreviewMobile';
+import React, { useState, useRef, useEffect } from 'react';
 import ResumeForm from './ResumeForm';
 import TemplateSelector from './TemplateSelector';
 import MncResume from './MncResume';
@@ -16,7 +11,17 @@ import SmartResume from './SmartResume';
 import HomeScreen from './HomeScreen';
 import HomeDesktop from './HomeDesktop';
 import ResumeTypeSelector from './ResumeTypeSelector';
+import InterviewPrep from './InterviewPrep';
 import AIExampleUsage from './examples/AIExampleUsage';
+import AIChatModal from './components/AIChatModal';
+import ResumeAnalytics from './components/ResumeAnalytics';
+import SuggestionsHistory from './components/SuggestionsHistory';
+import NotificationCenter from './components/NotificationCenter';
+import aiService from './services/aiService';
+import HomeMobile from './mobile/HomeMobile';
+import MobileResumeForm from './mobile/MobileResumeForm';
+import ResumePreviewMobile from './mobile/ResumePreviewMobile';
+import ATSScanner from './components/ATSScanner';
 import './styles/App.css';
 import './styles/ReverseChrono.css'; // Import template styles
 import './styles/ModernSidebar.css';
@@ -25,41 +30,86 @@ import './styles/JobFitPro.css';
 import './styles/ProProfile.css';
 
 function App() {
-  // Use matchMedia to react to viewport width changes immediately (no reload needed)
+  const [resumeData, setResumeData] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState('reverse-chrono');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [activeView, setActiveView] = useState('home'); // 'home', 'type-selector', 'form', 'templates', 'preview', 'interview-prep', or 'ai-chat'
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [resumeType, setResumeType] = useState(null); // 'technical', 'medical', 'diploma', or 'nontechnical'
+  const [isAnalyzingATS, setIsAnalyzingATS] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [activeFeatureTab, setActiveFeatureTab] = useState('analytics'); // For preview page tabs
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile menu toggle
+  const resumePreviewRef = useRef(null);
+  // Responsive: determine if we're in mobile viewport using matchMedia so changes are immediate
   const [isMobile, setIsMobile] = useState(() => {
-    // initialize using deviceUtils but prefer matchMedia for immediate accuracy
     if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(max-width: 768px)').matches || isMobileDevice();
+      return window.matchMedia('(max-width: 768px)').matches;
     }
-    return isMobileDevice();
+    return false;
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
     const mql = window.matchMedia('(max-width: 768px)');
     const handler = (e) => setIsMobile(e.matches);
-    // Modern browsers support addEventListener on MediaQueryList
     if (mql.addEventListener) mql.addEventListener('change', handler);
     else mql.addListener(handler);
-    // Cleanup
     return () => {
       if (mql.removeEventListener) mql.removeEventListener('change', handler);
       else mql.removeListener(handler);
     };
   }, []);
-  const [resumeData, setResumeData] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState('reverse-chrono');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [activeView, setActiveView] = useState('home'); // 'home', 'type-selector', 'form', 'templates', or 'preview'
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const [resumeType, setResumeType] = useState(null); // 'technical', 'medical', 'diploma', or 'nontechnical'
-  // ...existing code...
 
+  // Hide app header when scrolling down, show when scrolling up
+  React.useEffect(() => {
+    let lastY = typeof window !== 'undefined' ? window.scrollY : 0;
+    let ticking = false;
+
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const hdr = document.querySelector('.app-header');
+          if (!hdr) { ticking = false; return; }
+          if (currentY > lastY && currentY > 80) {
+            hdr.classList.add('app-header--hidden');
+          } else {
+            hdr.classList.remove('app-header--hidden');
+          }
+          lastY = currentY > 0 ? currentY : 0;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  
+  // Template search states
+  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
+  const [recommendedTemplates, setRecommendedTemplates] = useState([]);
+  const [isSearchingTemplates, setIsSearchingTemplates] = useState(false);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [templateExperienceFilter, setTemplateExperienceFilter] = useState('');
+  
+  // Popular job roles for search suggestions
+  const popularJobRoles = [
+    'Software Engineer', 'Data Scientist', 'Product Manager', 'Marketing Manager',
+    'Sales Representative', 'Business Analyst', 'UX/UI Designer', 'Project Manager',
+    'DevOps Engineer', 'Full Stack Developer', 'Data Analyst', 'Digital Marketing Specialist'
+  ];
+  const [showTemplateResults, setShowTemplateResults] = useState(false);
+  
   // Handle form submission
   const handleFormSubmit = (formData) => {
     setIsGenerating(true);
+    
     // Store the form data
     setResumeData(formData);
+    
     // Simulate processing delay
     setTimeout(() => {
       setIsGenerating(false);
@@ -68,29 +118,84 @@ function App() {
     }, 1000);
   };
 
+  // Handle auto-fill from AI chat
+  const handleChatAutoFill = (data) => {
+    if (data.type === 'skills' && data.content && resumeData) {
+      setResumeData(prev => ({ ...prev, skills: data.content }));
+      showToast('Skills added successfully from AI suggestion!');
+    } else if (data.type === 'summary' && resumeData) {
+      // Generate summary with AI
+      showToast('Summary will be generated with AI!');
+    }
+    setShowChatModal(false);
+  };
+
   // Update form data as user types
   const handleFormChange = (formData) => {
     setResumeData(formData);
   };
+  
   // Handle template selection change
   const handleTemplateChange = (template) => {
-    setSelectedTemplate(template);
-    // After selecting a template, open the resume form for immediate editing
+    const templateId = template && typeof template === 'object' ? (template.id || '') : template;
+    setSelectedTemplate(templateId);
+    // After user selects a template, take them to the form to edit
     setActiveView('form');
   };
 
-  // Handle template select with resumeType (called from TemplateSelector when user selects with a type)
+  // Handle template select (from TemplateSelector with resumeType)
   const handleTemplateSelect = (templateId, type) => {
     setSelectedTemplate(templateId);
     if (type) setResumeType(type);
     setActiveView('form');
   };
+
   // Handle template preview (select + navigate to preview)
   const handleTemplatePreview = (template) => {
-    setSelectedTemplate(template);
+    // TemplateSelector may call this with either a template id (string)
+    // or a template object. Ensure we store the id so later comparisons
+    // (e.g. selectedTemplate === 'modern-sidebar') work correctly.
+    const templateId = template && typeof template === 'object' ? (template.id || '') : template;
+    setSelectedTemplate(templateId);
     setActiveView('preview');
   };
+  
+  // When preview is active, scale the resume inside #resume-to-pdf so it fits the viewport
+  useEffect(() => {
+    if (activeView !== 'preview') return;
 
+    const applyFit = () => {
+      const container = document.getElementById('resume-to-pdf');
+      if (!container) return;
+
+      const resumeEl = container.firstElementChild;
+      if (!resumeEl) return;
+
+      // Reset transform to measure natural size
+      resumeEl.style.transform = '';
+      resumeEl.style.transformOrigin = 'top left';
+
+      // Calculate available space (use a fraction of window to leave controls visible)
+      const availableWidth = Math.min(window.innerWidth * 0.8, container.clientWidth || window.innerWidth);
+      const availableHeight = Math.max(window.innerHeight * 0.7, 600); // at least 600px
+
+      const naturalWidth = resumeEl.offsetWidth || resumeEl.scrollWidth || 800;
+      const naturalHeight = resumeEl.offsetHeight || resumeEl.scrollHeight || 1100;
+
+      const scaleX = availableWidth / naturalWidth;
+      const scaleY = availableHeight / naturalHeight;
+      const scale = Math.min(1, Math.min(scaleX, scaleY));
+
+      // Apply scale with small padding so nothing clips
+      resumeEl.style.transform = `scale(${scale * 0.98})`;
+    };
+
+    // Apply immediately and on resize
+    applyFit();
+    window.addEventListener('resize', applyFit);
+    return () => window.removeEventListener('resize', applyFit);
+  }, [activeView, selectedTemplate, resumeData]);
+  
   // Show toast notification
   const showToast = (message, type = 'success', duration = 5000) => {
     setToast({ show: true, message, type });
@@ -98,17 +203,31 @@ function App() {
       setToast({ show: false, message: '', type: 'success' });
     }, duration);
   };
+  
   // Handle PDF download
   const handleDownloadPDF = async () => {
     try {
       setIsGenerating(true);
+      
       // Import the libraries for PDF generation
       const html2canvas = await import('html2canvas').then(module => module.default);
       const { jsPDF } = await import('jspdf');
-      const resumeElement = document.getElementById('resume-to-pdf');
+      
+  const resumeElement = document.getElementById('resume-to-pdf');
+      
       if (!resumeElement) {
         throw new Error('Resume element not found');
       }
+      
+      // Temporarily remove any scaling transform applied for preview so pdf capture is full-size
+      let innerResume = null;
+      let prevTransform = '';
+      if (resumeElement && resumeElement.firstElementChild) {
+        innerResume = resumeElement.firstElementChild;
+        prevTransform = innerResume.style.transform || '';
+        innerResume.style.transform = '';
+      }
+
       // Process images before capturing
       const images = resumeElement.querySelectorAll('img');
       // Wait for all images to load
@@ -119,7 +238,9 @@ function App() {
           img.onerror = resolve; // Continue even if image fails
         });
       });
+      
       await Promise.all(imagePromises);
+      
       // Capture the resume as canvas
       const canvas = await html2canvas(resumeElement, {
         scale: 2, // Higher scale for better quality
@@ -129,6 +250,12 @@ function App() {
         backgroundColor: '#ffffff',
         imageTimeout: 15000 // Longer timeout for images
       });
+
+      // Restore any transform used for preview
+      if (innerResume) {
+        innerResume.style.transform = prevTransform;
+      }
+      
       // Calculate dimensions to maintain aspect ratio
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
@@ -136,14 +263,18 @@ function App() {
         unit: 'mm',
         format: 'a4'
       });
+      
       const imgWidth = 210; // A4 width in mm
       const pageHeight = 297; // A4 height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
       // Add image to PDF
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
       // Generate multiple pages if resume is longer than A4
       let heightLeft = imgHeight;
       let position = 0;
+      
       // Only add additional pages if the resume is longer than one page
       if (heightLeft > pageHeight) {
         while (heightLeft > pageHeight) {
@@ -153,13 +284,17 @@ function App() {
           heightLeft -= pageHeight;
         }
       }
+      
       // Save the PDF
       const fileName = resumeData && resumeData.name ? 
         `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf` : 
         `Resume_${new Date().getTime()}.pdf`;
+      
       pdf.save(fileName);
+      
       setIsGenerating(false);
       showToast('PDF downloaded successfully!');
+      
     } catch (error) {
       console.error('Failed to generate PDF:', error);
       setIsGenerating(false);
@@ -167,14 +302,303 @@ function App() {
     }
   };
 
+  // Handle ATS Analysis
+  const handleATSAnalysis = async () => {
+    if (!resumeData) {
+      showToast('No resume data available for analysis.', 'danger');
+      return;
+    }
+
+    setIsAnalyzingATS(true);
+    try {
+      const analysis = await aiService.getEnhancedATSAnalysis(resumeData);
+      
+      if (analysis && analysis.atsScore) {
+        // Create detailed analysis display
+        const message = `
+🎯 ATS ANALYSIS REPORT
+═══════════════════════════════════════
+
+📊 OVERALL ATS SCORE: ${analysis.atsScore.totalScore}/100 (${analysis.atsScore.rating})
+
+🔍 DETECTED PROFILE:
+Role: ${analysis.detectedRole || 'General'}
+Industry: ${analysis.industry || 'General'}
+
+� DETAILED BREAKDOWN:
+• Keyword Match: ${analysis.atsScore.breakdown?.keywordMatch || 0}/100
+• Formatting: ${analysis.atsScore.breakdown?.formatting || 0}/100  
+• Content Quality: ${analysis.atsScore.breakdown?.contentQuality || 0}/100
+• Keyword Placement: ${analysis.atsScore.breakdown?.keywordPlacement || 0}/100
+• Industry Alignment: ${analysis.atsScore.breakdown?.industryAlignment || 0}/100
+
+✅ KEYWORDS FOUND (${analysis.keywordsFound?.length || 0}):
+${analysis.keywordsFound?.slice(0, 8).join(', ') || 'None detected'}
+
+⚠️ MISSING KEYWORDS (${analysis.missingKeywords?.length || 0}):
+${analysis.missingKeywords?.slice(0, 5).join(', ') || 'None'}
+
+${analysis.formattingIssues?.length > 0 ? `
+🚫 FORMATTING ISSUES:
+${analysis.formattingIssues.slice(0, 3).map(issue => `• ${issue}`).join('\n')}
+` : ''}
+
+💡 TOP RECOMMENDATIONS:
+${analysis.suggestions?.slice(0, 5).map(s => `• ${s}`).join('\n') || 'No specific suggestions available.'}
+
+${analysis.jobMatch ? `🎯 JOB MATCH: ${analysis.jobMatch}%` : ''}
+        `;
+        
+        alert(message);
+        showToast(`ATS Score: ${analysis.atsScore.totalScore}/100 - Analysis completed!`);
+      } else {
+        showToast('Unable to analyze resume. Please check your data and try again.', 'warning');
+      }
+    } catch (error) {
+      console.error('Error getting enhanced ATS analysis:', error);
+      showToast('Failed to analyze resume. Please try again.', 'danger');
+    } finally {
+      setIsAnalyzingATS(false);
+    }
+  };
+
+  // Handle Template Search
+  const handleTemplateSearch = async () => {
+    if (!templateSearchQuery.trim()) {
+      showToast('Please enter a job role to search templates', 'warning');
+      return;
+    }
+
+    setIsSearchingTemplates(true);
+    try {
+      const searchResults = await aiService.searchTemplates({
+        jobTitle: templateSearchQuery,
+        industry: resumeType || 'general',
+        experienceLevel: 'mid-level' // Can be made dynamic
+      });
+      
+      console.log('🔍 Template search results:', searchResults);
+      searchResults.forEach((template, index) => {
+        console.log(`Template ${index + 1}: ${template.name}, ATS Score: ${template.atsScore}`);
+      });
+      
+      setRecommendedTemplates(searchResults);
+      setShowTemplateResults(true);
+      setActiveView('template-search');
+      showToast(`Found ${searchResults.length} ATS-optimized templates!`);
+    } catch (error) {
+      console.error('Error searching templates:', error);
+      // If error has diagnostics (from aiService) show a clearer message
+      const diag = error && error.diagnostics;
+      if (diag) {
+        showToast(`Failed to search templates: ${diag.message} (API: ${diag.apiBase})`, 'danger', 8000);
+      } else {
+        showToast('Failed to search templates. Please try again.', 'danger');
+      }
+    } finally {
+      setIsSearchingTemplates(false);
+    }
+  };
+
+  // Handle template selection from search results
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template.id);
+    showToast(`Template "${template.name}" selected! Complete the form to generate your resume.`);
+    
+    if (resumeData) {
+      // If resume data exists, go to preview with new template
+      setActiveView('preview');
+    } else {
+      // If no resume data, go to form
+      setActiveView('form');
+    }
+  };
+
+  // Handle template inspiration from external sources
+  const handleInspireFromTemplate = (template) => {
+    const inspirationMessage = `
+🎨 TEMPLATE INSPIRATION
+
+Template: ${template.name}
+Source: ${template.source}
+ATS Score: ${template.atsScore}%
+
+💡 DESIGN INSPIRATION:
+• Layout Style: ${template.layoutStyle}
+• Industry Focus: ${template.industry}
+• Key Features: ${template.features?.join(', ') || 'Professional design'}
+
+📝 RECOMMENDED APPROACH:
+1. Visit the original template for design reference
+2. Use our built-in templates with similar styling
+3. Apply the design principles to your resume content
+
+🔗 Original Source: ${template.sourceUrl}
+
+Would you like to use our "${template.layoutStyle}" template with similar styling?
+    `;
+    
+    const useInspiration = window.confirm(inspirationMessage);
+    
+    if (useInspiration) {
+      // Find similar local template
+      const similarLocalTemplate = Object.values({
+        'reverse-chrono': 'reverse-chrono',
+        'modern-sidebar': 'modern-sidebar', 
+        'professional-clean': 'professional-clean',
+        'jobfit-pro': 'jobfit-pro',
+        'proprofile': 'proprofile'
+      }).find(id => {
+        const localTemplate = recommendedTemplates.find(t => t.id === id && !t.isExternal);
+        return localTemplate && localTemplate.layoutStyle === template.layoutStyle;
+      });
+      
+      if (similarLocalTemplate) {
+        setSelectedTemplate(similarLocalTemplate);
+        showToast(`Inspired by "${template.name}" - Applied similar local template!`);
+        if (resumeData) {
+          setActiveView('preview');
+        } else {
+          setActiveView('form');
+        }
+      } else {
+        // Use default best template
+        setSelectedTemplate('jobfit-pro');
+        showToast(`Inspired by "${template.name}" - Using our best ATS template!`);
+        if (resumeData) {
+          setActiveView('preview');
+        } else {
+          setActiveView('form');
+        }
+      }
+    }
+  };
+
+  // Handle using an external template as a basis for creating a resume
+  const handleUseExternalTemplate = (template) => {
+    // Map external layoutStyle to closest local template id
+    const layoutToLocal = {
+      'Modern': 'modern-sidebar',
+      'Minimal': 'minimal',
+      'Traditional': 'reverse-chrono',
+      'Professional': 'professional-clean',
+      'Tech': 'tech'
+    };
+
+    const localTemplateId = layoutToLocal[template.layoutStyle] || 'jobfit-pro';
+
+    setSelectedTemplate(localTemplateId);
+    showToast(`Using "${template.name}" as inspiration. Applied local template "${localTemplateId}".`);
+
+    // Optionally prefill form with example data (reuse existing preview logic)
+    if (resumeData) {
+      setActiveView('preview');
+    } else {
+      setActiveView('form');
+    }
+  };
+
+  // Centralized open chat handler (use named function so we can log during debugging)
+  const openAIChat = () => {
+    console.log('openAIChat called - toggling chat modal open');
+    setShowChatModal(true);
+    setIsMobileMenuOpen(false);
+  };
+
+  // Handle template preview
+  const handlePreviewTemplate = (template) => {
+    if (template.isExternal) {
+      // For external templates, open in new tab
+      window.open(template.sourceUrl, '_blank');
+      showToast(`Opening preview for "${template.name}" in new tab`);
+    } else {
+      // For local templates, show preview with sample data
+      const sampleData = {
+        personalInfo: {
+          fullName: 'John Doe',
+          title: 'Senior Software Engineer',
+          email: 'john.doe@email.com',
+          phone: '+1 (555) 123-4567',
+          location: 'San Francisco, CA',
+          linkedin: 'linkedin.com/in/johndoe',
+          github: 'github.com/johndoe'
+        },
+        summary: 'Experienced software engineer with 5+ years in full-stack development, specializing in React, Node.js, and cloud technologies. Proven track record of leading high-performance teams and delivering scalable solutions.',
+        experience: [
+          {
+            company: 'Tech Corp',
+            role: 'Senior Software Engineer',
+            position: 'Senior Software Engineer',
+            duration: '2020 - Present',
+            location: 'San Francisco, CA',
+            description: 'Led development of microservices architecture\nReduced deployment time by 40%\nManaged team of 5 junior developers\nImplemented CI/CD pipelines',
+            achievements: ['Led development of microservices architecture', 'Reduced deployment time by 40%']
+          },
+          {
+            company: 'StartupXYZ',
+            role: 'Full Stack Developer',
+            position: 'Full Stack Developer',
+            duration: '2018 - 2020',
+            location: 'Austin, TX',
+            description: 'Built responsive web applications using React and Node.js\nIntegrated third-party APIs and payment systems\nOptimized database queries improving performance by 60%',
+            achievements: ['Built 3 major client applications', 'Improved performance by 60%']
+          }
+        ],
+  skills: 'JavaScript, React, Node.js, AWS, Docker, MongoDB, PostgreSQL',
+  technicalSkills: 'React, Node.js, AWS, Docker, Kubernetes',
+        softSkills: 'Leadership, Communication, Problem-solving, Team management',
+        projects: [
+          {
+            title: 'E-commerce Platform',
+            description: 'Built a full-stack e-commerce platform using MERN stack\nImplemented payment integration with Stripe\nAdded real-time chat support\nDeployed on AWS with auto-scaling',
+            technologies: 'React, Node.js, MongoDB, AWS',
+            duration: '2023'
+          },
+          {
+            title: 'Task Management App',
+            description: 'Developed a collaborative task management application\nImplemented real-time updates using WebSockets\nAdded drag-and-drop functionality\nIntegrated with third-party calendar APIs',
+            technologies: 'React, Express, Socket.io, MySQL',
+            duration: '2022'
+          }
+        ],
+        education: [
+          {
+            degree: 'Bachelor of Computer Science',
+            school: 'State University',
+            year: '2018',
+            location: 'California, USA',
+            gpa: '3.8/4.0'
+          }
+        ],
+        certifications: [
+          'AWS Certified Developer Associate (2023)',
+          'Certified Kubernetes Administrator (2022)',
+          'MongoDB Certified Developer (2021)'
+        ],
+        achievements: [
+          'Employee of the Year 2023 at Tech Corp',
+          'Led team that won company hackathon 2022',
+          'Speaker at React Conference 2023',
+          'Published article on microservices architecture with 10K+ views'
+        ],
+        languages: 'English - Native, Spanish - Intermediate, French - Basic'
+      };
+
+      setResumeData(sampleData);
+      setSelectedTemplate(template.id);
+      setActiveView('preview');
+      showToast(`Previewing "${template.name}" template with sample data`);
+    }
+  };
+
+  // If mobile viewport, show mobile app routes immediately
   if (isMobile) {
-    // Mobile version routing
     return (
       <div className="app-mobile">
         {activeView === 'home' && (
           <HomeMobile
             onNavigate={(view) => { setActiveView(view); setIsMobileMenuOpen(false); }}
-            onOpenAIChat={() => { setShowChatModal(true); setIsMobileMenuOpen(false); }}
+            onOpenAIChat={openAIChat}
             resumeType={resumeType}
             showToast={showToast}
           />
@@ -187,129 +611,36 @@ function App() {
             }}
           />
         )}
-        {activeView === 'templates' && (
-          <TemplateSelector
-            selectedTemplate={selectedTemplate}
-            onTemplateChange={handleTemplateChange}
-            onTemplatePreview={handleTemplatePreview}
-            resumeType={resumeType}
-          />
-        )}
-        {activeView === 'form' && (
-          <MobileResumeForm 
-            onNavigate={(view) => { setActiveView(view); }}
-            onOpenTemplates={() => { resumeType ? setActiveView('templates') : showToast('Please select a resume type first', 'warning'); }}
-            onOpenInterview={() => { setActiveView('ai-test'); }}
-            onOpenAIChat={() => { setShowChatModal(true); }}
-          />
-        )}
-        {activeView === 'preview' && (
-          <ResumePreviewMobile onOpenAIChat={() => { setShowChatModal(true); setIsMobileMenuOpen(false); }} onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }} />
-        )}
-        {/* Add more mobile routes as needed */}
-      </div>
-    );
-  }
-
-  // Desktop/laptop version
-  return (
-    <div className="app">
-      <header className="app-header">
-        <div className="app-logo">
-          <h1>ResuMate</h1>
-          <p className="app-tagline">Professional MNC-approved Resume Builder</p>
-        </div>
-        <nav className="app-nav">
-          <button 
-            className={`nav-link ${activeView === 'home' ? 'active' : ''}`}
-            onClick={() => setActiveView('home')}
-          >
-            Home
-          </button>
-          {resumeType && (
-            <button 
-              className={`nav-link ${activeView === 'form' ? 'active' : ''}`}
-              onClick={() => setActiveView('form')}
-            >
-              Create Resume
-            </button>
-          )}
-          <button 
-            className={`nav-link ${activeView === 'templates' ? 'active' : ''}`}
-            onClick={() => resumeType ? setActiveView('templates') : showToast('Please select a resume type first', 'warning')}
-          >
-            Templates
-          </button>
-          {resumeData && (
-            <button 
-              className={`nav-link ${activeView === 'preview' ? 'active' : ''}`}
-              onClick={() => setActiveView('preview')}
-            >
-              Preview
-            </button>
-          )}
-          <button 
-            className={`nav-link ${activeView === 'ai-test' ? 'active' : ''}`}
-            onClick={() => setActiveView('ai-test')}
-          >
-            🤖 AI Test
-          </button>
-        </nav>
-      </header>
-
-      <main className="app-content">
-        {activeView === 'home' && (
-          <HomeDesktop onStartClick={() => setActiveView('type-selector')} />
-        )}
-        {activeView === 'type-selector' && (
-          <ResumeTypeSelector 
-            onSelect={(type) => {
-              setResumeType(type);
-              setActiveView('form');
-            }}
-          />
-        )}
-        {activeView === 'form' && (
-          <>
-            <div className="app-intro">
-              <h2>Create Your ATS-Friendly Resume for Top MNCs</h2>
-              <p>
-                Build a professional resume optimized for Applicant Tracking Systems 
-                used by companies like Google, Microsoft, Amazon, and other tech giants.
-              </p>
-              {resumeType && (
-                <div className="selected-resume-type">
-                  <span>Selected Resume Type: </span>
-                  <strong>
-                    {resumeType === 'technical' ? 'Technical' : 
-                     resumeType === 'medical' ? 'Medical' : 
-                     resumeType === 'diploma' ? 'Diploma/Certificate' : 'Non-Technical'}
-                  </strong>
-                  <button 
-                    onClick={() => setActiveView('type-selector')} 
-                    className="change-type-btn"
-                  >
-                    Change
-                  </button>
-                </div>
-              )}
-            </div>
-            <ResumeForm 
-              initialData={resumeData} // Pass existing resume data when editing
-              onSubmit={handleFormSubmit} 
-              onChange={handleFormChange}
-              isSubmitting={isGenerating}
-              resumeType={resumeType}
-            />
-          </>
-        )}
+  {activeView === 'form' && (
+    <MobileResumeForm 
+      onNavigate={(view) => { setActiveView(view); setIsMobileMenuOpen(false); }}
+      onOpenTemplates={() => { if (resumeType) { setActiveView('templates'); setIsMobileMenuOpen(false); } else { showToast('Please select a resume type first', 'warning'); } }}
+      resumeType={resumeType}
+      onOpenInterview={() => { setActiveView('interview-prep'); setIsMobileMenuOpen(false); }}
+      onOpenAIChat={() => { openAIChat(); }}
+    />
+  )}
+  {activeView === 'preview' && (
+    <ResumePreviewMobile
+      onOpenAIChat={openAIChat}
+      onNavigate={(v) => { setActiveView(v); setIsMobileMenuOpen(false); }}
+      resumeData={resumeData}
+      selectedTemplate={selectedTemplate}
+      onDownload={handleDownloadPDF}
+      onSave={() => { showToast('Progress saved', 'success'); }}
+    />
+  )}
         {activeView === 'templates' && (
           <>
             <TemplateSelector
               selectedTemplate={selectedTemplate}
               onTemplateChange={handleTemplateChange}
+              onTemplateSelect={handleTemplateSelect}
+              onResumeTypeChange={(t) => setResumeType(t)}
               onTemplatePreview={handleTemplatePreview}
               resumeType={resumeType}
+              onInspireFromTemplate={handleInspireFromTemplate}
+              onUseExternalTemplate={handleUseExternalTemplate}
             />
             {resumeData && (
               <div className="template-preview-actions">
@@ -323,313 +654,197 @@ function App() {
             )}
           </>
         )}
-        {activeView === 'preview' && resumeData && (
-          <div className="resume-preview-container">
-            <div className="resume-actions">
-              <button 
-                className="btn-download" 
-                onClick={handleDownloadPDF}
-                disabled={isGenerating}
-              >
-                {isGenerating ? 'Generating PDF...' : 'Download PDF'}
-              </button>
-              <button 
-                className="btn-edit"
-                onClick={() => {
-                  // Keep the existing form data when editing
-                  setActiveView('form');
-                }}
-              >
-                Edit Resume
-              </button>
-              <button 
-                className="btn-change-template"
-                onClick={() => setActiveView('templates')}
-              >
-                Change Template
-              </button>
-            </div>
-            <div className="resume-preview" id="resume-to-pdf">
-              {selectedTemplate === 'reverse-chrono' ? (
-                <ReverseChronoResume
-                  data={resumeData}
-                  showProfile={true}
-                />
-              ) : selectedTemplate === 'modern-sidebar' ? (
-                <ModernSidebarResume
-                  data={resumeData}
-                  showProfile={true}
-                />
-              ) : selectedTemplate === 'professional-clean' ? (
-                <ProfessionalCleanResume
-                  data={resumeData}
-                  showProfile={true}
-                />
-              ) : selectedTemplate === 'jobfit-pro' ? (
-                <JobFitProResume
-                  data={resumeData}
-                  showProfile={true}
-                />
-              ) : selectedTemplate === 'pro-profile' ? (
-                <ProProfileResume
-                  data={resumeData}
-                  showProfile={true}
-                />
-              ) : selectedTemplate === 'smart-resume' ? (
-                <SmartResume
-                  data={resumeData}
-                  template={selectedTemplate}
-                />
-              ) : (
-                <MncResume 
-                  data={resumeData} 
-                  template={selectedTemplate} 
-                />
-              )}
-            </div>
+
+        {activeView === 'ats-scanner' && (
+          <div style={{ minHeight: '520px', padding: '20px 0' }}>
+            <ATSScanner onBack={() => setActiveView('home')} />
           </div>
         )}
-        {activeView === 'ai-test' && (
-          <div className="ai-test-container">
-            <div className="app-intro">
-              <h2>🤖 AI Features Testing</h2>
-              <p>Test all Gemini AI features integrated in ResuMate</p>
-            </div>
-            <AIExampleUsage />
-          </div>
-        )}
-        {activeView === 'preview' && !resumeData && (
-          <div className="no-resume">
-            <h2>No Resume Data</h2>
-            <p>Please fill out the resume form first.</p>
-            <button 
-              className="btn-create"
-              onClick={() => setActiveView('form')}
-            >
-              Create Resume
-            </button>
-          </div>
-        )}
-      </main>
-
-      {/* Toast notification */}
-      {toast.show && (
-        <div className={`toast toast-${toast.type}`}>
-          <span>{toast.message}</span>
-          <button onClick={() => setToast({ ...toast, show: false })}>×</button>
-        </div>
-      )}
-
-      <footer className="app-footer">
-        <p>&copy; {new Date().getFullYear()} ResuMate - ATS-Optimized Resume Builder</p>
-        <div className="footer-links">
-          <a href="#privacy">Privacy Policy</a>
-          <a href="#terms">Terms of Use</a>
-          <a href="#contact">Contact</a>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-
-
-function App() {
-  const [isMobile, setIsMobile] = useState(isMobileDevice());
-
-  useEffect(() => {
-    function handleResize() {
-      setIsMobile(isMobileDevice());
-    }
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  const [resumeData, setResumeData] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState('reverse-chrono');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [activeView, setActiveView] = useState('home'); // 'home', 'type-selector', 'form', 'templates', or 'preview'
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const [resumeType, setResumeType] = useState(null); // 'technical', 'medical', 'diploma', or 'nontechnical'
-  
-  // Handle form submission
-  const handleFormSubmit = (formData) => {
-    setIsGenerating(true);
-    
-    // Store the form data
-    setResumeData(formData);
-    
-    // Simulate processing delay
-    setTimeout(() => {
-      setIsGenerating(false);
-      setActiveView('preview');
-      showToast('Resume generated successfully!');
-    }, 1000);
-  };
-
-  // Update form data as user types
-  const handleFormChange = (formData) => {
-    setResumeData(formData);
-  };
-  
-  // Handle template selection change
-  const handleTemplateChange = (template) => {
-    setSelectedTemplate(template);
-  };
-  
-  // Show toast notification
-  const showToast = (message, type = 'success', duration = 5000) => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast({ show: false, message: '', type: 'success' });
-    }, duration);
-  };
-  
-  // Handle PDF download
-  const handleDownloadPDF = async () => {
-    try {
-      setIsGenerating(true);
-      
-      // Import the libraries for PDF generation
-      const html2canvas = await import('html2canvas').then(module => module.default);
-      const { jsPDF } = await import('jspdf');
-      
-      const resumeElement = document.getElementById('resume-to-pdf');
-      
-      if (!resumeElement) {
-        throw new Error('Resume element not found');
-      }
-      
-      // Process images before capturing
-      const images = resumeElement.querySelectorAll('img');
-      // Wait for all images to load
-      const imagePromises = Array.from(images).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve; // Continue even if image fails
-        });
-      });
-      
-      await Promise.all(imagePromises);
-      
-      // Capture the resume as canvas
-      const canvas = await html2canvas(resumeElement, {
-        scale: 2, // Higher scale for better quality
-        useCORS: true, // Allow loading cross-origin images
-        allowTaint: true, // Allow tainted canvas for security constraints
-        logging: false,
-        backgroundColor: '#ffffff',
-        imageTimeout: 15000 // Longer timeout for images
-      });
-      
-      // Calculate dimensions to maintain aspect ratio
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      // Add image to PDF
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      
-      // Generate multiple pages if resume is longer than A4
-      let heightLeft = imgHeight;
-      let position = 0;
-      
-      // Only add additional pages if the resume is longer than one page
-      if (heightLeft > pageHeight) {
-        while (heightLeft > pageHeight) {
-          position = heightLeft - pageHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-      }
-      
-      // Save the PDF
-      const fileName = resumeData && resumeData.name ? 
-        `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf` : 
-        `Resume_${new Date().getTime()}.pdf`;
-      
-      pdf.save(fileName);
-      
-      setIsGenerating(false);
-      showToast('PDF downloaded successfully!');
-      
-    } catch (error) {
-      console.error('Failed to generate PDF:', error);
-      setIsGenerating(false);
-      showToast('Failed to generate PDF. Please try again.', 'danger');
-    }
-  };
-
-  if (isMobile) {
-    // Mobile version routing
-    return (
-      <div className="app-mobile">
-        {activeView === 'home' && <HomeMobile />}
-        {activeView === 'form' && <ResumeFormMobile />}
-        {activeView === 'preview' && <ResumePreviewMobile />}
-        {/* Add more mobile routes as needed */}
+        {activeView === 'interview-prep' && <InterviewPrep />}
+        {/* AI Chat modal for mobile */}
+        <AIChatModal
+          isOpen={showChatModal}
+          onClose={() => setShowChatModal(false)}
+          onAutoFill={handleChatAutoFill}
+        />
       </div>
     );
   }
 
-  // Desktop/laptop version
+  // Ensure AIChatModal is also available in mobile view by rendering inside the mobile return above.
+
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="app-logo">
-          <h1>ResuMate</h1>
-          <p className="app-tagline">Professional MNC-approved Resume Builder</p>
-        </div>
-        <nav className="app-nav">
-          <button 
-            className={`nav-link ${activeView === 'home' ? 'active' : ''}`}
-            onClick={() => setActiveView('home')}
-          >
-            Home
-          </button>
-          {resumeType && (
-            <button 
-              className={`nav-link ${activeView === 'form' ? 'active' : ''}`}
-              onClick={() => setActiveView('form')}
-            >
-              Create Resume
-            </button>
-          )}
-          <button 
-            className={`nav-link ${activeView === 'templates' ? 'active' : ''}`}
-            onClick={() => resumeType ? setActiveView('templates') : showToast('Please select a resume type first', 'warning')}
-          >
-            Templates
-          </button>
-          {resumeData && (
-            <button 
-              className={`nav-link ${activeView === 'preview' ? 'active' : ''}`}
-              onClick={() => setActiveView('preview')}
-            >
-              Preview
-            </button>
-          )}
-          <button 
-            className={`nav-link ${activeView === 'ai-test' ? 'active' : ''}`}
-            onClick={() => setActiveView('ai-test')}
-          >
-            🤖 AI Test
-          </button>
-        </nav>
-      </header>
+      {!showChatModal && (
+        <header className="app-header">
+          <div className="header-container">
+            <div className="app-logo">
+              <h1>ResuMate</h1>
+              <p className="app-tagline">AI-Powered Professional Resume Builder</p>
+            </div>
 
-      <main className="app-content">
-        {activeView === 'home' && (
-          <HomeScreen onStartClick={() => setActiveView('type-selector')} />
-        )}
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="mobile-nav-toggle"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? '✕' : '☰'}
+            </button>
+          
+          {/* Template Search Bar - Center of Navigation */}
+          <div className="template-search-container">
+            <div className="search-input-wrapper">
+              <input
+                type="text"
+                className="template-search-input"
+                placeholder="Search ATS templates by role (e.g., Software Engineer, Marketing Manager)"
+                value={templateSearchQuery}
+                onChange={(e) => setTemplateSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleTemplateSearch()}
+                onFocus={() => setShowSearchSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 300)}
+              />
+              <button 
+                className={`search-button ${isSearchingTemplates ? 'loading' : ''}`}
+                onClick={handleTemplateSearch}
+                disabled={isSearchingTemplates || !templateSearchQuery.trim()}
+              >
+                {isSearchingTemplates ? '' : 'Search'}
+              </button>
+            </div>
+            
+            {/* Search Suggestions */}
+            {showSearchSuggestions && templateSearchQuery.length === 0 && (
+              <div className="search-suggestions">
+                {popularJobRoles.slice(0, 6).map((role, index) => (
+                  <div 
+                    key={index}
+                    className="search-suggestion"
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // Prevent input blur
+                      setTemplateSearchQuery(role);
+                      setShowSearchSuggestions(false);
+                    }}
+                    onClick={() => {
+                      setTemplateSearchQuery(role);
+                      setShowSearchSuggestions(false);
+                    }}
+                  >
+                    <span className="search-suggestion-icon">💼</span>
+                    <span>{role}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Filtered Suggestions */}
+            {showSearchSuggestions && templateSearchQuery.length > 0 && (
+              <div className="search-suggestions">
+                {popularJobRoles
+                  .filter(role => role.toLowerCase().includes(templateSearchQuery.toLowerCase()))
+                  .slice(0, 4)
+                  .map((role, index) => (
+                    <div 
+                      key={index}
+                      className="search-suggestion"
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur
+                        setTemplateSearchQuery(role);
+                        setShowSearchSuggestions(false);
+                      }}
+                      onClick={() => {
+                        setTemplateSearchQuery(role);
+                        setShowSearchSuggestions(false);
+                      }}
+                    >
+                      <span className="search-suggestion-icon">🎯</span>
+                      <span>{role}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+
+          {/* Navigation */}
+          <nav className={`app-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+            <button 
+              className={`nav-link ${activeView === 'home' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('home');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              🏠 Home
+            </button>
+            <button 
+              className={`nav-link ${activeView === 'type-selector' || activeView === 'form' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('type-selector');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              📝 Create Resume
+            </button>
+            <button 
+              className={`nav-link ${activeView === 'templates' ? 'active' : ''}`}
+              onClick={() => {
+                if (resumeType) {
+                  setActiveView('templates');
+                  setIsMobileMenuOpen(false);
+                } else {
+                  showToast('Please select a resume type first', 'warning');
+                }
+              }}
+            >
+              📋 Templates
+            </button>
+            {/* ATS Scan button in nav (opens ATS Scanner page) */}
+            <button
+              className={`nav-link ${activeView === 'ats-scanner' ? 'active' : ''} ats-scan-btn`}
+              onClick={() => { console.log('NAV: ATS Scan clicked'); setActiveView('ats-scanner'); setIsMobileMenuOpen(false); }}
+            >
+              📊 ATS Scan
+            </button>
+            <button 
+              className={`nav-link ${activeView === 'interview-prep' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('interview-prep');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              🎯 Interview Prep
+            </button>
+            {resumeData && (
+              <button 
+                className={`nav-link ${activeView === 'preview' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveView('preview');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                👁️ Preview
+              </button>
+            )}
+            <button 
+              className="nav-link ai-chat-btn"
+              onClick={() => {
+                setShowChatModal(true);
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              💬 AI Chat
+            </button>
+          </nav>
+        </div>
+      </header>
+      )}
+
+      {!showChatModal && (
+        <main className="app-content">
+          {activeView === 'home' && (
+            <HomeDesktop onStartClick={() => setActiveView('type-selector')} onOpenATS={() => setActiveView('ats-scanner')} />
+          )}
         
         {activeView === 'type-selector' && (
           <ResumeTypeSelector 
@@ -638,6 +853,10 @@ function App() {
               setActiveView('form');
             }}
           />
+        )}
+        
+        {activeView === 'interview-prep' && (
+          <InterviewPrep />
         )}
         
         {activeView === 'form' && (
@@ -682,6 +901,8 @@ function App() {
               onTemplateChange={handleTemplateChange}
               onTemplatePreview={handleTemplatePreview}
               resumeType={resumeType}
+              onInspireFromTemplate={handleInspireFromTemplate}
+              onUseExternalTemplate={handleUseExternalTemplate}
             />
             {resumeData && (
               <div className="template-preview-actions">
@@ -696,6 +917,159 @@ function App() {
           </>
         )}
         
+        {activeView === 'template-search' && (
+          <div className="template-search-results">
+            <div className="search-header">
+              <h2>🎯 AI-Recommended Templates for "{templateSearchQuery}"</h2>
+              <p>ATS-optimized templates ranked by relevance and compatibility</p>
+              <button 
+                className="btn-back"
+                onClick={() => setActiveView('home')}
+              >
+                ← Back to Home
+              </button>
+            </div>
+                  {/* Experience level filter for external templates */}
+                  <div className="template-search-filters" style={{display: 'flex', gap: '8px', alignItems: 'center', margin: '12px 0'}}>
+                    <label style={{fontWeight: 600}}>Experience:</label>
+                    <select value={templateExperienceFilter || ''} onChange={(e) => setTemplateExperienceFilter(e.target.value)}>
+                      <option value="">All</option>
+                      <option value="entry-level">Entry / Fresher</option>
+                      <option value="mid-level">Mid-level</option>
+                      <option value="senior">Senior</option>
+                    </select>
+                    <button className="btn-clear-filter" onClick={() => setTemplateExperienceFilter('')}>Clear</button>
+                  </div>
+            { (recommendedTemplates.filter(t => {
+                if (!templateExperienceFilter) return true;
+                // t.experienceLevel may be array or string
+                const levels = Array.isArray(t.experienceLevel) ? t.experienceLevel.map(l => l.toLowerCase()) : [String(t.experienceLevel || '').toLowerCase()];
+                return levels.includes(templateExperienceFilter.toLowerCase());
+              })).length > 0 ? (
+              <div className="template-grid">
+                {recommendedTemplates.filter(t => {
+                  if (!templateExperienceFilter) return true;
+                  const levels = Array.isArray(t.experienceLevel) ? t.experienceLevel.map(l => l.toLowerCase()) : [String(t.experienceLevel || '').toLowerCase()];
+                  return levels.includes(templateExperienceFilter.toLowerCase());
+                }).map((template, index) => (
+                  <div key={template.id} className="template-card">
+                    <div className="template-rank">#{index + 1}</div>
+                    {template.source && (
+                      <div className="template-source">{template.source}</div>
+                    )}
+                    <div className="template-preview">
+                      {template.previewUrl ? (
+                        <img 
+                          src={template.previewUrl} 
+                          alt={template.name}
+                          className="template-image"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="template-placeholder"
+                        style={{ 
+                          display: template.previewUrl ? 'none' : 'flex',
+                          width: '100%',
+                          height: '100%',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: 'white',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '3rem'
+                        }}
+                      >
+                        📄
+                      </div>
+                      {template.isExternal && (
+                        <div className="external-badge">🌐 External</div>
+                      )}
+                    </div>
+                    <div className="template-info">
+                      <h3>{template.name}</h3>
+                      <div className="template-stats">
+                        <span className="industry-tag">{template.industry || 'General'}</span>
+                        <span className="ats-score">ATS: {template.atsScore || 85}%</span>
+                        <span className="layout-type">{template.layoutStyle || 'Standard'}</span>
+                        {template.aiRecommendation && (
+                          <span className="ai-recommendation">{template.aiRecommendation}</span>
+                        )}
+                      </div>
+                      <p className="template-description">{template.description}</p>
+                      <div className="template-features">
+                        {template.features?.map((feature, idx) => (
+                          <span key={idx} className="feature-tag">✓ {feature}</span>
+                        ))}
+                      </div>
+                      {template.copyright && (
+                        <p className="copyright-notice">📄 {template.copyright}</p>
+                      )}
+                    </div>
+                    <div className="template-actions">
+                      {template.isExternal ? (
+                        <>
+                          <button 
+                            className="btn-visit-external"
+                            onClick={() => window.open(template.sourceUrl, '_blank')}
+                          >
+                            🔗 View Original
+                          </button>
+                          <button 
+                            className="btn-inspire-template"
+                            onClick={() => handleInspireFromTemplate(template)}
+                          >
+                            💡 Get Inspired
+                          </button>
+                          <button
+                            className="btn-use-external"
+                            onClick={() => handleUseExternalTemplate(template)}
+                          >
+                            ✅ Use as Template
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button 
+                            className="btn-select-template"
+                            onClick={() => handleSelectTemplate(template)}
+                          >
+                            ✨ Select Template
+                          </button>
+                          <button 
+                            className="btn-preview-template"
+                            onClick={() => handlePreviewTemplate(template)}
+                          >
+                            👁️ Preview
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-templates">
+                <div className="no-templates-icon">🔍</div>
+                <h3>No templates found</h3>
+                <p>Try searching with different job roles or keywords</p>
+                <button 
+                  className="btn-search-again"
+                  onClick={() => setActiveView('home')}
+                >
+                  Search Again
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {activeView === 'ats-scanner' && (
+          <ATSScanner onBack={() => setActiveView('home')} />
+        )}
+
         {activeView === 'preview' && resumeData && (
           <div className="resume-preview-container">
             <div className="resume-actions">
@@ -704,7 +1078,7 @@ function App() {
                 onClick={handleDownloadPDF}
                 disabled={isGenerating}
               >
-                {isGenerating ? 'Generating PDF...' : 'Download PDF'}
+                📥 {isGenerating ? 'Generating PDF...' : 'Download PDF'}
               </button>
               <button 
                 className="btn-edit"
@@ -713,17 +1087,25 @@ function App() {
                   setActiveView('form');
                 }}
               >
-                Edit Resume
+                ✏️ Edit Resume
               </button>
               <button 
                 className="btn-change-template"
                 onClick={() => setActiveView('templates')}
               >
-                Change Template
+                🎨 Change Template
+              </button>
+              <button 
+                className="btn-ats-score"
+                onClick={handleATSAnalysis}
+                disabled={isAnalyzingATS}
+                style={{backgroundColor: '#28a745', color: 'white'}}
+              >
+                {isAnalyzingATS ? '🔄 Analyzing...' : '📊 ATS Score'}
               </button>
             </div>
             <div className="resume-preview" id="resume-to-pdf">
-              {selectedTemplate === 'reverse-chrono' ? (
+                    {selectedTemplate === 'reverse-chrono' ? (
                 <ReverseChronoResume
                   data={resumeData}
                   showProfile={true}
@@ -748,6 +1130,8 @@ function App() {
                   data={resumeData}
                   showProfile={true}
                 />
+                    ) : selectedTemplate === 'smart-resume' ? (
+                      <SmartResume data={resumeData} template={selectedTemplate} />
               ) : (
                 <MncResume 
                   data={resumeData} 
@@ -755,16 +1139,42 @@ function App() {
                 />
               )}
             </div>
-          </div>
-        )}
-
-        {activeView === 'ai-test' && (
-          <div className="ai-test-container">
-            <div className="app-intro">
-              <h2>🤖 AI Features Testing</h2>
-              <p>Test all Gemini AI features integrated in ResuMate</p>
+            
+            {/* Resume Analytics and Additional Features */}
+            <div className="resume-additional-features">
+              <div className="features-tabs">
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'analytics' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('analytics')}
+                >
+                  📊 Analytics
+                </button>
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'history' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('history')}
+                >
+                  🕒 History
+                </button>
+                <button 
+                  className={`feature-tab ${activeFeatureTab === 'notifications' ? 'active' : ''}`}
+                  onClick={() => setActiveFeatureTab('notifications')}
+                >
+                  🔔 Notifications
+                </button>
+              </div>
+              
+              <div className="feature-content">
+                {activeFeatureTab === 'analytics' && (
+                  <ResumeAnalytics resumeData={resumeData} />
+                )}
+                {activeFeatureTab === 'history' && (
+                  <SuggestionsHistory userId="anonymous" />
+                )}
+                {activeFeatureTab === 'notifications' && (
+                  <NotificationCenter userId="anonymous" />
+                )}
+              </div>
             </div>
-            <AIExampleUsage />
           </div>
         )}
 
@@ -781,6 +1191,7 @@ function App() {
           </div>
         )}
       </main>
+      )}
 
       {/* Toast notification */}
       {toast.show && (
@@ -798,6 +1209,13 @@ function App() {
           <a href="#contact">Contact</a>
         </div>
       </footer>
+
+      {/* AI Chat Modal */}
+      <AIChatModal
+        isOpen={showChatModal}
+        onClose={() => setShowChatModal(false)}
+        onAutoFill={handleChatAutoFill}
+      />
     </div>
   );
 }

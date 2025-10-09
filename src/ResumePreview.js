@@ -1,123 +1,116 @@
 import React from 'react';
-import './ResumePreview.css';
+import './styles/ResumePreview.css';
 
-const ResumePreview = ({ formData, templateType = 'modern' }) => {
-  // Get the theme from the parent container
-  const theme = document.querySelector('.app-container').classList.contains('dark-theme') ? 'dark' : 'light';
-  
-  // Use formData for preview
-  const data = formData;
-  const formatDate = (dateString) => {
-    return dateString;
+/**
+ * Resume preview component to display HTML-based resume
+ */
+const ResumePreview = React.forwardRef(({ data, template = 'modern' }, ref) => {
+  // Helper function to safely render text (convert objects to strings)
+  const safeText = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value.text) return value.text;
+    return String(value);
   };
 
+  // CSS class for the selected template
+  const templateClass = `resume-template-${template}`;
+  
   return (
-    <div className={`resume-preview ${theme}-theme`}>
-      <div className="preview-header">
-        <h2>Resume Preview</h2>
-        <p className="preview-note">This is how your resume will appear when generated</p>
-      </div>
-
-      <div className={`preview-content template-${templateType}`}>
-        {/* Header / Personal Info */}
-        <div className="preview-section preview-header-section">
-          <div className="preview-header-content">
-            {data.profilePic && (
-              <div className="preview-profile-pic">
-                <img 
-                  src={data.profilePic} 
-                  alt="Profile" 
-                  className="preview-profile-image"
-                />
-              </div>
-            )}
-            <div className="preview-personal-info">
-              <h1 className="preview-name">{data.name || 'Your Name'}</h1>
-              <div className="preview-contact">
-                {data.email && <span className="preview-email">{data.email}</span>}
-                {data.phone && <span className="preview-phone">{data.phone}</span>}
-                {data.address && <span className="preview-address">{data.address}</span>}
-              </div>
-            </div>
+    <div ref={ref} className={`resume-preview ${templateClass}`}>
+      {/* Header section */}
+      <header className="resume-header">
+        {data.profilePic && (
+          <div className="profile-pic">
+            <img src={data.profilePic} alt="Profile" />
           </div>
+        )}
+        <div className="contact-info">
+          <h1 className="resume-name">{safeText(data.name) || 'Your Name'}</h1>
+          <p className="resume-contact">
+            {data.address && <span>{safeText(data.address)} • </span>}
+            {data.phone && <span>{safeText(data.phone)} • </span>}
+            {data.email && <span><a href={`mailto:${safeText(data.email)}`}>{safeText(data.email)}</a></span>}
+          </p>
         </div>
-        
-        {/* Career Objective */}
-        {data.objective && (
-          <div className="preview-section">
-            <h3 className="preview-section-title">Career Objective</h3>
-            <div className="preview-objective">{data.objective}</div>
-          </div>
-        )}
+      </header>
 
-        {/* Education */}
-        {data.education && data.education.length > 0 && (
-          <div className="preview-section">
-            <h3 className="preview-section-title">Education</h3>
+      {/* Objective section */}
+      {data.objective && (
+        <section className="resume-section">
+          <h2 className="section-title">CAREER OBJECTIVE</h2>
+          <p className="objective-text">{safeText(data.objective)}</p>
+        </section>
+      )}
+
+      {/* Education section */}
+      {data.education && data.education.length > 0 && (
+        <section className="resume-section">
+          <h2 className="section-title">EDUCATION</h2>
+          <ul className="education-list">
             {data.education.map((edu, index) => (
-              <div key={index} className="preview-education-item">
-                <div className="preview-degree">{edu.degree || 'Degree'}</div>
-                <div className="preview-institution">{edu.institution || 'Institution'}</div>
-                <div className="preview-edu-details">
-                  <span>{edu.year || 'Year'}</span>
-                  {edu.percentage && <span> • {edu.percentage}</span>}
+              <li key={index} className="education-item">
+                <div className="education-degree">{safeText(edu.degree)}</div>
+                <div className="education-details">
+                  {safeText(edu.institution)} 
+                  {edu.year && <span> • {safeText(edu.year)}</span>} 
+                  {edu.percentage && <span> • {safeText(edu.percentage)}</span>}
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
-        )}
+          </ul>
+        </section>
+      )}
 
-        {/* Experience */}
-        {data.experience && data.experience.length > 0 && (
-          <div className="preview-section">
-            <h3 className="preview-section-title">Experience</h3>
+      {/* Experience section */}
+      {data.experience && data.experience.length > 0 && (
+        <section className="resume-section">
+          <h2 className="section-title">PROFESSIONAL EXPERIENCE</h2>
+          <ul className="experience-list">
             {data.experience.map((exp, index) => (
-              <div key={index} className="preview-experience-item">
-                <div className="preview-role">{exp.role || 'Role'}</div>
-                <div className="preview-company">{exp.company || 'Company'}</div>
-                <div className="preview-duration">{exp.duration || 'Duration'}</div>
-              </div>
+              <li key={index} className="experience-item">
+                <div className="experience-role">
+                  <strong>{safeText(exp.role)}</strong> at {safeText(exp.company)}
+                </div>
+                <div className="experience-duration">{safeText(exp.duration)}</div>
+              </li>
             ))}
-          </div>
-        )}
+          </ul>
+        </section>
+      )}
 
-        {/* Projects */}
-        {data.projects && data.projects.length > 0 && (
-          <div className="preview-section">
-            <h3 className="preview-section-title">Projects</h3>
-            {data.projects.map((proj, index) => (
-              <div key={index} className="preview-project-item">
-                <div className="preview-project-title">{proj.title || 'Project Title'}</div>
-                <div className="preview-project-description">{proj.description || 'Description'}</div>
-              </div>
+      {/* Projects section */}
+      {data.projects && data.projects.length > 0 && (
+        <section className="resume-section">
+          <h2 className="section-title">PROJECTS</h2>
+          <ul className="projects-list">
+            {data.projects.map((project, index) => (
+              <li key={index} className="project-item">
+                <div className="project-title">{safeText(project.title)}</div>
+                <div className="project-description">{safeText(project.description)}</div>
+              </li>
             ))}
-          </div>
-        )}
+          </ul>
+        </section>
+      )}
 
-        {/* Skills */}
-        {data.skills && data.skills.length > 0 && (
-          <div className="preview-section">
-            <h3 className="preview-section-title">Skills</h3>
-            <div className="preview-skills">
-              {data.skills.join(' • ')}
-            </div>
-          </div>
-        )}
+      {/* Skills section */}
+      {data.skills && (
+        <section className="resume-section">
+          <h2 className="section-title">SKILLS</h2>
+          <p className="skills-text">{safeText(data.skills)}</p>
+        </section>
+      )}
 
-        {/* Achievements */}
-        {data.achievements && data.achievements.filter(Boolean).length > 0 && (
-          <div className="preview-section">
-            <h3 className="preview-section-title">Achievements</h3>
-            <ul className="preview-achievements">
-              {data.achievements.filter(Boolean).map((achievement, index) => (
-                <li key={index} className="preview-achievement-item">{achievement}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      {/* Achievements section */}
+      {data.achievements && (
+        <section className="resume-section">
+          <h2 className="section-title">ACHIEVEMENTS</h2>
+          <p className="achievements-text">{safeText(data.achievements)}</p>
+        </section>
+      )}
     </div>
   );
-};
+});
 
 export default ResumePreview;

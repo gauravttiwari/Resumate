@@ -151,7 +151,7 @@ const ProProfileResume = React.forwardRef(({ data, showProfile = true }, ref) =>
         )}
         
         {/* Achievements can go in sidebar if there's space */}
-        {achievements.length > 0 && (
+        {achievements && achievements.length > 0 && (
           <section className="achievements">
             <h2>ACHIEVEMENTS</h2>
             <ul>
@@ -208,7 +208,7 @@ const ProProfileResume = React.forwardRef(({ data, showProfile = true }, ref) =>
                   {job.duration || 'Duration'} | {job.location || 'Location'}
                 </span>
                 <ul className="job-description">
-                  {job.description.split('.').filter(item => item.trim()).map((point, pointIndex) => (
+                  {job.description && job.description.split('.').filter(item => item.trim()).map((point, pointIndex) => (
                     <li key={pointIndex}>{point.trim()}.</li>
                   ))}
                 </ul>

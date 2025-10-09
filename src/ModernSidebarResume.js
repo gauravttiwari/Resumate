@@ -201,14 +201,14 @@ const ModernSidebarResume = React.forwardRef(({ data, showProfile = true }, ref)
         )}
         
         {/* Certifications & Achievements Section */}
-        {(certifications.length > 0 || achievements.length > 0) && (
+        {((certifications && certifications.length > 0) || (achievements && achievements.length > 0)) && (
           <section className="certifications">
             <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>Certifications & Achievements</h2>
             <ul className="certifications-list">
-              {certifications.map((cert, index) => (
+              {certifications && certifications.map((cert, index) => (
                 <li key={`cert-${index}`}>{cert}</li>
               ))}
-              {achievements.map((achievement, index) => (
+              {achievements && achievements.map((achievement, index) => (
                 <li key={`achv-${index}`}>{achievement}</li>
               ))}
             </ul>

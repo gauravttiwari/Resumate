@@ -186,7 +186,7 @@ body {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--gray-200);
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-4) 0;
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
@@ -212,36 +212,51 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 0 var(--space-6) 0 var(--space-3);
   gap: var(--space-8);
+  width: 100%;
 }
 
 /* Logo Section */
 .app-logo {
   display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.main-logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.app-logo:hover .main-logo-icon {
+  transform: scale(1.05);
+}
+
+.main-logo-content {
+  display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 4px;
 }
 
 .app-logo h1 {
   font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
-  color: var(--primary-600);
-  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 28px;
+  font-weight: 700;
+  color: #8b5cf6;
   letter-spacing: -0.025em;
   margin: 0;
+  line-height: 1;
 }
 
 .app-tagline {
-  font-size: var(--text-sm);
-  color: var(--gray-600);
-  font-weight: var(--font-medium);
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 400;
   margin: 0;
+  opacity: 0.9;
 }
 
 /* Template Search Container */
@@ -256,7 +271,7 @@ body {
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98); /* More opaque for better text visibility */
   backdrop-filter: blur(10px);
   border-radius: var(--radius-2xl);
   border: 2px solid var(--gray-200);
@@ -283,14 +298,29 @@ body {
   background: transparent;
   font-size: var(--text-base);
   font-family: var(--font-primary);
-  color: var(--gray-800);
+  color: #1f2937 !important; /* Dark gray for better visibility */
   font-weight: var(--font-medium);
   outline: none;
   transition: all var(--transition-normal);
 }
 
+.template-search-input:focus {
+  color: #111827 !important; /* Even darker when focused */
+}
+
+.template-search-input::-webkit-input-placeholder { /* WebKit browsers */
+  color: #6b7280 !important;
+}
+.template-search-input::-moz-placeholder { /* Mozilla Firefox 19+ */
+  color: #6b7280 !important;
+  opacity: 1;
+}
+.template-search-input:-ms-input-placeholder { /* Internet Explorer 10+ */
+  color: #6b7280 !important;
+}
+
 .template-search-input::placeholder {
-  color: var(--gray-500);
+  color: #6b7280 !important; /* Medium gray for good contrast */
   font-weight: var(--font-normal);
   transition: color var(--transition-normal);
 }
@@ -1722,10 +1752,11 @@ body {
   font-size: 14px;
   outline: none;
   background: transparent;
+  color: #1f2937 !important; /* Ensure text is visible */
 }
 
 .template-search-input::placeholder {
-  color: #888;
+  color: #6b7280 !important; /* Better contrast for placeholder */
   font-style: italic;
 }
 
@@ -2481,6 +2512,20 @@ body {
   .app-logo {
     order: 1;
     flex: 1;
+    gap: 12px;
+  }
+  
+  .main-logo-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .app-logo h1 {
+    font-size: 22px;
+  }
+  
+  .app-tagline {
+    font-size: 12px;
   }
   
   .mobile-nav-toggle {

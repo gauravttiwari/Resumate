@@ -3,9 +3,10 @@
  * ATS-friendly design following best practices for major companies
  */
 import React from 'react';
+import { safeText, safeAchievement, safeArray } from './utils/safeRender';
 import './styles/MncResumeStyles.css';
 
-const MncResume = React.forwardRef(({ data, template = 'professional' }, ref) => {
+const MncResume = React.forwardRef(({ data = {}, template = 'mnc' }, ref) => {
   // Destructure resume data with defaults
   const { 
     name = '', 
@@ -20,7 +21,16 @@ const MncResume = React.forwardRef(({ data, template = 'professional' }, ref) =>
     education = [],
     achievements = [],
     profilePic = null
-  } = data || {};
+  } = data;
+
+  // Helper to safely convert values to text
+  const safeText = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value.text !== undefined) return String(value.text || '');
+    if (Array.isArray(value)) return value.map(v => safeText(v)).filter(Boolean).join(', ');
+    return '';
+  };
 
   const templateClass = `resume-template-${template}`;
 
@@ -55,7 +65,7 @@ const MncResume = React.forwardRef(({ data, template = 'professional' }, ref) =>
       {summary && (
         <section className="resume-section">
           <h2 className="section-title">PROFESSIONAL SUMMARY</h2>
-          <p className="summary-text">{summary}</p>
+          <p className="summary-text">{safeText(summary)}</p>
         </section>
       )}
 
@@ -67,76 +77,106 @@ const MncResume = React.forwardRef(({ data, template = 'professional' }, ref) =>
         </section>
       )}
 
-      {/* Work Experience */}
-      {experience && experience.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">WORK EXPERIENCE</h2>
-          <div className="experience-list">
-            {experience.map((exp, index) => (
+      {/* Work Experience - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">WORK EXPERIENCE</h2>
+        <div className="experience-list">
+          {experience && experience.length > 0 ? (
+            experience.map((exp, index) => (
               <div key={index} className="experience-item">
                 <div className="job-header">
                   <div className="job-title">
-                    <strong>{exp.role}</strong> – {exp.company}
+                    <strong>{safeText(exp.role)}</strong> – {safeText(exp.company)}
                   </div>
-                  <div className="job-duration">{exp.duration}</div>
+                  <div className="job-duration">{safeText(exp.duration)}</div>
                 </div>
                 <ul className="job-duties">
-                  {exp.description && exp.description.split('\n').map((duty, i) => 
+                  {exp.description && safeText(exp.description).split('\n').map((duty, i) => 
                     duty.trim() && <li key={i}>{duty.trim()}</li>
                   )}
                 </ul>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            ))
+          ) : (
+            <div className="experience-item">
+              <div className="job-header">
+                <div className="job-title">
+                  <strong>Software Developer</strong> – Tech Company Inc.
+                </div>
+                <div className="job-duration">Jan 2020 - Present</div>
+              </div>
+              <ul className="job-duties">
+                <li>Your work experience will appear here</li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* Projects */}
-      {projects && projects.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">PROJECTS</h2>
-          <div className="projects-list">
-            {projects.map((project, index) => (
+      {/* Projects - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">PROJECTS</h2>
+        <div className="projects-list">
+          {projects && projects.length > 0 ? (
+            projects.map((project, index) => (
               <div key={index} className="project-item">
-                <h3 className="project-title">{project.title}</h3>
+                <h3 className="project-title">{safeText(project.title)}</h3>
                 <ul className="project-details">
-                  {project.description && project.description.split('\n').map((detail, i) => 
+                  {project.description && safeText(project.description).split('\n').map((detail, i) => 
                     detail.trim() && <li key={i}>{detail.trim()}</li>
                   )}
                 </ul>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            ))
+          ) : (
+            <div className="project-item">
+              <h3 className="project-title">Sample Project</h3>
+              <ul className="project-details">
+                <li>Your projects will appear here</li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* Education */}
-      {education && education.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">EDUCATION</h2>
-          <div className="education-list">
-            {education.map((edu, index) => (
+      {/* Education - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">EDUCATION</h2>
+        <div className="education-list">
+          {education && education.length > 0 ? (
+            education.map((edu, index) => (
               <div key={index} className="education-item">
-                <div className="degree">{edu.degree} – {edu.institution} – {edu.year} 
-                  {edu.percentage && <span> – {edu.percentage}</span>}
+                <div className="degree">{safeText(edu.degree)} – {safeText(edu.institution)} – {safeText(edu.year)} 
+                  {edu.percentage && <span> – {safeText(edu.percentage)}</span>}
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            ))
+          ) : (
+            <div className="education-item">
+              <div className="degree">Bachelor of Technology in Computer Science – University Name – 2020 – 75%</div>
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* Achievements & Certifications */}
-      {achievements && achievements.length > 0 && (
-        <section className="resume-section">
-          <h2 className="section-title">ACHIEVEMENTS & CERTIFICATIONS</h2>
-          <ul className="achievements-list">
-            {achievements.map((achievement, index) => (
-              achievement.trim() && <li key={index}>{achievement}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {/* Achievements & Certifications - Always visible */}
+      <section className="resume-section">
+        <h2 className="section-title">ACHIEVEMENTS & CERTIFICATIONS</h2>
+        <ul className="achievements-list">
+          {(() => {
+            const achvItems = achievements && achievements.length > 0
+              ? achievements.map((achievement, index) => {
+                  const text = safeAchievement(achievement);
+                  return text ? <li key={index}>{text}</li> : null;
+                }).filter(Boolean)
+              : [];
+            
+            return achvItems.length > 0 ? achvItems : (
+              <li>Your achievements and certifications will appear here</li>
+            );
+          })()}
+        </ul>
+      </section>
     </div>
   );
 });

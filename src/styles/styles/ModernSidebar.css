@@ -1,0 +1,243 @@
+/**
+ * Modern Sidebar Resume Template
+ * ATS-friendly yet visually appealing two-column design
+ */
+
+.template-modern-sidebar {
+  font-family: 'Arial', sans-serif;
+  color: #333;
+  background: #fff;
+  max-width: 8.5in;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Left sidebar */
+.template-modern-sidebar .sidebar {
+  width: 30%;
+  background-color: #800000; /* Maroon background as requested */
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+  min-height: 11in; /* A4 height */
+}
+
+/* Profile picture */
+.template-modern-sidebar .profile-pic {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.template-modern-sidebar .profile-pic img {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+}
+
+/* Contact information */
+.template-modern-sidebar .contact-info {
+  margin-bottom: 25px;
+}
+
+.template-modern-sidebar .contact-info h3 {
+  font-size: 14pt;
+  text-transform: uppercase;
+  border-bottom: 1px solid #4a5a72;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.template-modern-sidebar .contact-info p {
+  margin: 8px 0;
+  font-size: 10pt;
+  display: flex;
+  align-items: center;
+}
+
+.template-modern-sidebar .contact-info .icon {
+  margin-right: 10px;
+  font-weight: bold;
+  width: 20px;
+  display: inline-block;
+  text-align: center;
+}
+
+/* Languages section */
+.template-modern-sidebar .languages {
+  margin-bottom: 25px;
+}
+
+.template-modern-sidebar .languages h3 {
+  font-size: 14pt;
+  text-transform: uppercase;
+  border-bottom: 1px solid #4a5a72;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.template-modern-sidebar .languages ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.template-modern-sidebar .languages li {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.template-modern-sidebar .languages .language-level {
+  font-size: 9pt;
+  opacity: 0.8;
+}
+
+/* Skills section */
+.template-modern-sidebar .skills {
+  margin-bottom: 25px;
+}
+
+.template-modern-sidebar .skills h3 {
+  font-size: 14pt;
+  text-transform: uppercase;
+  border-bottom: 1px solid #4a5a72;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.template-modern-sidebar .skills ul {
+  list-style-type: none;
+  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.template-modern-sidebar .skills li {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 5px 12px;
+  margin: 0 5px 8px 0;
+  border-radius: 15px;
+  font-size: 10pt;
+}
+
+/* Main content */
+.template-modern-sidebar .main-content {
+  width: 70%;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.template-modern-sidebar .main-content .header {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.template-modern-sidebar .main-content h1 {
+  font-size: 24pt;
+  margin: 0 0 5px 0;
+  color: #2e3b4e;
+}
+
+.template-modern-sidebar .main-content .job-title {
+  font-size: 14pt;
+  color: #555;
+  margin: 0 0 15px 0;
+  font-weight: normal;
+}
+
+/* Section styling */
+.template-modern-sidebar .main-content section {
+  margin-bottom: 25px;
+}
+
+.template-modern-sidebar .main-content section h2 {
+  font-size: 14pt;
+  text-transform: uppercase;
+  color: #2e3b4e;
+  border-bottom: 2px solid #2e3b4e;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+/* Summary section */
+.template-modern-sidebar .summary p {
+  text-align: justify;
+  line-height: 1.5;
+}
+
+/* Experience section */
+.template-modern-sidebar .experience-item {
+  margin-bottom: 20px;
+}
+
+.template-modern-sidebar .experience-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.template-modern-sidebar .experience-title {
+  font-weight: bold;
+  font-size: 11pt;
+}
+
+.template-modern-sidebar .experience-company {
+  margin-bottom: 5px;
+}
+
+.template-modern-sidebar .experience-duration {
+  font-style: italic;
+  font-size: 10pt;
+  color: #666;
+}
+
+.template-modern-sidebar .experience-description {
+  font-size: 10pt;
+  line-height: 1.5;
+}
+
+/* Education section */
+.template-modern-sidebar .education-item {
+  margin-bottom: 15px;
+}
+
+.template-modern-sidebar .education-degree {
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.template-modern-sidebar .education-institution {
+  margin-bottom: 3px;
+}
+
+.template-modern-sidebar .education-details {
+  font-size: 10pt;
+  color: #666;
+}
+
+/* Certifications & Achievements */
+.template-modern-sidebar .certifications-list {
+  padding-left: 18px;
+  margin-top: 10px;
+}
+
+.template-modern-sidebar .certifications-list li {
+  margin-bottom: 8px;
+  font-size: 10pt;
+}
+
+/* Print styles for PDF generation */
+@media print {
+  .template-modern-sidebar {
+    padding: 0;
+  }
+  
+  .template-modern-sidebar .sidebar {
+    min-height: 100%;
+  }
+}

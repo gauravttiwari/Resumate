@@ -19,7 +19,7 @@ const MobileResumeForm = ({ resumeType = 'technical', onNavigate = () => {}, onO
     experience: [{ company: '', role: '', duration: '', description: '' }],
     education: [{ school: '', degree: '', year: '' }],
     projects: [{ name: '', description: '' }],
-    achievements: [{ name: '', issuer: '', start: '', end: '' }],
+    achievements: [{ text: '', start: '', end: '' }],
   });
 
   const refs = useRef(sections.map(() => React.createRef()));
@@ -150,7 +150,7 @@ const MobileResumeForm = ({ resumeType = 'technical', onNavigate = () => {}, onO
       case 5:
         return form.projects.some(p => p.name && p.name.trim());
       case 6:
-        return form.achievements.some(a => a && a.trim());
+        return form.achievements.some(a => a.text && a.text.trim());
       default:
         return false;
     }
@@ -432,8 +432,7 @@ const MobileResumeForm = ({ resumeType = 'technical', onNavigate = () => {}, onO
                 <div className="cert-list">
                   {form.achievements.map((c, idx) => (
                     <div key={idx} className="cert-item">
-                      <label>Certificate / Award Name<input value={c.name} onChange={e => setForm(prev => ({ ...prev, achievements: prev.achievements.map((it,i) => i===idx ? { ...it, name: e.target.value } : it) }))} /></label>
-                      <label>Issuer (Organization)<input value={c.issuer} onChange={e => setForm(prev => ({ ...prev, achievements: prev.achievements.map((it,i) => i===idx ? { ...it, issuer: e.target.value } : it) }))} /></label>
+                      <label>Achievement / Certification<input value={c.text} onChange={e => setForm(prev => ({ ...prev, achievements: prev.achievements.map((it,i) => i===idx ? { ...it, text: e.target.value } : it) }))} placeholder="e.g., AWS Certified Developer" /></label>
                       <div style={{ display: 'flex', gap: '0.6rem' }}>
                         <label style={{ flex: 1 }}>Start Date<input type="date" value={c.start} onChange={e => setForm(prev => ({ ...prev, achievements: prev.achievements.map((it,i) => i===idx ? { ...it, start: e.target.value } : it) }))} /></label>
                         <label style={{ flex: 1 }}>End Date<input type="date" value={c.end} onChange={e => setForm(prev => ({ ...prev, achievements: prev.achievements.map((it,i) => i===idx ? { ...it, end: e.target.value } : it) }))} /></label>
@@ -444,7 +443,7 @@ const MobileResumeForm = ({ resumeType = 'technical', onNavigate = () => {}, onO
                     </div>
                   ))}
                   <div style={{ marginTop: '0.6rem' }}>
-                    <button type="button" onClick={() => setForm(prev => ({ ...prev, achievements: [...prev.achievements, { name: '', issuer: '', start: '', end: '' }] }))}>Add Certificate</button>
+                    <button type="button" onClick={() => setForm(prev => ({ ...prev, achievements: [...prev.achievements, { text: '', start: '', end: '' }] }))}>Add Achievement</button>
                   </div>
                 </div>
             </section>

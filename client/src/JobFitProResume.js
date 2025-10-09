@@ -5,9 +5,10 @@
  * featuring sections for contact, languages, software skills, and general skills
  */
 import React from 'react';
+import { safeText, safeAchievement, safeArray } from './utils/safeRender';
 import './styles/JobFitPro.css';
 
-const JobFitProResume = React.forwardRef(({ data, showProfile = true }, ref) => {
+const JobFitProResume = React.forwardRef(({ data = {}, showProfile = true }, ref) => {
   // Destructure resume data with defaults
   const { 
     name = '', 
@@ -30,12 +31,22 @@ const JobFitProResume = React.forwardRef(({ data, showProfile = true }, ref) => 
     hobbies = '',
     profilePic = null,
     sidebarColor = '#800000' // Default maroon color if not specified
-  } = data || {};
+  } = data;
+
+  // Helper to safely convert values to text
+  const safeText = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value.text !== undefined) return String(value.text || '');
+    if (Array.isArray(value)) return value.map(v => safeText(v)).filter(Boolean).join(', ');
+    return '';
+  };
 
   // Format skills into an array
   const formatSkillsList = (skillsString) => {
     if (!skillsString) return [];
-    return skillsString.split(',').map(skill => skill.trim()).filter(Boolean);
+    const text = safeText(skillsString);
+    return text.split(',').map(skill => skill.trim()).filter(Boolean);
   };
 
   // Create skill arrays
@@ -44,7 +55,7 @@ const JobFitProResume = React.forwardRef(({ data, showProfile = true }, ref) => 
   const generalSkillsList = formatSkillsList(skills);
   
   // Format languages into an array
-  const languagesList = languages ? languages.split(',').map(lang => {
+  const languagesList = languages ? safeText(languages).split(',').map(lang => {
     // Check if language has proficiency level indicated with a dash
     const parts = lang.trim().split('-');
     if (parts.length > 1) {
@@ -60,10 +71,10 @@ const JobFitProResume = React.forwardRef(({ data, showProfile = true }, ref) => 
   }) : [];
 
   // Professional summary
-  const professionalSummary = summary || objective || '';
+  const professionalSummary = safeText(summary) || safeText(objective) || '';
 
   // Format hobbies into a string
-  const hobbiesText = hobbies || '';
+  const hobbiesText = safeText(hobbies) || '';
 
   // Determine job title from latest experience or default
   const jobTitle = experience && experience.length > 0 ? 
@@ -163,24 +174,28 @@ const JobFitProResume = React.forwardRef(({ data, showProfile = true }, ref) => 
             </section>
           )}
           
-          {/* Education Section */}
-          {education && education.length > 0 && (
-            <section className="education">
-              <h3 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>🎓 Education</h3>
-              {education.map((edu, index) => (
+          {/* Education Section - Always visible */}
+          <section className="education">
+            <h3 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>🎓 Education</h3>
+            {education && education.length > 0 ? (
+              education.map((edu, index) => (
                 <p key={index}>
                   <strong>{edu.degree}</strong> – {edu.institution} ({edu.year})
                   {edu.percentage && <span> - {edu.percentage}%</span>}
                 </p>
-              ))}
-            </section>
-          )}
+              ))
+            ) : (
+              <p>
+                <strong>Bachelor of Technology in Computer Science</strong> – University Name (2020) - 75%
+              </p>
+            )}
+          </section>
           
-          {/* Work Experience Section */}
-          {experience && experience.length > 0 && (
-            <section className="experience">
-              <h3 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>💼 Professional Experience</h3>
-              {experience.map((job, index) => (
+          {/* Work Experience Section - Always visible */}
+          <section className="experience">
+            <h3 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>💼 Professional Experience</h3>
+            {experience && experience.length > 0 ? (
+              experience.map((job, index) => (
                 <div key={index} className="experience-item">
                   <p>
                     <strong>{job.role} | {job.company} – {job.location || 'N/A'}</strong> ({job.duration})
@@ -193,22 +208,36 @@ const JobFitProResume = React.forwardRef(({ data, showProfile = true }, ref) => 
                     </ul>
                   )}
                 </div>
-              ))}
-            </section>
-          )}
+              ))
+            ) : (
+              <div className="experience-item">
+                <p>
+                  <strong>Software Developer | Tech Company Inc. – N/A</strong> (Jan 2020 - Present)
+                </p>
+                <ul>
+                  <li>Your work experience will appear here</li>
+                </ul>
+              </div>
+            )}
+          </section>
           
-          {/* Projects Section */}
-          {projects && projects.length > 0 && (
-            <section className="projects">
-              <h3 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>📋 Projects</h3>
-              {projects.map((project, index) => (
+          {/* Projects Section - Always visible */}
+          <section className="projects">
+            <h3 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>📋 Projects</h3>
+            {projects && projects.length > 0 ? (
+              projects.map((project, index) => (
                 <div key={index} className="project-item">
-                  <p><strong>{project.title}</strong></p>
-                  <p>{project.description}</p>
+                  <p><strong>{safeText(project.title)}</strong></p>
+                  <p>{safeText(project.description)}</p>
                 </div>
-              ))}
-            </section>
-          )}
+              ))
+            ) : (
+              <div className="project-item">
+                <p><strong>Sample Project</strong></p>
+                <p>Your projects will appear here</p>
+              </div>
+            )}
+          </section>
           
           {/* Hobbies Section */}
           {hobbiesText && (

@@ -1,7 +1,9 @@
 import React from 'react';
+import { safeText, safeAchievement, safeArray } from './utils/safeRender';
 import './styles/SmartResume.css';
 
 const SmartResume = React.forwardRef(({ data = {}, template = 'smart-resume' }, ref) => {
+
   const {
     name = data.name || data.personalInfo?.fullName || 'John Doe',
     title = data.title || data.personalInfo?.title || 'Senior Software Engineer',
@@ -31,48 +33,66 @@ const SmartResume = React.forwardRef(({ data = {}, template = 'smart-resume' }, 
       {summary && (
         <section className="sr-section sr-summary">
           <h2>PROFILE</h2>
-          <p>{summary}</p>
+          <p>{safeText(summary)}</p>
         </section>
       )}
 
       {skills && (
         <section className="sr-section sr-skills">
           <h2>KEY SKILLS</h2>
-          <p>{skills}</p>
+          <p>{safeText(skills)}</p>
         </section>
       )}
 
-      {experience && experience.length > 0 && (
-        <section className="sr-section sr-experience">
-          <h2>EXPERIENCE</h2>
-          {experience.map((exp, idx) => (
+      {/* Experience Section - Always visible */}
+      <section className="sr-section sr-experience">
+        <h2>EXPERIENCE</h2>
+        {experience && experience.length > 0 ? (
+          experience.map((exp, idx) => (
             <div className="sr-experience-item" key={idx}>
               <div className="sr-exp-head">
-                <div className="sr-role">{exp.role || exp.jobTitle || exp.position || 'Role'}</div>
-                <div className="sr-duration">{exp.duration || exp.dates || exp.startEnd || ''}</div>
+                <div className="sr-role">{safeText(exp.role || exp.jobTitle || exp.position) || 'Role'}</div>
+                <div className="sr-duration">{safeText(exp.duration || exp.dates || exp.startEnd) || ''}</div>
               </div>
-              <div className="sr-company">{exp.company}</div>
+              <div className="sr-company">{safeText(exp.company)}</div>
               {exp.description && (
                 <div className="sr-exp-desc">
-                  {exp.description.split('\n').map((line, i) => line.trim() && <div key={i}>{line}</div>)}
+                  {safeText(exp.description).split('\n').map((line, i) => line.trim() && <div key={i}>{line}</div>)}
                 </div>
               )}
             </div>
-          ))}
-        </section>
-      )}
+          ))
+        ) : (
+          <div className="sr-experience-item">
+            <div className="sr-exp-head">
+              <div className="sr-role">Software Developer</div>
+              <div className="sr-duration">Jan 2020 - Present</div>
+            </div>
+            <div className="sr-company">Tech Company Inc.</div>
+            <div className="sr-exp-desc">
+              <div>Your work experience will appear here</div>
+            </div>
+          </div>
+        )}
+      </section>
 
-      {education && education.length > 0 && (
-        <section className="sr-section sr-education">
-          <h2>EDUCATION</h2>
-          {education.map((edu, i) => (
+      {/* Education Section - Always visible */}
+      <section className="sr-section sr-education">
+        <h2>EDUCATION</h2>
+        {education && education.length > 0 ? (
+          education.map((edu, i) => (
             <div key={i} className="sr-edu-item">
               <div className="sr-degree">{edu.degree || edu.title}</div>
               <div className="sr-institution">{edu.institution || edu.school}{edu.year ? ` • ${edu.year}` : ''}</div>
             </div>
-          ))}
-        </section>
-      )}
+          ))
+        ) : (
+          <div className="sr-edu-item">
+            <div className="sr-degree">Bachelor of Technology in Computer Science</div>
+            <div className="sr-institution">University Name • 2020</div>
+          </div>
+        )}
+      </section>
     </div>
   );
 });

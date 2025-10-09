@@ -24,13 +24,43 @@
 .logo {
   display: flex;
   align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: translateY(-1px);
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.logo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .logo-text {
-  color: #3366ff;
+  color: #8b5cf6;
   font-weight: 700;
-  font-size: 24px;
+  font-size: 20px;
   text-decoration: none;
+  line-height: 1;
+}
+
+.logo-subtitle {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0.8;
 }
 
 .desktop-nav {
@@ -46,7 +76,7 @@
 }
 
 .nav-link:hover {
-  color: #3366ff;
+  color: #8b5cf6;
 }
 
 .header-buttons {
@@ -173,5 +203,22 @@
 
   .mobile-menu-button {
     display: block;
+  }
+  
+  .logo {
+    gap: 10px;
+  }
+  
+  .logo-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .logo-subtitle {
+    font-size: 11px;
   }
 }

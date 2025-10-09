@@ -12,7 +12,16 @@ const Header = () => {
         <div className="header-content">
           {/* Logo */}
           <Link to="/" className="logo">
-            <span className="logo-text">ResuMate</span>
+            <div className="logo-icon">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="6" fill="#8b5cf6"/>
+                <path d="M8 10h16v2H8v-2zm0 4h16v2H8v-2zm0 4h12v2H8v-2zm0 4h14v2H8v-2z" fill="white"/>
+              </svg>
+            </div>
+            <div className="logo-content">
+              <span className="logo-text">ResuMate</span>
+              <span className="logo-subtitle">AI Resume Builder</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}

@@ -112,9 +112,9 @@ p {
 
 /* Custom CSS Variables */
 :root {
-  --color-primary: #3366FF;
-  --color-primary-dark: #2952cc;
-  --color-primary-light: rgba(51, 102, 255, 0.1);
+  --color-primary: #8b5cf6;
+  --color-primary-dark: #7c3aed;
+  --color-primary-light: rgba(139, 92, 246, 0.1);
   --color-text-dark: #222;
   --color-text-medium: #555;
   --color-text-light: #666;
@@ -128,4 +128,29 @@ p {
   --border-radius-lg: 8px;
   --border-radius-xl: 12px;
   --border-radius-full: 9999px;
+  
+  /* Primary Colors */
+  --primary-50: #faf5ff;
+  --primary-600: #8b5cf6;
+  --primary-700: #7c3aed;
+  
+  /* Gray Colors */
+  --gray-50: #f9fafb;
+  
+  /* Spacing */
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  
+  /* Typography */
+  --font-heading: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-semibold: 600;
+  
+  /* Radius */
+  --radius-full: 9999px;
 }

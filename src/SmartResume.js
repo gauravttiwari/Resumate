@@ -1,8 +1,6 @@
 import React from 'react';
 import './styles/SmartResume.css';
 
-// SmartResume - Structured Minimalist Design
-// Lightweight renderer that follows a structured, minimalist layout similar to the provided PDF.
 const SmartResume = React.forwardRef(({ data = {}, template = 'smart-resume' }, ref) => {
   const {
     name = data.name || data.personalInfo?.fullName || 'John Doe',
@@ -16,10 +14,8 @@ const SmartResume = React.forwardRef(({ data = {}, template = 'smart-resume' }, 
     education = data.education || []
   } = data || {};
 
-  const templateClass = `smart-resume ${template}`;
-
   return (
-    <div ref={ref} className={templateClass} id="smart-resume-root">
+    <div ref={ref} className={`smart-resume ${template}`} id="smart-resume-root">
       <header className="sr-header">
         <div className="sr-name-block">
           <h1 className="sr-name">{name}</h1>

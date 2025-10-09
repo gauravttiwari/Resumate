@@ -6,9 +6,10 @@
  * for experience and education. ATS-friendly and print-optimized.
  */
 import React from 'react';
+import { safeText, safeAchievement, safeArray } from './utils/safeRender';
 import './styles/ProProfile.css';
 
-const ProProfileResume = React.forwardRef(({ data, showProfile = true }, ref) => {
+const ProProfileResume = React.forwardRef(({ data = {}, showProfile = true }, ref) => {
   // Destructure resume data with defaults
   const { 
     name = '', 
@@ -29,12 +30,22 @@ const ProProfileResume = React.forwardRef(({ data, showProfile = true }, ref) =>
     achievements = [],
     profilePic = null,
     sidebarColor = '#1a365d' // Default dark blue color
-  } = data || {};
+  } = data;
+
+  // Helper to safely convert values to text
+  const safeText = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value.text !== undefined) return String(value.text || '');
+    if (Array.isArray(value)) return value.map(v => safeText(v)).filter(Boolean).join(', ');
+    return '';
+  };
 
   // Format skills into arrays
   const formatSkillsList = (skillsString) => {
     if (!skillsString) return [];
-    return skillsString.split(',').map(skill => skill.trim()).filter(Boolean);
+    const text = safeText(skillsString);
+    return text.split(',').map(skill => skill.trim()).filter(Boolean);
   };
 
   const technicalSkillsList = formatSkillsList(technicalSkills);
@@ -123,7 +134,9 @@ const ProProfileResume = React.forwardRef(({ data, showProfile = true }, ref) =>
           <section className="certifications">
             <h2>CERTIFICATION</h2>
             {certifications.map((cert, index) => (
-              <p key={index}>{cert}</p>
+              <p key={index}>
+                {typeof cert === 'object' && cert.text ? cert.text : cert}
+              </p>
             ))}
           </section>
         )}
@@ -150,17 +163,24 @@ const ProProfileResume = React.forwardRef(({ data, showProfile = true }, ref) =>
           </section>
         )}
         
-        {/* Achievements can go in sidebar if there's space */}
-        {achievements && achievements.length > 0 && (
-          <section className="achievements">
-            <h2>ACHIEVEMENTS</h2>
-            <ul>
-              {achievements.map((achievement, index) => (
-                <li key={index}>{achievement}</li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {/* Achievements - Always visible */}
+        <section className="achievements">
+          <h2>ACHIEVEMENTS</h2>
+          <ul>
+            {(() => {
+              const achvItems = achievements && achievements.length > 0
+                ? achievements.map((achievement, index) => {
+                    const text = safeAchievement(achievement);
+                    return text ? <li key={index}>{text}</li> : null;
+                  }).filter(Boolean)
+                : [];
+              
+              return achvItems.length > 0 ? achvItems : (
+                <li>Your achievements will appear here</li>
+              );
+            })()}
+          </ul>
+        </section>
       </aside>
       
       {/* Main Content */}
@@ -184,7 +204,7 @@ const ProProfileResume = React.forwardRef(({ data, showProfile = true }, ref) =>
         {summary && (
           <section className="summary">
             <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>SUMMARY</h2>
-            <p>{summary}</p>
+            <p>{safeText(summary)}</p>
           </section>
         )}
         
@@ -218,30 +238,41 @@ const ProProfileResume = React.forwardRef(({ data, showProfile = true }, ref) =>
         )}
         
         {/* Projects Section - If provided */}
-        {projects && projects.length > 0 && (
-          <section className="projects">
-            <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>PROJECTS</h2>
-            {projects.map((project, index) => (
+        {/* Projects Section - Always visible */}
+        <section className="projects">
+          <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>PROJECTS</h2>
+          {projects && projects.length > 0 ? (
+            projects.map((project, index) => (
               <div key={index} className="project-item">
                 <h3>{project.title || 'Project'}</h3>
                 <p>{project.description || 'Project description'}</p>
               </div>
-            ))}
-          </section>
-        )}
+            ))
+          ) : (
+            <div className="project-item">
+              <h3>Sample Project</h3>
+              <p>Your projects will appear here</p>
+            </div>
+          )}
+        </section>
         
-        {/* Education Section */}
-        {education && education.length > 0 && (
-          <section className="education">
-            <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>EDUCATION</h2>
-            {education.map((edu, index) => (
+        {/* Education Section - Always visible */}
+        <section className="education">
+          <h2 style={{...dynamicStyles.heading, ...dynamicStyles.borderBottom}}>EDUCATION</h2>
+          {education && education.length > 0 ? (
+            education.map((edu, index) => (
               <div key={index} className="education-item">
                 <p className="institution">{edu.institution || 'Institution'}</p>
                 <p className="degree">{edu.degree || 'Degree'} {edu.year ? `- ${edu.year}` : ''}</p>
               </div>
-            ))}
-          </section>
-        )}
+            ))
+          ) : (
+            <div className="education-item">
+              <p className="institution">University Name</p>
+              <p className="degree">Bachelor of Technology in Computer Science - 2020</p>
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );

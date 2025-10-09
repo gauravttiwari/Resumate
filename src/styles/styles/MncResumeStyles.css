@@ -1,0 +1,193 @@
+/* MNC-Approved Resume Styles
+ * ATS-friendly, clean formatting for major tech companies
+ */
+
+.mnc-resume {
+  width: 210mm; /* A4 width */
+  min-height: 297mm; /* A4 height */
+  padding: 25mm 20mm;
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; /* ATS-friendly font */
+  color: #333;
+  background-color: white;
+  box-sizing: border-box;
+  margin: 0 auto;
+  line-height: 1.5;
+  position: relative;
+}
+
+/* Clear, professional header */
+.mnc-resume .resume-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.mnc-resume .resume-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.mnc-resume .contact-info {
+  font-size: 12px;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Section styling */
+.mnc-resume .resume-section {
+  margin-bottom: 16px;
+}
+
+.mnc-resume .section-title {
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 0 0 10px 0;
+  color: #000;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+  letter-spacing: 1px;
+}
+
+/* Summary section */
+.mnc-resume .summary-text {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Skills section */
+.mnc-resume .skills-text {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Experience section */
+.mnc-resume .experience-item {
+  margin-bottom: 14px;
+}
+
+.mnc-resume .job-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.mnc-resume .job-title {
+  font-weight: normal;
+}
+
+.mnc-resume .job-duration {
+  font-style: italic;
+  color: #555;
+}
+
+.mnc-resume .job-duties {
+  margin: 5px 0 0 0;
+  padding-left: 20px;
+  font-size: 11px;
+}
+
+.mnc-resume .job-duties li {
+  margin-bottom: 3px;
+}
+
+/* Projects section */
+.mnc-resume .project-item {
+  margin-bottom: 12px;
+}
+
+.mnc-resume .project-title {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 0 0 5px 0;
+}
+
+.mnc-resume .project-details {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 11px;
+}
+
+.mnc-resume .project-details li {
+  margin-bottom: 3px;
+}
+
+/* Education section */
+.mnc-resume .education-item {
+  margin-bottom: 8px;
+}
+
+.mnc-resume .degree {
+  font-size: 12px;
+}
+
+/* Achievements section */
+.mnc-resume .achievements-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 11px;
+}
+
+.mnc-resume .achievements-list li {
+  margin-bottom: 5px;
+}
+
+/* Template variations */
+
+/* Professional template - for tech positions */
+.resume-template-professional .section-title {
+  color: #2c3e50;
+  border-bottom: 1px solid #2c3e50;
+}
+
+.resume-template-professional .resume-name {
+  color: #2c3e50;
+}
+
+/* Corporate template - for business/corporate roles */
+.resume-template-corporate .section-title {
+  color: #34495e;
+  border-bottom: 1px solid #34495e;
+  text-transform: uppercase;
+}
+
+.resume-template-corporate .resume-header {
+  border-bottom: 2px solid #34495e;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+/* Minimal template - clean, minimal design */
+.resume-template-minimal .section-title {
+  border-bottom: none;
+  font-size: 13px;
+  color: #333;
+}
+
+.resume-template-minimal .resume-section:before {
+  content: "";
+  display: block;
+  height: 1px;
+  background: #eee;
+  margin-bottom: 10px;
+}
+
+/* Print optimization for ATS */
+@media print {
+  .mnc-resume {
+    margin: 0;
+    padding: 15mm;
+    width: 100%;
+    height: auto;
+    box-shadow: none;
+  }
+
+  .mnc-resume * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

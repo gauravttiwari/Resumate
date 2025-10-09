@@ -23,6 +23,7 @@ const TemplateSelector = ({ selectedTemplate, onTemplateChange, onTemplateSelect
     { id: 'modern', name: 'Modern Professional', description: 'Clean design with a touch of color. Good balance of style and ATS compatibility.', types: ['technical', 'nontechnical'] },
     { id: 'minimal', name: 'Minimalist', description: 'Streamlined and focused on content. Maximum ATS compatibility.', types: ['technical', 'nontechnical', 'diploma'] },
     { id: 'smart-resume', name: 'SmartResume – Structured Minimalist Design', description: 'Structured minimalist layout inspired by a professional PDF design. Focus on clarity and hierarchy.', types: ['technical', 'nontechnical'] },
+    { id: 'enhancv-pro', name: 'Enhancv Professional', description: 'Clean left-right section layout with profile photo. Professional two-column design inspired by Enhancv with modern styling and excellent readability.', types: ['technical', 'nontechnical', 'diploma'] },
     { id: 'tech', name: 'Tech Specialist', description: 'Designed specifically for tech roles at companies like Google, Microsoft, and Amazon.', types: ['technical'] },
     { id: 'medical-pro', name: 'Medical Professional', description: 'Specialized for medical professionals with sections for certifications, specialties, and clinical experience.', types: ['medical'] },
     { id: 'healthcare', name: 'Healthcare Specialist', description: 'Tailored for healthcare roles with emphasis on patient care, medical procedures, and health institution experience.', types: ['medical'] },
